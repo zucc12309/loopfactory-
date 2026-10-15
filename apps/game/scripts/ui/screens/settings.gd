@@ -102,7 +102,8 @@ func _open_url(key: String, missing: String) -> void:
 	if u == "" or LFReleaseConfig.url_problem(u, false) != "":
 		main.toast(missing, LFStyle.TEXT_MUTED, 3.0)
 		return
-	OS.shell_open(u)
+	if LFPlatform.open_external_url(u) != "opened":
+		main.toast("Couldn't open the link. It is: %s" % u, LFStyle.TEXT_MUTED, 4.0)
 
 
 var _version_taps := 0

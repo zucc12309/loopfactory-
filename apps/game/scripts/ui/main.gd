@@ -46,16 +46,19 @@ func _ready() -> void:
 	Game.achievements_unlocked.connect(_on_achievements)
 	Game.cosmetics_unlocked.connect(_on_cosmetics)
 	goto("splash", {}, false)
+	# Links that arrive while the game runs (iOS Universal Links signal it; both platforms are also
+	# polled on resume, which covers Android App Links delivered to the running activity).
+	LFPlatform.adapter().link_received.connect(func(_uri: String): _poll_link.call_deferred())
 	_check_build_config.call_deferred()
 	if Array(OS.get_cmdline_user_args()).any(func(a): return a.begins_with("--tour=")):
 		add_child(load("res://scripts/core/dev_tour.gd").new())
 
 
-## Challenge code from an App Link (via the share plugin), a launch argument
+## Challenge code from an App Link / Universal Link (via LFPlatform), a launch argument
 ## (`--challenge=CODE`, `loopfactory://challenge/CODE`, `https://<host>/c/CODE`), or a code saved
-## while offline. Invalid codes are dropped here, before any request. Android App Links only reach
-## an INSTALLED app (and only once the domain is verified, docs/sharing.md); they do not survive an
-## install from the store, so the landing page always shows the code for manual entry.
+## while offline. Invalid codes are dropped here, before any request. App Links / Universal Links only
+## reach an INSTALLED app (and only once the domain is verified, docs/sharing.md); they do not survive
+## an install from the store, so the landing page always shows the code for manual entry.
 func launch_challenge_code() -> String:
 	var uri := LFShare.launch_uri()
 	if uri != "":
@@ -72,6 +75,33 @@ func launch_challenge_code() -> String:
 				Analytics.track("challenge_link_opened", {"source": "launch_argument"})
 				return code
 	return str(Game.state.data["challenges"].get("pending", ""))
+
+
+## A link delivered while the game is already past the splash (warm start / foreground). The splash
+## consumes the launch link itself, so nothing is taken from the queue before it has run.
+func _poll_link() -> void:
+	if current_name == "" or current_name == "splash":
+		return
+	var uri := LFShare.launch_uri()
+	if uri != "":
+		open_link(uri)
+
+
+## Route an incoming link to the challenge screen. Invalid links are rejected before any request;
+## the same code arriving twice just reopens it (the screen re-validates online / offline).
+func open_link(uri: String) -> void:
+	Analytics.track("challenge_link_opened", {"source": "app_link"})
+	var code := LFShare.parse_challenge(uri)
+	if code == "":
+		LFDiagnostics.record("link", false, {"result": "invalid"})
+		toast("That link isn't a Loop Factory challenge. You can type a code under Friends.", LFStyle.TEXT_MUTED, 3.5)
+		return
+	if _overlay_layer.get_child_count() > 0:
+		close_overlay()
+	if current_name == "challenge":
+		replace("challenge", {"code": code})
+	else:
+		goto("challenge", {"code": code})
 
 
 ## First keyboard / D-pad input: make every control focusable and focus the first one.
@@ -229,7 +259,9 @@ func _show(name: String, args: Dictionary, direction: int) -> void:
 
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_WM_GO_BACK_REQUEST:
+	if what == NOTIFICATION_APPLICATION_RESUMED:
+		_poll_link.call_deferred()
+	elif what == NOTIFICATION_WM_GO_BACK_REQUEST:
 		back()
 	elif what == NOTIFICATION_WM_CLOSE_REQUEST:
 		Game.save_now()

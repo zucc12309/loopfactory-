@@ -14,7 +14,7 @@ extends RefCounted
 
 const PATH := "user://diagnostics.json"
 const MAX := 50
-const CATEGORIES := ["save_failed", "save_recovered", "unclean_exit", "network", "auth", "config", "diagnostic_test", "share"]
+const CATEGORIES := ["save_failed", "save_recovered", "unclean_exit", "network", "auth", "config", "diagnostic_test", "share", "secure_token", "memory_warning", "link"]
 
 static var path := PATH
 static var _seen := {}  # category -> true: network/auth are recorded once per session

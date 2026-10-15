@@ -21,11 +21,27 @@ func _ready() -> void:
 	var had_save := FileAccess.file_exists(store.path) or FileAccess.file_exists(store.path + ".bak")
 	state.load_from(store.load_data())
 	load_source = store.last_load_source
+	LFSecureTokens.after_load(state.data, not had_save)
+	_apply_system_preferences()
 	state.data["stats"]["sessions"] += 1
 	save_now()
 	if load_source == "tmp" or load_source == "bak" or (load_source == "default" and had_save):
 		# A damaged main save was recovered from a backup (or nothing usable was left).
 		LFDiagnostics.record.call_deferred("save_recovered", load_source == "default", {"source": load_source})
+	if LFSecureTokens.last_problem != "":
+		LFDiagnostics.record.call_deferred("secure_token", false, {"problem": LFSecureTokens.last_problem})
+	LFPlatform.prune_share_files()
+
+
+## Seeds settings from OS accessibility preferences once (iOS Reduce Motion when the native module is
+## present). The player's own choice in Settings always wins afterwards.
+func _apply_system_preferences() -> void:
+	var s: Dictionary = state.data["settings"]
+	if s.get("systemPrefsApplied", false):
+		return
+	if LFPlatform.system_reduce_motion() == 1:
+		s["reducedMotion"] = true
+	s["systemPrefsApplied"] = true
 
 
 func _load_campaign() -> Array:
@@ -56,7 +72,7 @@ func _flush() -> void:
 
 
 func save_now() -> void:
-	if not store.save(state.data):
+	if not store.save(LFSecureTokens.for_disk(state.data)):
 		push_warning("Save failed: " + store.last_error)
 		LFDiagnostics.record("save_failed", false, {"error": store.last_error})
 
@@ -65,6 +81,10 @@ func _notification(what: int) -> void:
 	match what:
 		NOTIFICATION_APPLICATION_PAUSED, NOTIFICATION_APPLICATION_FOCUS_OUT, NOTIFICATION_WM_CLOSE_REQUEST, NOTIFICATION_WM_GO_BACK_REQUEST:
 			save_now()
+		NOTIFICATION_OS_MEMORY_WARNING:
+			# iOS may terminate a backgrounded app under memory pressure without further notice.
+			save_now()
+			LFDiagnostics.record("memory_warning", false, {})
 
 
 # Convenience wrappers used by screens -------------------------------------------------
@@ -95,6 +115,7 @@ func complete_active() -> Dictionary:
 ## Ordinary saves never touch the backups; only this explicit deletion removes them.
 func wipe_local() -> void:
 	store.wipe(true)
+	LFSecureTokens.wipe()
 	Analytics.clear()
 	LFDiagnostics.clear()
 	for f in ["user://loop-factory-export.json"]:

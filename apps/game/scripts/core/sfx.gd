@@ -86,8 +86,7 @@ func haptic_pattern(kind: String) -> void:
 func haptic(ms := 12) -> void:
 	if Game.state == null or not Game.settings().get("haptics", true):
 		return
-	if OS.has_feature("mobile"):
-		Input.vibrate_handheld(ms)
+	LFPlatform.vibrate(ms)
 
 
 # --- music --------------------------------------------------------------------------------

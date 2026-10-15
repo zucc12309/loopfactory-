@@ -30,6 +30,7 @@ const EVENTS := [
 	"daily_challenge_entry", "daily_challenge_started", "daily_challenge_completed",
 	# sharing & friend challenges (see docs/sharing.md for exactly what each one can and can't prove)
 	"share_card_created", "share_image_saved", "share_text_copied", "share_sheet_opened",
+	"share_sheet_closed",
 	"challenge_create_clicked", "challenge_created", "challenge_link_opened", "challenge_loaded",
 	"challenge_started", "challenge_completed",
 	# diagnostics

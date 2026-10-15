@@ -5,7 +5,8 @@ class_name LFShareCard
 ##
 ## Platform notes (docs/sharing.md): Godot has no built-in native share sheet. The card is saved
 ## to the app's data folder (and to Pictures on desktop) and the text is copied to the clipboard.
-## Native sharing goes through LFShare (Android plugin when built in; copy/save fallback otherwise).
+## Native sharing goes through LFShare → LFPlatform (Android plugin / iOS extension when built in;
+## copy/save fallback otherwise).
 
 const W := 1080
 const H := 1350
@@ -198,6 +199,12 @@ static func share_native(main: Node, text: String, file_path: String, kind: Stri
 	match r:
 		LFShare.OPENED:
 			Analytics.track("share_sheet_opened", {"kind": kind, "with_image": file_path != ""})
+			# iOS reports when the sheet closes (done / cancelled / failed); never who received what.
+			var a := LFPlatform.adapter()
+			for c in a.share_closed.get_connections():
+				a.share_closed.disconnect(c["callable"])
+			a.share_closed.connect(func(result: String, _activity: String):
+				Analytics.track("share_sheet_closed", {"kind": kind, "result": result}), CONNECT_ONE_SHOT)
 		_:
 			DisplayServer.clipboard_set(text)
 			Analytics.track("share_text_copied", {"kind": kind, "fallback": true})

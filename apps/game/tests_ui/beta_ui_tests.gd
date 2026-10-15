@@ -430,6 +430,8 @@ func _events() -> Array:
 
 func _share_tests() -> void:
 	var Share: GDScript = load("res://scripts/core/share.gd")
+	var Platform: GDScript = load("res://scripts/platform/platform_services.gd")
+	var AndroidAdapter: GDScript = load("res://scripts/platform/android_adapter.gd")
 	var Card: GDScript = load("res://scripts/ui/share_card.gd")
 	var An: Node = root.get_node("Analytics")
 	# Link parsing / validation happens before any request.
@@ -446,7 +448,7 @@ func _share_tests() -> void:
 	var main: Control = made[1]
 	var d := {"kind": "campaign", "date": "2026-10-15", "rotations": 6, "par": 6, "stars": 3, "attempts": 1, "levelName": "Test"}
 	# No plugin (this build): no native button, copy works, honest events, no private path shown.
-	Share.fake_plugin = Callable()
+	Platform.use_adapter(null)
 	check(not Share.native_available(), "no native share plugin in this build")
 	await Card.present(main, d)
 	await _frames(2)
@@ -462,9 +464,9 @@ func _share_tests() -> void:
 	await _frames(2)
 	# With a plugin that opens the chooser: content handed over as a real file, only "opened" tracked.
 	var calls: Array = []
-	Share.fake_plugin = func(method: String, args: Array):
+	Platform.use_adapter(AndroidAdapter.new(func(method: String, args: Array):
 		calls.append([method, args])
-		return true
+		return true))
 	An.clear()
 	await Card.present(main, d)
 	await _frames(2)
@@ -478,13 +480,13 @@ func _share_tests() -> void:
 	check(ev.has("share_sheet_opened") and not ev.has("share_text_copied"), "chooser opened tracked; nothing about recipients")
 	main.close_overlay()
 	# Plugin failure / cancellation: falls back to copying text.
-	Share.fake_plugin = func(_m: String, _a: Array): return false
+	Platform.use_adapter(AndroidAdapter.new(func(_m: String, _a: Array): return false))
 	An.clear()
 	DisplayServer.clipboard_set("")
 	var r: String = Card.share_native(main, "hello share", "", "campaign")
 	check(r == Share.FAILED and DisplayServer.clipboard_get() == "hello share", "failed share falls back to copied text")
 	check(_events().has("share_text_copied") and not _events().has("share_sheet_opened"), "failure not counted as a share")
-	Share.fake_plugin = Callable()
+	Platform.use_adapter(null)
 	# Invite text always carries the code (manual entry), and only an https link.
 	var inv: String = Card.invite_text({"code": "K7MPQ2XR", "url": "/c/K7MPQ2XR"}, 6)
 	check(inv.contains("K7MPQ2XR") and not inv.contains("/c/K7MPQ2XR"), "invite has the code; relative links dropped")

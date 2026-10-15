@@ -16,3 +16,12 @@ apps/game/export_credentials.cfg
 .DS_Store
 # load test output
 scripts/loadtest/results/*.json
+
+# iOS native module build outputs (scripts/build-ios.sh --native)
+ios/loopfactory-native/bin/
+ios/loopfactory-native/build/
+ios/loopfactory-native/godot-cpp
+ios/loopfactory-native/.sconsign*.dblite
+ios/loopfactory-native/src/*.o
+ios/loopfactory-native/src/*.os
+apps/game/native/
