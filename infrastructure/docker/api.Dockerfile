@@ -43,9 +43,11 @@ RUN npm ci --workspaces --include-workspace-root --omit=dev --ignore-scripts \
 COPY --from=build /app/node_modules/.prisma node_modules/.prisma
 COPY --from=build /app/services/api/dist services/api/dist
 COPY database database
+COPY --chmod=755 infrastructure/docker/start-api.sh infrastructure/docker/start-api.sh
 USER node
 EXPOSE 8080
 HEALTHCHECK --interval=15s --timeout=3s --start-period=20s CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||8080)+'/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 # server.ts handles SIGTERM/SIGINT itself (graceful shutdown), so no init shim is required.
 # Migrations run as a separate release step:  node_modules/.bin/prisma migrate deploy --schema database/schema.prisma
+# Hosts without one can use /app/infrastructure/docker/start-api.sh (migrate + seed + server) as the command.
 CMD ["node", "services/api/dist/server.js"]
