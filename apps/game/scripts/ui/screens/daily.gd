@@ -49,7 +49,8 @@ func _render_official(entry: Dictionary) -> void:
 	var res = Game.state.data["daily"]["results"].get(_date)
 	var status := "Not solved yet — everyone gets the same puzzle today. Fewest rotations wins; hints are off."
 	if res != null:
-		status = "Your best: %d rotations%s" % [res["rotations"], "" if res.get("submitted", false) else " (will upload when online)"]
+		var tries := int(res.get("attempts", 0))
+		status = "Your best: %d rotations%s%s" % [res["rotations"], (" · %d tr%s" % [tries, "y" if tries == 1 else "ies"]) if tries > 0 else "", "" if res.get("submitted", false) else " (will upload when online)"]
 	var sl := LFStyle.label(status, 24, LFStyle.TEXT_MUTED, 400)
 	sl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(sl)

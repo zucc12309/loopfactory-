@@ -19,10 +19,11 @@ func setup(_args: Dictionary) -> void:
 
 	v.add_child(_section("Feel"))
 	v.add_child(_toggle("Sound effects", "sfx"))
+	v.add_child(_toggle("Music", "music"))
 	v.add_child(_toggle("Vibration", "haptics"))
 	v.add_child(_section("Accessibility"))
 	v.add_child(_toggle("Reduce motion", "reducedMotion"))
-	v.add_child(_toggle("Color symbols (colorblind aid)", "colorblind"))
+	v.add_child(_toggle("Larger shape symbols", "colorblind"))
 	var tip := LFStyle.label("Tip: long-press a belt to rotate it counter-clockwise.", 22, LFStyle.TEXT_MUTED, 400)
 	tip.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(tip)

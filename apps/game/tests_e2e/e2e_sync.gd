@@ -72,5 +72,22 @@ func _run() -> void:
 	var fresh := LFGameState.new(st.campaign, st.achievements_def)
 	fresh.merge_remote(snap["body"])
 	check(fresh.completed_count() == 2, "reinstall-style merge restores progress")
+	# 5. Friend challenge: create from a solve, then a second (silent guest) player accepts it.
+	var c6: Dictionary = st.campaign[5]
+	var created = await Net.create_challenge("campaign", c6, c6["solution"]["moves"])
+	check(created != null and str(created["code"]).length() == 8, "challenge created from a verified solve")
+	if created != null:
+		var own = await Net.submit_challenge_attempt(str(created["code"]), c6["solution"]["moves"])
+		check(own == null, "creator cannot attempt their own challenge")
+		# Become a different player without any sign-up step (new guest identity).
+		st.data["auth"] = {"playerId": "", "refreshToken": "", "displayName": ""}
+		Net._access_token = ""
+		var view = await Net.get_challenge(str(created["code"]).to_lower())
+		check(view != null and not view["level"].has("solution"), "recipient fetches the puzzle without its solution")
+		check(view != null and int(view["creatorRotations"]) == c6["solution"]["moves"].size(), "recipient sees the score to beat")
+		if view != null:
+			var sol2 := LFSolver.solve(view["level"], LFTiles.start_rotations(view["level"]))
+			var out = await Net.submit_challenge_attempt(str(created["code"]), sol2["moves"])
+			check(out != null and out["valid"] and out["outcome"] == "tie", "server-verified comparison (tie at par)")
 	print("\nE2E: %d failure(s)" % failures)
 	quit(1 if failures > 0 else 0)

@@ -13,4 +13,11 @@ func setup(_args: Dictionary) -> void:
 	logo.custom_minimum_size = Vector2(260, 260)
 	v.add_child(logo)
 	v.add_child(LFStyle.label("Loop Factory", 56, LFStyle.TEXT, 800, HORIZONTAL_ALIGNMENT_CENTER))
-	get_tree().create_timer(0.15 if main.reduced_motion() else 0.9).timeout.connect(func(): main.replace("home"))
+	get_tree().create_timer(0.15 if main.reduced_motion() else 0.7).timeout.connect(_go)
+
+
+func _go() -> void:
+	main.replace("home")
+	var code: String = main.launch_challenge_code()
+	if code != "":
+		main.goto("challenge", {"code": code})

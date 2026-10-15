@@ -261,3 +261,51 @@ func delete_account() -> bool:
 	Analytics.clear()
 	Game.wipe_local()
 	return true
+
+
+# ---------------------------------------------------------------- friend challenges
+
+## How the server can rebuild the exact puzzle: campaign id, daily date, or generator parameters.
+static func level_ref(kind: String, level: Dictionary) -> Variant:
+	match kind:
+		"campaign":
+			return {"type": "campaign", "levelId": str(level["id"])}
+		"daily":
+			return {"type": "daily", "date": str(level.get("date", ""))}
+		_:
+			var g = level.get("generator")
+			if g is Dictionary:
+				return {"type": "generated", "seed": int(g["seed"]), "tier": str(g["tier"]), "version": str(g["version"])}
+	return null
+
+
+## Create a challenge from a verified solve. Returns {code, url, rotations} or null.
+func create_challenge(kind: String, level: Dictionary, moves: Array) -> Variant:
+	var ref = level_ref(kind, level)
+	if ref == null:
+		return null
+	var r := await call_api(HTTPClient.METHOD_POST, "/api/v1/challenges/friend", {"level": ref, "moves": moves})
+	return r["body"] if r["ok"] and r["body"] is Dictionary else null
+
+
+## Fetch a challenge by code. Returns {code, level, creatorName, creatorRotations, attempts} or
+## null. The response never contains the creator's moves.
+func get_challenge(code: String) -> Variant:
+	var clean := code.strip_edges().to_upper().replace(" ", "")
+	if base_url == "" or clean.is_empty():
+		return null
+	var r := await call_api(HTTPClient.METHOD_GET, "/api/v1/challenges/friend/" + clean.uri_encode(), null, false)
+	if r["ok"] and r["body"] is Dictionary:
+		var lvl := LFTiles.normalize_level(r["body"]["level"])
+		if LFTiles.validate_board(lvl) == "":
+			r["body"]["level"] = lvl
+			return r["body"]
+	return null
+
+
+## Submit an attempt; the server re-simulates it. Returns {rotations, creatorRotations, outcome} or null.
+func submit_challenge_attempt(code: String, moves: Array) -> Variant:
+	if code.is_empty():
+		return null
+	var r := await call_api(HTTPClient.METHOD_POST, "/api/v1/challenges/friend/%s/attempts" % code.uri_encode(), {"moves": moves})
+	return r["body"] if r["ok"] and r["body"] is Dictionary else null

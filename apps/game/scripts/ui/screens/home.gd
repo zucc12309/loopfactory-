@@ -46,7 +46,7 @@ func setup(_args: Dictionary) -> void:
 	else:
 		var idx := st.next_campaign_index()
 		heading = "Play" if done == 0 else "Continue"
-		sub = "Level %d · %s" % [idx + 1, st.campaign[idx]["name"]]
+		sub = "%s · Level %d" % [LFWorlds.palette(LFWorlds.index_for(st.campaign, idx))["name"], idx + 1]
 	mv.add_child(LFStyle.label(heading, 48, Color.WHITE, 800))
 	mv.add_child(LFStyle.label(sub, 26, Color(1, 1, 1, 0.85), 700))
 	var bar := ProgressBar.new()
@@ -65,16 +65,35 @@ func setup(_args: Dictionary) -> void:
 	main_card.mouse_filter = Control.MOUSE_FILTER_STOP
 	root.add_child(main_card)
 
-	var row := LFStyle.hbox(20)
 	var today := LFGameState.utc_date()
 	var dres = st.data["daily"]["results"].get(today)
-	row.add_child(_tile_card("calendar", "Daily", "Solved · %d moves" % dres["rotations"] if dres else "Today's puzzle", func(): main.goto("daily")))
+	var daily_sub: String = "Solved · %d rotations" % dres["rotations"] if dres else "Today's puzzle"
+	var open_daily := func():
+		Analytics.track("daily_challenge_entry", {"surface": str(LFFlags.get_variant("daily_entry"))})
+		main.goto("daily")
+	var row := LFStyle.hbox(20)
+	if LFFlags.get_variant("daily_entry") == "banner":
+		# Experiment variant: daily as a full-width banner above Continue.
+		var banner := _tile_card("calendar", "Daily challenge", daily_sub, open_daily)
+		root.add_child(banner)
+		root.move_child(banner, main_card.get_index())
+		row.add_child(_tile_card("share", "Challenge", "Play a friend's code", func(): main.goto("challenge")))
+	else:
+		row.add_child(_tile_card("calendar", "Daily", daily_sub, open_daily))
 	row.add_child(_tile_card("infinity", "Endless", "Puzzle #%d" % (int(st.data["endless"]["count"]) + 1), _endless))
 	root.add_child(row)
 
+	var bottom := LFStyle.hbox(16)
 	var levels := LFStyle.button("All levels", "SecondaryButton", 96)
+	levels.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	levels.pressed.connect(func(): main.goto("levels"))
-	root.add_child(levels)
+	bottom.add_child(levels)
+	if LFFlags.get_variant("daily_entry") != "banner":
+		var code := LFStyle.button("Friend code", "SecondaryButton", 96)
+		code.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		code.pressed.connect(func(): main.goto("challenge"))
+		bottom.add_child(code)
+	root.add_child(bottom)
 
 	_status = LFStyle.label("", 22, LFStyle.TEXT_MUTED, 400, HORIZONTAL_ALIGNMENT_CENTER)
 	root.add_child(_status)

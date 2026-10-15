@@ -9,6 +9,8 @@ const SCREENS := {
 	"daily": "res://scripts/ui/screens/daily.gd",
 	"profile": "res://scripts/ui/screens/profile.gd",
 	"settings": "res://scripts/ui/screens/settings.gd",
+	"replay": "res://scripts/ui/screens/replay.gd",
+	"challenge": "res://scripts/ui/screens/challenge.gd",
 }
 
 var current: LFScreen
@@ -18,6 +20,7 @@ var _layer: Control
 var _overlay_layer: Control
 var _toast_layer: Control
 var _bg: ColorRect
+var _overlay_back := Callable()
 
 
 func _ready() -> void:
@@ -43,6 +46,23 @@ func _ready() -> void:
 	goto("splash", {}, false)
 	if Array(OS.get_cmdline_user_args()).any(func(a): return a.begins_with("--tour=")):
 		add_child(load("res://scripts/core/dev_tour.gd").new())
+
+
+## Challenge code from a deep link / launch argument: `loopfactory://challenge/CODE`,
+## `https://<host>/c/CODE` or `--challenge=CODE`. On Android/iOS the OS only passes these to the app
+## once intent filters / associated domains are configured (docs/sharing.md); until then players
+## enter the code on the Challenge screen.
+func launch_challenge_code() -> String:
+	var args := Array(OS.get_cmdline_args()) + Array(OS.get_cmdline_user_args())
+	for a in args:
+		var s := str(a)
+		for prefix in ["--challenge=", "loopfactory://challenge/"]:
+			if s.begins_with(prefix):
+				return s.substr(prefix.length()).strip_edges().to_upper()
+		var i := s.find("/c/")
+		if s.begins_with("http") and i >= 0:
+			return s.substr(i + 3).split("?")[0].strip_edges().to_upper()
+	return ""
 
 
 func reduced_motion() -> bool:
@@ -71,7 +91,10 @@ func replace(name: String, args := {}) -> void:
 
 func back() -> void:
 	if _overlay_layer.get_child_count() > 0:
+		var cb := _overlay_back
 		close_overlay()
+		if cb.is_valid():
+			cb.call()
 		return
 	if current and current.on_back():
 		return
@@ -146,7 +169,8 @@ func toast(text: String, color := LFStyle.TEXT, duration := 2.2) -> void:
 	card.add_child(l)
 	_toast_layer.add_child(card)
 	card.reset_size()
-	card.position = Vector2(48, vw.y - 260 - card.size.y - safe_margins().y)
+	# Toasts sit at the top edge so they never cover the board or the controls under the thumb.
+	card.position = Vector2(48, 20 + safe_margins().x)
 	card.modulate.a = 0.0
 	var tw := create_tween()
 	tw.tween_property(card, "modulate:a", 1.0, 0.15)
@@ -156,8 +180,9 @@ func toast(text: String, color := LFStyle.TEXT, duration := 2.2) -> void:
 
 
 ## Full-screen dimmed modal hosting `content` (centred card). Returns the dim node.
-func overlay(content: Control, dismissable := true) -> Control:
+func overlay(content: Control, dismissable := true, on_back := Callable()) -> Control:
 	close_overlay()
+	_overlay_back = on_back
 	_overlay_layer.mouse_filter = Control.MOUSE_FILTER_STOP
 	var dim := ColorRect.new()
 	dim.color = Color(LFStyle.TEXT, 0.35)
@@ -181,7 +206,12 @@ func overlay(content: Control, dismissable := true) -> Control:
 	return dim
 
 
+func has_overlay() -> bool:
+	return _overlay_layer.get_child_count() > 0
+
+
 func close_overlay() -> void:
+	_overlay_back = Callable()
 	for c in _overlay_layer.get_children():
 		c.queue_free()
 	_overlay_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE

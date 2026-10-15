@@ -6,19 +6,35 @@ extends Node
 ## Providers: "none" (default), "debug" (prints), "posthog" (HTTP capture API). Configure in
 ## res://config/client.json. See docs/analytics.md for the event taxonomy.
 
+## Event taxonomy (docs/analytics.md). object_action, snake_case, past tense for outcomes.
 const EVENTS := [
-	"app_open", "session_start", "level_start", "level_complete", "level_fail", "level_retry",
-	"hint_used", "daily_challenge_started", "daily_challenge_completed", "share_clicked",
+	# lifecycle
+	"app_open", "first_launch", "session_start", "session_end", "app_background", "app_resume",
+	"previous_session_unclean",
+	# onboarding & core loop
+	"tutorial_start", "tutorial_complete", "level_start", "level_complete", "level_fail", "level_retry",
+	"hint_used", "replay_viewed",
+	# daily
+	"daily_challenge_entry", "daily_challenge_started", "daily_challenge_completed",
+	# sharing & friend challenges
+	"share_clicked", "share_completed", "challenge_create_clicked", "challenge_created",
+	"challenge_link_opened", "challenge_completed",
+	# monetization (interfaces only; no store integrated)
 	"purchase_started", "purchase_completed",
 ]
+## A new session starts if the app was in the background longer than this.
+const SESSION_GAP_MS := 30 * 60 * 1000
 const MAX_QUEUE := 200
 
 var provider := "none"
+var last_event := ""
 var _cfg := {}
 var _queue: Array = []
 var _http: HTTPRequest
 var _session_id := ""
 var _sending := false
+var _session_started_ms := 0
+var _background_at_ms := 0
 
 
 func _ready() -> void:
@@ -29,13 +45,60 @@ func _ready() -> void:
 	add_child(_http)
 	_http.request_completed.connect(_on_done)
 	_session_id = LFGameState.uuid4()
+	_session_started_ms = Time.get_ticks_msec()
 	var t := Timer.new()
 	t.wait_time = 30.0
 	t.autostart = true
 	t.timeout.connect(flush)
 	add_child(t)
+	var guard: Dictionary = Game.state.data.get("sessionGuard", {})
+	if bool(guard.get("open", false)):
+		# The last session never reached background/close: the app crashed or was killed in the
+		# foreground. Used as the crash-free-sessions proxy until native crash reporting exists.
+		track("previous_session_unclean", {"previous_session_id": str(guard.get("id", ""))})
+	Game.state.data["sessionGuard"] = {"open": true, "id": _session_id}
 	track("app_open")
+	if int(Game.state.data["stats"].get("sessions", 0)) <= 1:
+		track("first_launch")
 	track("session_start")
+
+
+func _notification(what: int) -> void:
+	match what:
+		NOTIFICATION_APPLICATION_PAUSED, NOTIFICATION_APPLICATION_FOCUS_OUT:
+			if _background_at_ms == 0:
+				_background_at_ms = Time.get_ticks_msec()
+				track("app_background", {"session_seconds": (_background_at_ms - _session_started_ms) / 1000, "screen": _screen()})
+				_close_guard()
+				flush()
+		NOTIFICATION_APPLICATION_RESUMED, NOTIFICATION_APPLICATION_FOCUS_IN:
+			if _background_at_ms > 0:
+				var away := Time.get_ticks_msec() - _background_at_ms
+				_background_at_ms = 0
+				if Game.state != null:
+					Game.state.data["sessionGuard"] = {"open": true, "id": _session_id}
+				if away > SESSION_GAP_MS:
+					track("session_end", {"session_seconds": maxi(0, (Time.get_ticks_msec() - away - _session_started_ms) / 1000), "reason": "background_timeout"})
+					_session_id = LFGameState.uuid4()
+					_session_started_ms = Time.get_ticks_msec()
+					track("session_start", {"resumed": true})
+				else:
+					track("app_resume", {"away_seconds": away / 1000})
+		NOTIFICATION_WM_CLOSE_REQUEST:
+			track("session_end", {"session_seconds": (Time.get_ticks_msec() - _session_started_ms) / 1000, "reason": "close"})
+			_close_guard()
+			flush()
+
+
+func _close_guard() -> void:
+	if Game.state != null:
+		Game.state.data["sessionGuard"] = {"open": false, "id": _session_id}
+		Game.save_now()
+
+
+func _screen() -> String:
+	var m := get_tree().root.get_node_or_null("Main")
+	return str(m.get("current_name")) if m != null else ""
 
 
 func consented() -> bool:
@@ -48,10 +111,14 @@ func track(event: String, props := {}) -> void:
 		return
 	if not consented():
 		return
+	last_event = event
 	var p := props.duplicate()
 	p["session_id"] = _session_id
 	p["app_version"] = ProjectSettings.get_setting("application/config/version", "0")
 	p["platform"] = OS.get_name()
+	var exps := LFFlags.active_assignments(Game.state.data)
+	for k in exps:
+		p["exp_" + k] = exps[k]
 	_queue.append({"event": event, "properties": p, "timestamp": Time.get_datetime_string_from_system(true) + "Z"})
 	if _queue.size() > MAX_QUEUE:
 		_queue = _queue.slice(_queue.size() - MAX_QUEUE)

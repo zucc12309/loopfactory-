@@ -36,12 +36,14 @@ static func defaults() -> Dictionary:
 	return {
 		"player": {"localId": uuid4(), "createdAt": now_ms()},
 		"settings": {
-			"sfx": true, "haptics": true, "reducedMotion": false, "colorblind": false,
+			"sfx": true, "music": true, "haptics": true, "reducedMotion": false, "colorblind": false,
 			"analytics": false, "analyticsAsked": false, "cloudSync": true, "updatedAt": 0,
 		},
 		"progress": {},
 		"active": null,
-		"stats": {"campaign": 0, "perfect": 0, "dailies": 0, "endless": 0, "rotations": 0, "hints": 0, "sessions": 0},
+		"stats": {"campaign": 0, "perfect": 0, "dailies": 0, "endless": 0, "rotations": 0, "hints": 0, "sessions": 0, "challenges": 0},
+		"onboarding": {"tutorialStarted": false, "tutorialDone": false},
+		"challenges": {"created": {}, "played": {}},
 		"endless": {"count": 0, "seedBase": randi() & 0x7fffffff},
 		"daily": {"cache": {}, "results": {}},
 		"achievements": {},
@@ -94,7 +96,8 @@ func _active_valid(a: Variant) -> bool:
 func start_level(kind: String, level: Dictionary) -> Dictionary:
 	data["active"] = {
 		"kind": kind, "levelId": level["id"], "level": level,
-		"rotations": LFTiles.start_rotations(level), "history": [], "hints": 0,
+		"rotations": LFTiles.start_rotations(level), "history": [], "hints": 0, "runs": 0,
+		"hintTile": -1, "hintStep": 0,
 		"startedAt": now_ms(), "updatedAt": now_ms(),
 	}
 	return data["active"]
@@ -151,6 +154,30 @@ func record_hint() -> void:
 		data["stats"]["hints"] += 1
 
 
+## Progressive hints: asking again about the same suggested tile reveals more (1 = area,
+## 2 = tile, 3 = tile + rotation). A new suggestion (after the player moved on) starts at 1.
+func next_hint_step(tile: int) -> int:
+	var a = data["active"]
+	if a == null:
+		return 0
+	if int(a.get("hintTile", -1)) == tile:
+		a["hintStep"] = mini(3, int(a.get("hintStep", 0)) + 1)
+	else:
+		a["hintTile"] = tile
+		a["hintStep"] = 1
+	record_hint()
+	return int(a["hintStep"])
+
+
+## Count a press of Run (attempts are shown on daily results and challenge comparisons).
+func record_run() -> int:
+	var a = data["active"]
+	if a == null:
+		return 0
+	a["runs"] = int(a.get("runs", 0)) + 1
+	return int(a["runs"])
+
+
 static func stars_for(moves: int, par: int) -> int:
 	if moves <= par:
 		return 3
@@ -178,6 +205,13 @@ func complete_active() -> Dictionary:
 		"completed": true, "best": best, "par": par, "stars": stars_for(best, par),
 		"completedAt": now_ms() if first else int(prev["completedAt"]), "kind": kind,
 	}
+	# Keep the best solution as a deterministic replay (moves from the level's start rotations).
+	if first or moves < int(prev["best"]) or not prev.has("replay"):
+		entry["replay"] = {"v": 1, "levelId": lvl["id"], "contentVersion": lvl["version"], "moves": a["history"].duplicate(true), "rotations": moves}
+		if kind != "campaign":
+			entry["replay"]["level"] = lvl
+	else:
+		entry["replay"] = prev["replay"]
 	data["progress"][key] = entry
 	data["stats"]["rotations"] += moves
 	if first or (int(prev["best"]) > par and best <= par):
@@ -192,6 +226,8 @@ func complete_active() -> Dictionary:
 			"daily", "offline_daily":
 				if kind == "daily":
 					data["stats"]["dailies"] += 1
+			"challenge":
+				data["stats"]["challenges"] += 1
 	if kind == "endless":
 		data["endless"]["count"] += 1
 	var history: Array = a["history"].duplicate(true)
@@ -203,14 +239,27 @@ func complete_active() -> Dictionary:
 		op_payload["generator"] = lvl["generator"]
 	if kind == "daily":
 		var date: String = str(a.get("date", lvl.get("date", "")))
-		data["daily"]["results"][date] = {"rotations": mini(moves, int(data["daily"]["results"].get(date, {}).get("rotations", moves))), "submitted": false}
+		var prev_d: Dictionary = data["daily"]["results"].get(date, {})
+		data["daily"]["results"][date] = {
+			"rotations": mini(moves, int(prev_d.get("rotations", moves))), "submitted": false,
+			"attempts": int(prev_d.get("attempts", 0)) + int(a.get("runs", 1)), "solves": int(prev_d.get("solves", 0)) + 1,
+		}
 		enqueue("daily_submit", {"date": date, "moves": history, "submissionId": uuid4()})
-	elif kind != "offline_daily":
+	elif kind != "offline_daily" and kind != "challenge":
 		enqueue("level_complete", op_payload)
 	var unlocked := evaluate_achievements()
 	data["active"] = null
 	return {"moves": moves, "par": par, "best": best, "stars": stars_for(moves, par), "first": first,
-		"newBest": not first and moves < int(prev["best"]), "achievements": unlocked, "kind": kind, "levelId": lvl["id"]}
+		"newBest": not first and moves < int(prev["best"]), "achievements": unlocked, "kind": kind, "levelId": lvl["id"],
+		"hints": int(a["hints"]), "runs": int(a.get("runs", 1)), "history": history, "level": lvl}
+
+
+## Replay of the best solution for a progress key, or null.
+func replay_for(key: String) -> Variant:
+	var p = data["progress"].get(key)
+	if p == null or not (p.get("replay") is Dictionary):
+		return null
+	return p["replay"]
 
 
 static func progress_key(kind: String, lvl: Dictionary) -> String:
@@ -251,12 +300,14 @@ func next_campaign_index() -> int:
 
 # ---------------------------------------------------------------- endless & daily
 
-static func endless_tier(count: int) -> String:
-	if count < 5:
+## `ramp` is the difficulty_ramp experiment: "gentle" stays 1.5× longer in each tier.
+static func endless_tier(count: int, ramp := "standard") -> String:
+	var k := 1.5 if ramp == "gentle" else 1.0
+	if count < 5 * k:
 		return "easy"
-	if count < 15:
+	if count < 15 * k:
 		return "medium"
-	if count < 35:
+	if count < 35 * k:
 		return "hard"
 	return "expert"
 
@@ -264,7 +315,7 @@ static func endless_tier(count: int) -> String:
 func endless_level() -> Variant:
 	var n: int = data["endless"]["count"]
 	var seed: int = (int(data["endless"]["seedBase"]) + n * ENDLESS_SEED_STEP) & 0x7fffffff
-	var tier := endless_tier(n)
+	var tier := endless_tier(n, str(LFFlags.resolve(data, "difficulty_ramp")))
 	return LFGenerator.generate_level_from(seed, tier, "", "Endless #%d" % (n + 1))
 
 

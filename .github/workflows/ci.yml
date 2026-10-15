@@ -84,7 +84,9 @@ jobs:
         run: |
           curl -sSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_linux.x86_64.zip"
           unzip -q godot.zip && sudo mv "Godot_v${GODOT_VERSION}_linux.x86_64" /usr/local/bin/godot
-      - name: Game tests (engine parity, rules, save/resume, all scripts compile)
+      - name: Virtual display + Mesa for the UI layout tests
+        run: sudo apt-get update && sudo apt-get install -y xvfb libgl1-mesa-dri
+      - name: Game tests (engine parity, rules, save/resume, all scripts compile, UI layout on 5 aspect ratios)
         run: ./scripts/test-game.sh
       - name: Client <-> API end-to-end (offline play, sync, daily submission)
         run: ./scripts/e2e.sh
