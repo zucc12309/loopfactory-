@@ -1,7 +1,4 @@
-import type { Prisma } from '@prisma/client';
-import type { Db } from '../db';
-
-type Tx = Prisma.TransactionClient;
+import type { Db, Tx } from '../db';
 
 /**
  * Leaderboards share one table; on every board a LOWER score ranks higher and ties go to whoever
@@ -28,19 +25,28 @@ export function weekRange(week: string): { start: Date; end: Date } {
   return { start, end: new Date(start.getTime() + 7 * 86400000) };
 }
 
+/**
+ * Keep the minimum score on a board in ONE statement: concurrent submissions can't overwrite a
+ * better score with a worse one, whichever commits last, and a concurrent first write can't fail.
+ * An equal score keeps the earlier achievedAt (ties rank by who got there first).
+ */
 export async function upsertBest(tx: Tx, board: string, playerId: string, score: number, display: Record<string, number>) {
-  const cur = await tx.leaderboardEntry.findUnique({ where: { board_playerId: { board, playerId } } });
-  if (!cur) {
-    await tx.leaderboardEntry.create({ data: { board, playerId, score, display } });
-  } else if (score < cur.score) {
-    await tx.leaderboardEntry.update({ where: { id: cur.id }, data: { score, display, achievedAt: new Date() } });
-  }
+  await tx.$executeRaw`
+    INSERT INTO leaderboard_entries (id, board, player_id, score, display, achieved_at)
+    VALUES (gen_random_uuid(), ${board}, ${playerId}::uuid, ${score}, ${JSON.stringify(display)}::jsonb, clock_timestamp())
+    ON CONFLICT (board, player_id) DO UPDATE
+      SET score = EXCLUDED.score, display = EXCLUDED.display, achieved_at = EXCLUDED.achieved_at
+      WHERE leaderboard_entries.score > EXCLUDED.score`;
 }
 
+/** Overwrite an aggregate score (weekly/global). Callers hold the player's lock (lockedTransaction). */
 export async function setScore(tx: Tx, board: string, playerId: string, score: number, display: Record<string, number>) {
-  const cur = await tx.leaderboardEntry.findUnique({ where: { board_playerId: { board, playerId } } });
-  if (!cur) await tx.leaderboardEntry.create({ data: { board, playerId, score, display } });
-  else if (cur.score !== score) await tx.leaderboardEntry.update({ where: { id: cur.id }, data: { score, display, achievedAt: new Date() } });
+  await tx.$executeRaw`
+    INSERT INTO leaderboard_entries (id, board, player_id, score, display, achieved_at)
+    VALUES (gen_random_uuid(), ${board}, ${playerId}::uuid, ${score}, ${JSON.stringify(display)}::jsonb, clock_timestamp())
+    ON CONFLICT (board, player_id) DO UPDATE
+      SET score = EXCLUDED.score, display = EXCLUDED.display, achieved_at = EXCLUDED.achieved_at
+      WHERE leaderboard_entries.score <> EXCLUDED.score`;
 }
 
 export async function recomputeWeekly(tx: Tx, playerId: string, date: Date) {

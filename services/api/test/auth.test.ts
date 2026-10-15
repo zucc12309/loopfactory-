@@ -26,15 +26,18 @@ describe('guest authentication', () => {
     const g = await guest();
     const r1 = await api().post('/api/v1/auth/refresh').send({ refreshToken: g.refreshToken }).expect(200);
     expect(r1.body.refreshToken).not.toBe(g.refreshToken);
-    // Reusing the old token revokes the whole family, including the new token.
+    // Once the successor has been used, reusing the old token revokes the whole family.
+    // (A retry while the successor is still unused is the lost-response case: concurrency.test.ts.)
+    const r2 = await api().post('/api/v1/auth/refresh').send({ refreshToken: r1.body.refreshToken }).expect(200);
     const reuse = await api().post('/api/v1/auth/refresh').send({ refreshToken: g.refreshToken }).expect(401);
     expect(reuse.body.error.code).toBe('refresh_token_reused');
-    await api().post('/api/v1/auth/refresh').send({ refreshToken: r1.body.refreshToken }).expect(401);
+    await api().post('/api/v1/auth/refresh').send({ refreshToken: r2.body.refreshToken }).expect(401);
   });
 
-  it('allows exactly one winner when the same token is rotated concurrently', async () => {
-    const g = await guest();
-    const results = await Promise.all([1, 2, 3].map(() => api().post('/api/v1/auth/refresh').send({ refreshToken: g.refreshToken })));
+  it('strict single use when the reuse grace window is disabled', async () => {
+    const app = makeApp({ refreshReuseGraceSeconds: 0 });
+    const g = await guest(app);
+    const results = await Promise.all([1, 2, 3].map(() => api(app).post('/api/v1/auth/refresh').send({ refreshToken: g.refreshToken })));
     expect(results.filter((r) => r.status === 200).length).toBeLessThanOrEqual(1);
   });
 

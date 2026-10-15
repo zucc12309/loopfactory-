@@ -1,13 +1,12 @@
 import { verifyReplay, type Level } from '@loopfactory/engine';
 import type { TSnapshot, TSyncOperation } from '@loopfactory/contracts';
 import { Prisma } from '@prisma/client';
-import type { Db } from '../db';
-import { isUniqueViolation } from '../db';
+import type { Db, Tx } from '../db';
+import { isUniqueViolation, lockedTransaction } from '../db';
 import { evaluateAchievements, playerStats } from './achievements';
 import { recomputeGlobal } from './leaderboards';
 import type { LevelService } from './levels';
 
-type Tx = Prisma.TransactionClient;
 type OpResult = { opId: string; status: 'applied' | 'duplicate' | 'rejected'; error?: string };
 
 /**
@@ -47,11 +46,15 @@ export class ProgressService {
       else completion = r;
     }
     try {
-      await this.db.$transaction(async (tx) => {
+      // One player's operations apply one at a time (advisory lock), so the read-compare-write on
+      // best rotations and the aggregate leaderboard recompute always see each other's commits.
+      const dup = await lockedTransaction(this.db, [`player:${playerId}`], async (tx) => {
+        const again = await tx.syncOperation.findUnique({ where: { playerId_opId: { playerId, opId: op.opId } } });
+        if (again) return true; // a concurrent retry of this op committed while we waited
         await tx.syncOperation.create({
           data: { playerId, opId: op.opId, type: op.type, status: rejection ? 'rejected' : 'applied', result: rejection ? { error: rejection } : {}, clientTs: BigInt(op.clientTs) },
         });
-        if (rejection) return;
+        if (rejection) return false;
         switch (op.type) {
           case 'level_complete':
             await this.recordCompletion(tx, playerId, op.payload, completion!);
@@ -75,9 +78,12 @@ export class ProgressService {
             break;
           }
         }
+        return false;
       });
+      if (dup) return { opId: op.opId, status: 'duplicate' };
     } catch (e) {
-      if (isUniqueViolation(e)) return { opId: op.opId, status: 'duplicate' }; // concurrent retry won the race
+      // Only a clash on (player, opId) means "already applied"; any other constraint is a real error.
+      if (isUniqueViolation(e, ['player_id', 'op_id'])) return { opId: op.opId, status: 'duplicate' };
       throw e;
     }
     return rejection ? { opId: op.opId, status: 'rejected', error: rejection } : { opId: op.opId, status: 'applied' };

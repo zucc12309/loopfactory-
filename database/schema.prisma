@@ -58,6 +58,8 @@ model RefreshToken {
   expiresAt DateTime  @map("expires_at") @db.Timestamptz(3)
   revokedAt DateTime? @map("revoked_at") @db.Timestamptz(3)
   rotatedAt DateTime? @map("rotated_at") @db.Timestamptz(3)
+  /// Successor issued when this token was rotated (lets a retry after a lost response recover safely).
+  replacedById String? @map("replaced_by_id") @db.Uuid
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
   player    Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
 

@@ -2,7 +2,7 @@ import { createHmac } from 'node:crypto';
 import { generateLevelFrom, GENERATOR_VERSION, verifyReplay, type Difficulty, type Level, type Move } from '@loopfactory/engine';
 import type { Prisma } from '@prisma/client';
 import type { Db } from '../db';
-import { isUniqueViolation } from '../db';
+import { isUniqueViolation, lockedTransaction } from '../db';
 import { ApiError } from '../errors';
 import { evaluateAchievements } from './achievements';
 import { recomputeWeekly, upsertBest } from './leaderboards';
@@ -84,10 +84,14 @@ export class DailyService {
     if (now.getTime() > this.closesAt(date).getTime()) throw new ApiError(409, 'challenge_closed', 'Submissions for that daily are closed');
     const challenge = await this.getOrCreate(date);
     const prior = await this.db.challengeSubmission.findUnique({ where: { playerId_submissionId: { playerId, submissionId } } });
-    if (prior) return { ...(await this.result(playerId, date, prior.valid, prior.rotations, prior.error)), duplicate: true };
+    if (prior) return this.replay(playerId, date, challenge.id, prior);
     const verdict = verifyReplay(challenge.level as unknown as Level, moves);
     try {
-      await this.db.$transaction(async (tx) => {
+      // Per-player lock: the duplicate check, the submission row, the daily best and the weekly
+      // aggregate are decided against committed state only.
+      const existing = await lockedTransaction(this.db, [`player:${playerId}`], async (tx) => {
+        const again = await tx.challengeSubmission.findUnique({ where: { playerId_submissionId: { playerId, submissionId } } });
+        if (again) return again;
         await tx.challengeSubmission.create({
           data: { challengeId: challenge.id, playerId, submissionId, moves: moves as unknown as Prisma.InputJsonValue, rotations: verdict.rotations, valid: verdict.valid, error: verdict.error },
         });
@@ -96,11 +100,25 @@ export class DailyService {
           await recomputeWeekly(tx, playerId, dateToUtc(date));
           await evaluateAchievements(tx, playerId);
         }
+        return null;
       });
+      if (existing) return this.replay(playerId, date, challenge.id, existing);
     } catch (e) {
-      if (!isUniqueViolation(e)) throw e;
+      // Only a clash on this player's submission id means "already submitted": answer from the row that
+      // actually committed. Anything else (including an unrelated constraint) is a real failure and must
+      // never be reported as accepted, because the transaction rolled back.
+      if (!isUniqueViolation(e, ['player_id', 'submission_id'])) throw e;
+      const committed = await this.db.challengeSubmission.findUnique({ where: { playerId_submissionId: { playerId, submissionId } } });
+      if (!committed) throw e;
+      return this.replay(playerId, date, challenge.id, committed);
     }
     return { ...(await this.result(playerId, date, verdict.valid, verdict.rotations, verdict.error)), duplicate: false };
+  }
+
+  /** Answer a repeated submission id from the stored (committed) row. */
+  private async replay(playerId: string, date: string, challengeId: string, row: { challengeId: string; valid: boolean; rotations: number; error: string | null }) {
+    if (row.challengeId !== challengeId) throw new ApiError(409, 'submission_id_reused', 'That submission id was already used for a different daily');
+    return { ...(await this.result(playerId, date, row.valid, row.rotations, row.error)), duplicate: true };
   }
 
   private async result(playerId: string, date: string, valid: boolean, rotations: number, error: string | null) {

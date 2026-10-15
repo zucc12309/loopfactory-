@@ -64,7 +64,7 @@ export function buildRoutes(d: Deps): AnyRoute[] {
       handler: async () => {
         const player = await db.player.create({ data: { displayName: guestName() } });
         await db.playerAuthIdentity.create({ data: { playerId: player.id, provider: 'guest', subject: player.id } });
-        const tokens = await d.tokens.issue(player.id);
+        const tokens = await d.tokens.issueTokens(player.id);
         return { player: publicPlayer(player), ...tokens };
       },
     }),
@@ -100,7 +100,7 @@ export function buildRoutes(d: Deps): AnyRoute[] {
         }
         if (existing.playerId === me) return { mode: 'already_linked' as const, player: publicPlayer(existing.player) };
         if (body.onConflict !== 'switch') throw new ApiError(409, 'identity_in_use', 'This identity belongs to another Loop Factory account', { canSwitch: true });
-        const tokens = await d.tokens.issue(existing.playerId);
+        const tokens = await d.tokens.issueTokens(existing.playerId);
         return { mode: 'switched' as const, player: publicPlayer(existing.player), tokens };
       },
     }),

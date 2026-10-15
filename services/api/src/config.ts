@@ -17,6 +17,11 @@ const Env = z.object({
   TRUST_PROXY: z.coerce.number().int().default(1),
   ACCESS_TOKEN_TTL_SECONDS: z.coerce.number().int().default(900),
   REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().default(90),
+  /**
+   * A refresh token presented again within this many seconds of its rotation, while its successor
+   * is still unused, is treated as a retry after a lost response (not theft). 0 disables.
+   */
+  REFRESH_REUSE_GRACE_SECONDS: z.coerce.number().int().min(0).max(600).default(120),
   RATE_LIMIT_DISABLED: z.enum(['true', 'false']).default('false'),
   /** Public origin used in friend-challenge links, e.g. https://play.loopfactory.example (no trailing slash). */
   PUBLIC_BASE_URL: z.string().url().or(z.literal('')).default(''),
@@ -61,6 +66,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
     trustProxy: c.TRUST_PROXY,
     accessTtl: c.ACCESS_TOKEN_TTL_SECONDS,
     refreshTtlDays: c.REFRESH_TOKEN_TTL_DAYS,
+    refreshReuseGraceSeconds: c.REFRESH_REUSE_GRACE_SECONDS,
     rateLimitDisabled: c.RATE_LIMIT_DISABLED === 'true',
     publicBaseUrl: c.PUBLIC_BASE_URL.replace(/\/$/, ''),
     playStoreUrl: c.PLAY_STORE_URL,

@@ -57,7 +57,7 @@ export function createApp(opts: { config: Config; db: Db; logger: Logger; report
     }
   });
 
-  const tokens = new TokenService(db, config.jwtSecret, config.accessTtl, config.refreshTtlDays);
+  const tokens = new TokenService(db, config.jwtSecret, config.accessTtl, config.refreshTtlDays, config.refreshReuseGraceSeconds);
   const routes = buildRoutes({
     db,
     config,

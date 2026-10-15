@@ -4,7 +4,7 @@ import type * as C from '@loopfactory/contracts';
 import type { Prisma } from '@prisma/client';
 import type { z } from 'zod';
 import type { Db } from '../db';
-import { isUniqueViolation } from '../db';
+import { isUniqueViolation, lockedTransaction } from '../db';
 import { ApiError } from '../errors';
 import type { DailyService } from './daily';
 import { dateToUtc } from './daily';
@@ -122,21 +122,21 @@ export class FriendChallengeService {
       const prev = await this.db.friendChallengeAttempt.findUnique({ where: { challengeId_playerId: { challengeId: ch.id, playerId } } });
       return { valid: false, rotations: verdict.rotations, best: prev?.rotations ?? null, creatorRotations: ch.creatorRotations, outcome: null, error: verdict.error };
     }
-    const prev = await this.db.friendChallengeAttempt.findUnique({ where: { challengeId_playerId: { challengeId: ch.id, playerId } } });
-    let best = verdict.rotations;
-    if (!prev) {
-      try {
-        await this.db.friendChallengeAttempt.create({ data: { challengeId: ch.id, playerId, rotations: best, moves: moves as unknown as Prisma.InputJsonValue } });
-      } catch (e) {
-        if (!isUniqueViolation(e)) throw e;
+    // Serialised per (challenge, player): the stored best is the minimum of every valid attempt and
+    // `tries` counts each one, whatever order concurrent attempts commit in.
+    const best = await lockedTransaction(this.db, [`fc:${ch.id}:${playerId}`], async (tx) => {
+      const prev = await tx.friendChallengeAttempt.findUnique({ where: { challengeId_playerId: { challengeId: ch.id, playerId } } });
+      if (!prev) {
+        await tx.friendChallengeAttempt.create({ data: { challengeId: ch.id, playerId, rotations: verdict.rotations, moves: moves as unknown as Prisma.InputJsonValue } });
+        return verdict.rotations;
       }
-    } else {
-      best = Math.min(prev.rotations, verdict.rotations);
-      await this.db.friendChallengeAttempt.update({
+      const improved = verdict.rotations < prev.rotations;
+      await tx.friendChallengeAttempt.update({
         where: { id: prev.id },
-        data: { tries: { increment: 1 }, ...(verdict.rotations < prev.rotations ? { rotations: verdict.rotations, moves: moves as unknown as Prisma.InputJsonValue } : {}) },
+        data: { tries: { increment: 1 }, ...(improved ? { rotations: verdict.rotations, moves: moves as unknown as Prisma.InputJsonValue } : {}) },
       });
-    }
+      return Math.min(prev.rotations, verdict.rotations);
+    });
     return { valid: true, rotations: verdict.rotations, best, creatorRotations: ch.creatorRotations, outcome: outcomeOf(best, ch.creatorRotations), error: null };
   }
 
