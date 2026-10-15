@@ -15,9 +15,15 @@ extends Control
 ## press, pop and intro animations are transforms that cost no redraw. A tile re-records its draw
 ## commands only when its appearance signature changes (glow, dock fill, rollers moving under a
 ## package...). The board itself draws the plate; an overlay node draws packages and effects.
+##
+## Characters (docs/CHARACTER_SYSTEM.md): with `crew_on`, packages are drawn as the Interdimensional
+## Delivery Crew. Their poses come from LFCrewAnim as a pure function of the frame state and time,
+## so they never feed back into the simulation and are restored correctly by undo, reset, replay
+## and resume.
 
 signal rotate_requested(index: int, dir: int)
 signal locked_tapped(index: int)
+signal source_tapped(index: int)
 signal playback_finished(result: Dictionary)
 signal package_delivered(cell: int)
 signal celebration_finished
@@ -27,6 +33,9 @@ const ROT_TIME := 0.14
 const PRE_TILT := 0.06       # quarter-turns shown while a finger is down
 const MAX_CELL := 168.0
 const INTRO_TIME := 0.38
+const PACKAGE_K := 0.38      # package size as a fraction of the cell (classic)
+const CREW_K := 0.42         # character size as a fraction of the cell
+const POKE_TIME := 0.35
 
 
 class TileNode extends Node2D:
@@ -49,6 +58,22 @@ class BeltNode extends Node2D:
 	func _draw() -> void:
 		var t0 := Time.get_ticks_usec()
 		board._draw_tile_belt(self, i)
+		board._frame_cost_us += Time.get_ticks_usec() - t0
+
+
+## One travelling character. Pooled and reused; hops, leans, squash and fades are transforms and
+## modulate, so its draw commands are re-recorded only when its face changes.
+class CrewNode extends Node2D:
+	var board: LFBoardView
+	var body := ""
+	var pose := {}
+	var opts := {}
+	var sz := 0.0
+	var sig := -1
+
+	func _draw() -> void:
+		var t0 := Time.get_ticks_usec()
+		LFCrewPainter.draw_package(self, body, Vector2.ZERO, sz, pose, opts)
 		board._frame_cost_us += Time.get_ticks_usec() - t0
 
 
@@ -125,6 +150,20 @@ var hint_taps := 0
 var hint_level := 3          # 1 = area, 2 = tile, 3 = tile + rotation
 var tutorial_tile := -1
 
+# characters (configured by LFCrew.configure_board)
+var crew_on := false
+var crew_motion := true
+var crew_art := {}           # colour index -> cosmetic art key
+var crew_ctx := {}           # world theme (bounce, accent), starry, perfect
+var crew_draws := 0          # characters drawn by the last overlay pass (tests)
+var _src_poke := {}          # source cell -> time it was tapped
+var _src_mood := {}          # colour index -> time its failure reaction started
+var _end_time := 0.0
+var _crew_info := {}         # colour index -> [body id, style] (looked up once per board)
+var _crew_layer: Node2D
+var _crew_pool: Array = []   # CrewNode, reused frame to frame
+var _crew_shown := 0
+
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
@@ -166,6 +205,10 @@ func _build_nodes() -> void:
 		t.queue_free()
 	if _overlay != null:
 		_overlay.queue_free()
+	if _crew_layer != null:
+		_crew_layer.queue_free()
+	_crew_pool = []
+	_crew_shown = 0
 	_tiles = []
 	for i in level["tiles"].size():
 		var tn := TileNode.new()
@@ -180,6 +223,8 @@ func _build_nodes() -> void:
 			tn.add_child(bn)
 			tn.belt = bn
 		_tiles.append(tn)
+	_crew_layer = Node2D.new()
+	add_child(_crew_layer)
 	_overlay = OverlayNode.new()
 	_overlay.board = self
 	add_child(_overlay)
@@ -244,6 +289,7 @@ func show_hint(tile: int, dir: int, taps: int, p_level := 3) -> void:
 func clear_failure() -> void:
 	_fail_cell = -1
 	_fail_path = []
+	_src_mood = {}
 	_redraw_all()
 
 
@@ -340,6 +386,13 @@ func _gui_input(event: InputEvent) -> void:
 func _activate(i: int, dir: int) -> void:
 	if LFTiles.is_rotatable(level["tiles"][i]):
 		rotate_requested.emit(i, dir)
+	elif level["tiles"][i]["t"] == "source":
+		# The character in the source reacts; sources were never belts, so no "pinned" message.
+		if crew_on:
+			_src_poke[i] = _time
+		else:
+			_shake[i] = 0.0 if reduced_motion else 1.0
+		source_tapped.emit(i)
 	else:
 		_shake[i] = 0.0 if reduced_motion else 1.0
 		locked_tapped.emit(i)
@@ -418,8 +471,10 @@ func _advance_frame() -> void:
 			_dock_hits[p["cell"]] = _time
 			_burst(cell_center(p["cell"]), col, 10)
 			package_delivered.emit(p["cell"])
-	if _frame_i >= _frames.size() - 1 and not _result["success"]:
-		_compute_failure()
+	if _frame_i >= _frames.size() - 1:
+		_end_time = _time
+		if not _result["success"]:
+			_compute_failure()
 
 
 ## Locate the failure: the reported cell, or (off-board) the package's last cell; plus the path the
@@ -435,6 +490,9 @@ func _compute_failure() -> void:
 		if cell == null and not _fail_path.is_empty():
 			cell = _fail_path[-1]
 	_fail_cell = int(cell) if cell != null else -1
+	var fc := int(failure_info().get("color", -1))
+	if fc >= 0:
+		_src_mood[fc] = _time
 
 
 ## {reason, cell, color} for the last failed run, or {} if none.
@@ -540,7 +598,9 @@ func _process(delta: float) -> void:
 		p["v"] = p["v"] * 0.9 + Vector2(0, _cell * 2.2 * delta)
 	_particles = _particles.filter(func(p): return p["t"] < p["life"])
 	_update_tiles()
-	if _overlay != null and (not _frames.is_empty() or not _flashes.is_empty() or not _particles.is_empty() or hint_tile >= 0 or tutorial_tile >= 0 or _fail_cell >= 0):
+	if crew_on:
+		_update_crew()
+	if _overlay != null and (celebrating or not _frames.is_empty() or not _flashes.is_empty() or not _particles.is_empty() or hint_tile >= 0 or tutorial_tile >= 0 or _fail_cell >= 0):
 		_overlay.queue_redraw()
 	_frame_cost_us += Time.get_ticks_usec() - t0
 
@@ -615,7 +675,64 @@ func _tile_sig(i: int, t: Dictionary, press: float) -> int:
 			h = h * 64 + int(roundf(hit * 16.0)) * 2 + (1 if filled else 0)
 		"source":
 			h = h * 64 + int(_src_remaining.get(i, -1)) + 2 + (32 if not _frames.is_empty() else 0)
+			if crew_on:
+				h = h * 31 + _pose_sig(_source_pose(i, t))
 	return h
+
+
+# ------------------------------------------------------------------------------- characters
+
+## [state, age] of the character waiting in source tile `i`.
+func _source_state(i: int, cidx: int) -> Array:
+	if _src_mood.has(cidx):
+		return [LFCrewAnim.FAILED, _time - float(_src_mood[cidx])]
+	if _src_poke.has(i) and _time - float(_src_poke[i]) < POKE_TIME:
+		return [LFCrewAnim.SELECTED, _time - float(_src_poke[i])]
+	if not _frames.is_empty():
+		return [LFCrewAnim.WAITING, _time]
+	return [LFCrewAnim.IDLE, 0.0]
+
+
+func _source_pose(i: int, t: Dictionary) -> Dictionary:
+	var cidx := int(t.get("c", 0))
+	var st := _source_state(i, cidx)
+	var dir: int = int(rotations[i])
+	var dv := Vector2(LFTiles.DX[dir], LFTiles.DY[dir])
+	var pose := LFCrewAnim.pose(_crew(cidx)[0], st[0], st[1], _time, i, {"motion": crew_motion and not reduced_motion, "dir": dv})
+	if st[0] == LFCrewAnim.IDLE and Vector2(pose["look"]).length() < 0.01:
+		pose["look"] = dv * 0.6  # ready to go: eyes on the exit
+	return pose
+
+
+## Quantised pose signature: a source tile re-records its drawing only when the face visibly
+## changes (blink, glance, hop step), not every frame.
+func _pose_sig(p: Dictionary) -> int:
+	var px := maxf(1.0, _cell * 0.5)
+	var lk: Vector2 = p["look"]
+	return hash([p["eyes"], p["mouth"], p["brows"], p["arms"], p["sweat"], p["z"], roundi(float(p["dy"]) * px), roundi(float(p["dx"]) * px),
+		roundi(float(p["rot"]) * 24.0), roundi(float(p["sy"]) * 24.0), roundi(lk.x * 4.0), roundi(lk.y * 4.0), roundi(float(p["ghost"]) * 6.0), roundi(float(p["foot"]) * 4.0)])
+
+
+func _crew(cidx: int) -> Array:
+	var info = _crew_info.get(cidx)
+	if info == null:
+		var def := LFCrew.for_color(cidx)
+		info = [LFCrew.body_of(def), def.get("style", {})]
+		_crew_info[cidx] = info
+	return info
+
+
+func _crew_opts(cidx: int, sz: float) -> Dictionary:
+	return {
+		"color": LFStyle.PACKAGE[cidx], "cidx": cidx, "detail": LFCrewPainter.detail_for(sz),
+		"colorblind": colorblind, "cosmetic": str(crew_art.get(cidx, "")),
+		"style": _crew(cidx)[1], "accent": str(crew_ctx.get("accent", "")), "t": _time,
+	}
+
+
+## Detail level used for moving characters on this board (tests check small boards go compact).
+func crew_detail() -> int:
+	return LFCrewPainter.detail_for(_cell * CREW_K)
 
 
 func _belt_sig(i: int) -> int:
@@ -856,6 +973,9 @@ func _draw_source(ci: CanvasItem, i: int, t: Dictionary, c: Vector2, half: float
 	var dv := Vector2(LFTiles.DX[dir], LFTiles.DY[dir])
 	var perp := Vector2(-dv.y, dv.x)
 	ci.draw_colored_polygon(PackedVector2Array([c + perp * bw / 2, c + perp * bw / 2 + dv * half, c - perp * bw / 2 + dv * half, c - perp * bw / 2]), palette["belt"])
+	if crew_on:
+		_draw_source_crew(ci, i, t, c, half, cidx, dv)
+		return
 	var box := Rect2(c - Vector2(half, half) * 0.64, Vector2(half, half) * 1.28)
 	ci.draw_style_box(_sb(color.darkened(0.2), int(half * 0.36)), Rect2(box.position + Vector2(0, half * 0.08), box.size))
 	ci.draw_style_box(_sb(color, int(half * 0.36)), box)
@@ -869,6 +989,31 @@ func _draw_source(ci: CanvasItem, i: int, t: Dictionary, c: Vector2, half: float
 		ci.draw_circle(bc, half * 0.29, LFStyle.TEXT)
 		var f := LFStyle.font(800)
 		var fs := int(half * 0.36)
+		var txt := str(n)
+		var tsz := f.get_string_size(txt, HORIZONTAL_ALIGNMENT_CENTER, -1, fs)
+		ci.draw_string(f, bc + Vector2(-tsz.x / 2, tsz.y * 0.32), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color.WHITE)
+
+
+## Source as a launch pod: the character waits inside (idle, poked, failed) and leaves an empty pod
+## once its last package has departed. The exit chevron keeps the direction readable.
+func _draw_source_crew(ci: CanvasItem, i: int, t: Dictionary, c: Vector2, half: float, cidx: int, dv: Vector2) -> void:
+	var color: Color = LFStyle.PACKAGE[cidx]
+	var perp := Vector2(-dv.y, dv.x)
+	var tip := c + dv * half * 0.96
+	ci.draw_colored_polygon(PackedVector2Array([tip, tip - dv * half * 0.2 + perp * half * 0.16, tip - dv * half * 0.2 - perp * half * 0.16]), color.darkened(0.1))
+	var empty := not _frames.is_empty() and int(_src_remaining.get(i, 1)) == 0
+	var pod := Rect2(c - Vector2(half, half) * 0.66, Vector2(half, half) * 1.32)
+	if empty:
+		ci.draw_style_box(_sb(Color(color, 0.12), int(half * 0.36), false, Color(color, 0.5), int(maxf(2.0, half * 0.06))), pod)
+	else:
+		var csz := half * 1.2
+		LFCrewPainter.draw_package(ci, _crew(cidx)[0], c - dv * half * 0.04, csz, _source_pose(i, t), _crew_opts(cidx, csz))
+	var n: int = _src_remaining.get(i, int(t.get("n", 1))) if not _frames.is_empty() else int(t.get("n", 1))
+	if int(t.get("n", 1)) > 1:
+		var bc := c + Vector2(half * 0.66, half * 0.66)
+		ci.draw_circle(bc, half * 0.27, LFStyle.TEXT)
+		var f := LFStyle.font(800)
+		var fs := int(half * 0.34)
 		var txt := str(n)
 		var tsz := f.get_string_size(txt, HORIZONTAL_ALIGNMENT_CENTER, -1, fs)
 		ci.draw_string(f, bc + Vector2(-tsz.x / 2, tsz.y * 0.32), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color.WHITE)
@@ -895,8 +1040,8 @@ func _draw_dest(ci: CanvasItem, i: int, t: Dictionary, c: Vector2, half: float) 
 func _draw_overlay(ci: CanvasItem) -> void:
 	if _w == 0 or _cell < 8.0:
 		return
-	if not _frames.is_empty():
-		_draw_packages(ci)
+	if not _frames.is_empty() and not crew_on:
+		_draw_packages(ci, [])
 	for f in _flashes:
 		var k: float = f["t"] / 0.7
 		var col: Color = f["color"]
@@ -918,6 +1063,69 @@ func _draw_overlay(ci: CanvasItem) -> void:
 		_draw_tutorial(ci, tutorial_tile)
 
 
+## Position every visible character for this frame (pooled nodes; see CrewNode).
+func _update_crew() -> void:
+	var vis: Array = []
+	if not _frames.is_empty() and _cell > 0.0:
+		_draw_packages(null, vis)
+	if celebrating:
+		# Everyone celebrates together: each dock's character hops above its dock (never over the
+		# dock symbol or a neighbouring tile).
+		for i in level["tiles"].size():
+			var tile: Dictionary = level["tiles"][i]
+			if tile["t"] == "dest":
+				vis.append({"cidx": int(tile.get("c", 0)), "seed": i, "pos": cell_center(i) + Vector2(0, -_cell * 0.27), "size": _cell * 0.34,
+					"scale": 1.0, "alpha": 1.0, "state": LFCrewAnim.CELEBRATING, "age": _cele_t, "dir": Vector2.ZERO})
+	crew_draws = vis.size()
+	if vis.is_empty() and _crew_shown == 0:
+		return
+	var motion := crew_motion and not reduced_motion
+	for k in vis.size():
+		if k >= _crew_pool.size():
+			var n := CrewNode.new()
+			n.board = self
+			_crew_layer.add_child(n)
+			_crew_pool.append(n)
+		var v: Dictionary = vis[k]
+		var node: CrewNode = _crew_pool[k]
+		var cidx: int = v["cidx"]
+		var body: String = _crew(cidx)[0]
+		var ctx := {"motion": motion, "dir": v["dir"]}
+		if v["state"] == LFCrewAnim.CELEBRATING:
+			ctx.merge(crew_ctx)
+			ctx["motion"] = motion
+		var pose := LFCrewAnim.pose(body, v["state"], v["age"], _time, v["seed"], ctx)
+		var size: float = v["size"]
+		var sc: float = v["scale"]
+		node.position = Vector2(v["pos"]) + Vector2(float(pose["dx"]), float(pose["dy"])) * size * sc
+		node.rotation = float(pose["rot"])
+		node.scale = Vector2(float(pose["sx"]), float(pose["sy"])) * sc
+		node.modulate.a = float(v["alpha"])
+		node.visible = size * sc >= 2.0
+		var sig := hash([_face_sig(pose), cidx, roundi(size), colorblind, crew_art.get(cidx, ""), str(crew_ctx.get("accent", ""))])
+		if sig != node.sig:
+			node.sig = sig
+			var still := pose.duplicate()
+			still["dx"] = 0.0
+			still["dy"] = 0.0
+			still["rot"] = 0.0
+			still["sx"] = 1.0
+			still["sy"] = 1.0
+			node.pose = still
+			node.body = body
+			node.sz = size
+			node.opts = _crew_opts(cidx, size)
+			node.queue_redraw()
+	for k in range(vis.size(), _crew_shown):
+		_crew_pool[k].visible = false
+	_crew_shown = vis.size()
+
+
+func _face_sig(p: Dictionary) -> int:
+	var lk: Vector2 = p["look"]
+	return hash([p["eyes"], p["mouth"], p["brows"], p["arms"], p["sweat"], p["z"], roundi(lk.x * 4.0), roundi(lk.y * 4.0), roundi(float(p["ghost"]) * 6.0), roundi(float(p["foot"]) * 4.0)])
+
+
 func _draw_fail_mark(ci: CanvasItem, c: Vector2) -> void:
 	var r := _cell * 0.14
 	ci.draw_circle(c, r, LFStyle.ERROR)
@@ -934,14 +1142,17 @@ func _moved(fi: int, id: int) -> bool:
 	return a.has(id) and b.has(id) and a[id] != b[id]
 
 
-func _draw_packages(ci: CanvasItem) -> void:
+## Classic mode draws packages into `ci`; crew mode collects one entry per character into `out`
+## (positions are identical in both, so the characters follow exactly the same paths).
+func _draw_packages(ci: CanvasItem, out: Array) -> void:
 	var cur: Dictionary = _frames[_frame_i]
 	var animating := _frame_i < _frames.size() - 1
 	var nxt: Dictionary = _frames[_frame_i + 1] if animating else cur
 	var t := clampf(_frame_t, 0.0, 1.0)
 	var prev_pos: Dictionary = _cells[_frame_i]
-	var size_px := _cell * 0.38
+	var size_px := _cell * (CREW_K if crew_on else PACKAGE_K)
 	var list: Array = nxt["packages"]
+	var confused := str(_result.get("reason", "")) == "wrong_destination"
 	for p in list:
 		var color: Color = LFStyle.PACKAGE[p["color"]]
 		var id: int = p["id"]
@@ -950,17 +1161,29 @@ func _draw_packages(ci: CanvasItem) -> void:
 		var scale := 1.0
 		var alpha := 1.0
 		var state: String = p["state"]
+		var cs := LFCrewAnim.MOVING
+		var cage := t * step_time
+		var dir := Vector2.ZERO
 		if not animating:
 			if state == "delivered":
 				continue
+			cs = LFCrewAnim.WAITING
+			cage = _time - _end_time
 			if state == "crashed":
-				var shake := sin(_time * 40.0) * _cell * 0.03 * (1.0 if not reduced_motion else 0.0)
+				var shake := sin(_time * 40.0) * _cell * 0.03 * (1.0 if not reduced_motion and not crew_on else 0.0)
 				pos = to + Vector2(p.get("toX", 0) - p["cell"] % _w, p.get("toY", 0) - p["cell"] / _w) * _cell * 0.4 + Vector2(shake, 0)
-				color = color.lerp(LFStyle.ERROR, 0.4)
+				if not crew_on:
+					color = color.lerp(LFStyle.ERROR, 0.4)
+				cs = LFCrewAnim.FAILED
 		elif state == "spawned":
 			scale = _ease_out_back(t)
+			cs = LFCrewAnim.SELECTED
 		elif prev_pos.has(id):
 			var from := cell_center(prev_pos[id])
+			dir = (to - from).normalized() if to != from else Vector2.ZERO
+			if state == "waiting" or not _moved(_frame_i + 1, id):
+				cs = LFCrewAnim.WAITING
+				cage = _time
 			# Constant speed while travelling; ease only on start/stop.
 			var before := _moved(_frame_i, id)
 			var after := state != "delivered" and _moved(_frame_i + 2, id)
@@ -974,13 +1197,23 @@ func _draw_packages(ci: CanvasItem) -> void:
 			if state == "crashed":
 				var target := to + Vector2(p.get("toX", 0) - p["cell"] % _w, p.get("toY", 0) - p["cell"] / _w) * _cell * 0.4
 				pos = from.lerp(target, e)
-				color = color.lerp(LFStyle.ERROR, e * 0.4)
+				dir = (target - from).normalized() if target != from else dir
+				if not crew_on:
+					color = color.lerp(LFStyle.ERROR, e * 0.4)
+				cs = LFCrewAnim.FAILED if confused else LFCrewAnim.SURPRISED
 			else:
 				pos = from.lerp(to, e)
 			if state == "delivered":
-				scale = 1.0 - e * 0.65
+				scale = 1.0 - e * (0.45 if crew_on else 0.65)
 				alpha = 1.0 - e * 0.5
-		_draw_package(ci, pos, size_px * scale, color, int(p["color"]), alpha)
+				cs = LFCrewAnim.DELIVERED
+		if crew_on:
+			if dir == Vector2.ZERO:
+				var d := int(p.get("dir", 0))
+				dir = Vector2(LFTiles.DX[d], LFTiles.DY[d])
+			out.append({"cidx": int(p["color"]), "seed": id, "pos": pos, "size": size_px, "scale": scale, "alpha": alpha, "state": cs, "age": cage, "dir": dir})
+		else:
+			_draw_package(ci, pos, size_px * scale, color, int(p["color"]), alpha)
 
 
 func _draw_package(ci: CanvasItem, pos: Vector2, sz: float, color: Color, cidx: int, alpha: float) -> void:

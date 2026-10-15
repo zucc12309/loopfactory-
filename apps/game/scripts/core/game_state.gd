@@ -38,12 +38,15 @@ static func defaults() -> Dictionary:
 		"settings": {
 			"sfx": true, "music": true, "haptics": true, "reducedMotion": false, "colorblind": false,
 			"analytics": false, "analyticsAsked": false, "cloudSync": true, "updatedAt": 0,
+			"crewCharacters": true, "crewAnimations": true, "mascotDialogue": true,
 		},
 		"progress": {},
 		"active": null,
 		"stats": {"campaign": 0, "perfect": 0, "dailies": 0, "endless": 0, "rotations": 0, "hints": 0, "sessions": 0, "challenges": 0},
 		"onboarding": {"tutorialStarted": false, "tutorialDone": false},
 		"challenges": {"created": {}, "played": {}},
+		# Interdimensional Delivery Crew: cosmetic unlocks/equips and dialogue cooldowns (LFCrew).
+		"crew": {"equipped": {}, "unlocked": {}, "seen": {}, "dialogue": {}, "celebration": ""},
 		"endless": {"count": 0, "seedBase": randi() & 0x7fffffff},
 		"daily": {"cache": {}, "results": {}},
 		"achievements": {},
@@ -70,6 +73,9 @@ func load_from(saved: Dictionary) -> void:
 	# Defensive: drop an active puzzle that no longer validates (e.g. content update).
 	if data["active"] != null and not _active_valid(data["active"]):
 		data["active"] = null
+	LFCrew.sanitize(data)
+	# Cosmetics are derived from progress, so existing players receive what they already earned.
+	LFCrew.evaluate_unlocks(data, campaign, now_ms())
 
 
 func _active_valid(a: Variant) -> bool:
@@ -248,9 +254,10 @@ func complete_active() -> Dictionary:
 	elif kind != "offline_daily" and kind != "challenge":
 		enqueue("level_complete", op_payload)
 	var unlocked := evaluate_achievements()
+	var cosmetics := LFCrew.evaluate_unlocks(data, campaign, now_ms())
 	data["active"] = null
 	return {"moves": moves, "par": par, "best": best, "stars": stars_for(moves, par), "first": first,
-		"newBest": not first and moves < int(prev["best"]), "achievements": unlocked, "kind": kind, "levelId": lvl["id"],
+		"newBest": not first and moves < int(prev["best"]), "achievements": unlocked, "cosmetics": cosmetics, "kind": kind, "levelId": lvl["id"],
 		"hints": int(a["hints"]), "runs": int(a.get("runs", 1)), "history": history, "level": lvl}
 
 
@@ -440,3 +447,4 @@ func merge_remote(snap: Dictionary) -> void:
 		if not data["achievements"].has(id):
 			data["achievements"][id] = now_ms()
 	evaluate_achievements()
+	LFCrew.evaluate_unlocks(data, campaign, now_ms())

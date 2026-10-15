@@ -1,33 +1,34 @@
 class_name LFWorlds
 ## Campaign worlds: a name, a mechanic focus and a board palette each. Palettes only tint the
-## board plate, belts and backdrop — package and dock colours never change, so every theme stays
+## board plate, belts and backdrop (plus a small character theme: bouncier candy celebrations,
+## a neon rim light, space helmets) — package and dock colours never change, so every theme stays
 ## equally readable (all belt/plate pairs keep the same luminance contrast as the classic theme).
 
 const WORLDS := [
 	{
 		"id": "workshop", "name": "Little Workshop", "focus": "Turning belts, corners and pins",
 		"first": "c01", "bg": Color("#F7F5F0"), "plate": Color("#EDE6DA"), "belt": Color("#C9CEE8"),
-		"rail": Color("#AEB5DA"), "motif": "bolts",
+		"rail": Color("#AEB5DA"), "motif": "bolts", "crew": {},
 	},
 	{
 		"id": "candy", "name": "Candy Factory", "focus": "Longer routes and planning",
 		"first": "c10", "bg": Color("#FBF3F3"), "plate": Color("#F3E2E6"), "belt": Color("#E5C9D6"),
-		"rail": Color("#CFA9BC"), "motif": "sprinkles",
+		"rail": Color("#CFA9BC"), "motif": "sprinkles", "crew": {"bounce": 1.4},
 	},
 	{
 		"id": "parcel", "name": "Parcel Station", "focus": "Two routes at once",
 		"first": "c20", "bg": Color("#F2F6F6"), "plate": Color("#E1EBEC"), "belt": Color("#BFD5DB"),
-		"rail": Color("#9DBAC2"), "motif": "stripes",
+		"rail": Color("#9DBAC2"), "motif": "stripes", "crew": {},
 	},
 	{
 		"id": "neon", "name": "Neon Circuit", "focus": "Busy junctions and right of way",
 		"first": "x26", "bg": Color("#F3F2FA"), "plate": Color("#E4E1F4"), "belt": Color("#C8C2EE"),
-		"rail": Color("#A79FDF"), "motif": "traces",
+		"rail": Color("#A79FDF"), "motif": "traces", "crew": {"accent": "scan"},
 	},
 	{
 		"id": "space", "name": "Space Logistics", "focus": "Three colours, full factory",
 		"first": "x31", "bg": Color("#F1F3F8"), "plate": Color("#E0E5EF"), "belt": Color("#BCC6DC"),
-		"rail": Color("#98A6C6"), "motif": "stars",
+		"rail": Color("#98A6C6"), "motif": "stars", "crew": {"accent": "visor"},
 	},
 ]
 

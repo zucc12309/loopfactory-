@@ -41,6 +41,9 @@ func _ready() -> void:
 	_streams["unlock"] = _tone([[783.99, 0.08], [1174.66, 0.22]], 0.24, 11.0, 0.0)
 	_streams["hint"] = _tone([[987.77, 0.06], [1318.5, 0.12]], 0.16, 16.0, 0.0)
 	_streams["star"] = _tone([[1318.5, 0.12]], 0.16, 18.0, 0.0)
+	# Crew: a tiny rising "boop" when a character is poked, a soft "mrrp" for Captain Naps.
+	_streams["boop"] = _sweep(520.0, 900.0, 0.09, 0.14)
+	_streams["mrrp"] = _sweep(260.0, 380.0, 0.2, 0.12, true)
 	if Game.state != null:
 		Game.settings_changed.connect(_apply_music)
 	_apply_music.call_deferred()

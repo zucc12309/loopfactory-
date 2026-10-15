@@ -1,0 +1,50 @@
+{
+ "version": 1,
+ "locale": "en",
+ "lines": [
+  {"id": "naps_first_launch", "character": "naps", "event": "FIRST_LAUNCH", "text": "Oh. A new hire. Turn the belts, deliver the packages, don't wake me.", "priority": 10, "cooldown": -1, "probability": 1.0, "anim": "neutral"},
+
+  {"id": "naps_home_1", "character": "naps", "event": "HOME_IDLE", "text": "{done} deliveries so far. I've barely napped.", "priority": 1, "cooldown": 900, "probability": 0.5, "anim": "neutral"},
+  {"id": "naps_home_2", "character": "naps", "event": "HOME_IDLE", "text": "Back already? The packages missed you. Probably.", "priority": 1, "cooldown": 900, "probability": 0.5, "anim": "happy"},
+  {"id": "naps_home_3", "character": "naps", "event": "HOME_IDLE", "text": "{stars} stars. Don't let it go to your helmet.", "priority": 1, "cooldown": 900, "probability": 0.5, "anim": "neutral"},
+  {"id": "naps_home_4", "character": "naps", "event": "HOME_IDLE", "text": "Shift starts whenever you're ready. No rush. Zzz.", "priority": 1, "cooldown": 900, "probability": 0.5, "anim": "sleeping"},
+
+  {"id": "naps_tap_1", "character": "naps", "event": "HOME_TAP", "text": "I'm supervising. With my eyes closed. It's a technique.", "priority": 1, "cooldown": 0, "probability": 1.0, "anim": "neutral"},
+  {"id": "naps_tap_2", "character": "naps", "event": "HOME_TAP", "text": "Please don't poke the supervisor.", "priority": 1, "cooldown": 0, "probability": 1.0, "anim": "surprised"},
+  {"id": "naps_tap_3", "character": "naps", "event": "HOME_TAP", "text": "Fun fact: I am the employee of the month. Every month.", "priority": 1, "cooldown": 0, "probability": 1.0, "anim": "happy"},
+  {"id": "naps_tap_4", "character": "naps", "event": "HOME_TAP", "text": "The belts go round. The packages go round. I go to sleep.", "priority": 1, "cooldown": 0, "probability": 1.0, "anim": "sleeping"},
+
+  {"id": "naps_world_candy", "character": "naps", "event": "NEW_WORLD", "when": {"world": "candy"}, "text": "Candy Factory. Do not lick the conveyors.", "priority": 5, "cooldown": -1, "probability": 1.0, "anim": "neutral"},
+  {"id": "naps_world_parcel", "character": "naps", "event": "NEW_WORLD", "when": {"world": "parcel"}, "text": "Parcel Station. Two routes at once. I'm already tired.", "priority": 5, "cooldown": -1, "probability": 1.0, "anim": "sleeping"},
+  {"id": "naps_world_neon", "character": "naps", "event": "NEW_WORLD", "when": {"world": "neon"}, "text": "New dimension. Same terrible management.", "priority": 5, "cooldown": -1, "probability": 1.0, "anim": "neutral"},
+  {"id": "naps_world_space", "character": "naps", "event": "NEW_WORLD", "when": {"world": "space"}, "text": "Space Logistics. Finally, a use for this helmet.", "priority": 5, "cooldown": -1, "probability": 1.0, "anim": "happy"},
+
+  {"id": "rix_mech_crossing", "character": "rix", "event": "NEW_MECHANIC", "when": {"mechanic": "crossing"}, "text": "Dr. Rix here! Crossings: belts go over belts. Nobody collides. Probably.", "priority": 6, "cooldown": -1, "probability": 1.0, "anim": "happy"},
+  {"id": "rix_mech_junction", "character": "rix", "event": "NEW_MECHANIC", "when": {"mechanic": "junction"}, "text": "Dr. Rix here! My new junction joins three belts. I call it the Y-not.", "priority": 6, "cooldown": -1, "probability": 1.0, "anim": "happy"},
+  {"id": "rix_mech_colours", "character": "rix", "event": "NEW_MECHANIC", "when": {"mechanic": "three_colours"}, "text": "Dr. Rix here! Three routes at once. I've added more coffee to the break room.", "priority": 6, "cooldown": -1, "probability": 1.0, "anim": "surprised"},
+
+  {"id": "naps_first_success", "character": "naps", "event": "FIRST_SUCCESS", "text": "Huh. You actually did it. Welcome aboard.", "priority": 8, "cooldown": -1, "probability": 1.0, "anim": "happy"},
+  {"id": "naps_success_1", "character": "naps", "event": "SUCCESS", "text": "Wow. The company might survive another day.", "priority": 1, "cooldown": 120, "probability": 1.0, "anim": "happy"},
+  {"id": "naps_success_2", "character": "naps", "event": "SUCCESS", "text": "Delivered. I'll take the credit in the report.", "priority": 1, "cooldown": 120, "probability": 1.0, "anim": "neutral"},
+  {"id": "naps_success_3", "character": "naps", "event": "SUCCESS", "text": "Good. Now find the shorter way. Or don't. I'm on break.", "priority": 1, "cooldown": 120, "probability": 1.0, "anim": "sleeping"},
+  {"id": "naps_perfect_1", "character": "naps", "event": "PERFECT_SCORE", "text": "Okay, that was actually impressive.", "priority": 3, "cooldown": 120, "probability": 1.0, "anim": "surprised"},
+  {"id": "naps_perfect_2", "character": "naps", "event": "PERFECT_SCORE", "text": "Not a single wasted turn. Are you a robot?", "priority": 3, "cooldown": 120, "probability": 1.0, "anim": "happy"},
+  {"id": "naps_efficient", "character": "naps", "event": "UNUSUALLY_EFFICIENT", "text": "Par on a board this big? I'm writing that down. Tomorrow.", "priority": 4, "cooldown": 300, "probability": 1.0, "anim": "surprised"},
+  {"id": "naps_together", "character": "naps", "event": "ALL_TOGETHER", "text": "Everybody arrived at once. That's called teamwork. Allegedly.", "priority": 4, "cooldown": 300, "probability": 1.0, "anim": "celebrating"},
+  {"id": "naps_near_miss", "character": "naps", "event": "NEAR_MISS", "text": "That was close. I definitely wasn't watching.", "priority": 2, "cooldown": 300, "probability": 1.0, "anim": "surprised"},
+
+  {"id": "naps_fail_1", "character": "naps", "event": "FAILED_ATTEMPT", "text": "Interesting. That's definitely one way to break physics.", "priority": 1, "cooldown": 240, "probability": 0.5, "anim": "confused"},
+  {"id": "naps_fail_2", "character": "naps", "event": "FAILED_ATTEMPT", "text": "The packages are fine. Mostly. Try again.", "priority": 1, "cooldown": 240, "probability": 0.5, "anim": "confused"},
+  {"id": "bloop_fail", "character": "bloop", "event": "FAILED_ATTEMPT", "when": {"character": "bloop"}, "text": "Obviously, I planned that.", "priority": 2, "cooldown": 240, "probability": 0.5, "anim": "failed"},
+  {"id": "zip_fail", "character": "zip", "event": "FAILED_ATTEMPT", "when": {"character": "zip"}, "text": "Are we absolutely sure about this?", "priority": 2, "cooldown": 240, "probability": 0.5, "anim": "failed"},
+  {"id": "glitch_fail", "character": "glitch", "event": "FAILED_ATTEMPT", "when": {"character": "glitch"}, "text": "That was probably supposed to happen.", "priority": 2, "cooldown": 240, "probability": 0.5, "anim": "failed"},
+  {"id": "mochi_fail", "character": "mochi", "event": "FAILED_ATTEMPT", "when": {"character": "mochi"}, "text": "Five more minutes…", "priority": 2, "cooldown": 240, "probability": 0.5, "anim": "failed"},
+
+  {"id": "naps_daily_1", "character": "naps", "event": "DAILY_CHALLENGE", "text": "Today's special delivery. Everyone gets the same puzzle. Fewest turns wins.", "priority": 1, "cooldown": 0, "probability": 1.0, "anim": "neutral"},
+  {"id": "naps_daily_2", "character": "naps", "event": "DAILY_CHALLENGE", "text": "Daily shift. Hints are off. I'm also off.", "priority": 1, "cooldown": 0, "probability": 1.0, "anim": "sleeping"},
+  {"id": "naps_daily_done", "character": "naps", "event": "DAILY_CHALLENGE", "when": {"solved": true}, "text": "Today's delivery is done. Go and brag responsibly.", "priority": 2, "cooldown": 0, "probability": 1.0, "anim": "happy"},
+
+  {"id": "naps_unlock", "character": "naps", "event": "CHARACTER_UNLOCK", "text": "New gear for {name}. Very professional. Very necessary.", "priority": 1, "cooldown": 0, "probability": 1.0, "anim": "happy"},
+  {"id": "naps_collection", "character": "naps", "event": "COLLECTION", "text": "The crew. My crew. Please don't tell them I said that.", "priority": 1, "cooldown": 0, "probability": 1.0, "anim": "neutral"}
+ ]
+}

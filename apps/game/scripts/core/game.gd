@@ -4,6 +4,7 @@ extends Node
 
 signal state_changed
 signal achievements_unlocked(list: Array)
+signal cosmetics_unlocked(list: Array)
 signal settings_changed
 
 var state: LFGameState
@@ -78,6 +79,8 @@ func complete_active() -> Dictionary:
 	if not res.is_empty():
 		if not res["achievements"].is_empty():
 			achievements_unlocked.emit(res["achievements"])
+		if not res.get("cosmetics", []).is_empty():
+			cosmetics_unlocked.emit(res["cosmetics"])
 		request_save()
 	return res
 

@@ -21,7 +21,28 @@ const EXPERIMENTS := {
 	"daily_entry": ["card", "banner"],
 	# Endless difficulty ramp: standard thresholds or 1.5× more puzzles per tier.
 	"difficulty_ramp": ["standard", "gentle"],
+	# Character presentation: hybrid (expressive packages + Captain Naps, the shipped default),
+	# minimal (the pre-crew look) or full (hybrid + sci-fi backdrop). Puzzles, difficulty and
+	# progression are identical in every variant.
+	"presentation": ["hybrid", "minimal", "full"],
 }
+
+## Remote kill switches (remote config `flags.<name>`: bool). Default on; turning one off removes
+## that part of the character system without a client update.
+const FLAGS := {
+	"characters_enabled": true,
+	"character_animations_enabled": true,
+	"mascot_dialogue_enabled": true,
+	"character_collection_enabled": true,
+	"sci_fi_theme_enabled": true,
+}
+
+
+static func flag(data: Dictionary, name: String) -> bool:
+	var flags = data.get("remoteConfig", {}).get("flags", {})
+	if flags is Dictionary and flags.has(name):
+		return bool(flags[name])
+	return bool(FLAGS.get(name, false))
 
 
 static func bucket(analytics_id: String, key: String) -> int:

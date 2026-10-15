@@ -19,6 +19,9 @@ const EVENTS := [
 	# sharing & friend challenges
 	"share_clicked", "share_completed", "challenge_create_clicked", "challenge_created",
 	"challenge_link_opened", "challenge_completed",
+	# Interdimensional Delivery Crew
+	"character_exposed", "character_animation_played", "character_collection_opened",
+	"cosmetic_unlocked", "cosmetic_equipped", "character_dialogue_shown", "character_dialogue_dismissed",
 	# monetization (interfaces only; no store integrated)
 	"purchase_started", "purchase_completed",
 ]

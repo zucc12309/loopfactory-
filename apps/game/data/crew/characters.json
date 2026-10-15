@@ -1,0 +1,82 @@
+{
+ "version": 1,
+ "characters": [
+  {
+   "id": "bloop", "name": "Bloop", "kind": "package", "color": 0,
+   "role": "Orange package",
+   "personality": "Overconfident, energetic, dramatic.",
+   "bio": "Has never once admitted to taking a wrong turn. Insists every crash was a stunt.",
+   "line": "Obviously, I planned that.",
+   "style": {"body": "bloop", "size": 1.0, "radius": 0.3},
+   "cosmetics": [
+    {"id": "bloop_crown", "name": "Tiny crown", "art": "crown", "slot": "head", "unlock": {"type": "campaign", "count": 10}},
+    {"id": "bloop_goggles", "name": "Racing goggles", "art": "goggles", "slot": "eyes", "unlock": {"type": "stars", "count": 45}},
+    {"id": "bloop_cape", "name": "Superhero cape", "art": "cape", "slot": "back", "unlock": {"type": "world", "world": "candy"}}
+   ]
+  },
+  {
+   "id": "zip", "name": "Zip", "kind": "package", "color": 1,
+   "role": "Blue package",
+   "personality": "Nervous, intelligent, easily startled.",
+   "bio": "Has read every conveyor safety manual. Twice. Still doesn't trust the belts.",
+   "line": "Are we absolutely sure about this?",
+   "style": {"body": "zip", "size": 0.92, "radius": 0.32},
+   "cosmetics": [
+    {"id": "zip_headphones", "name": "Headphones", "art": "headphones", "slot": "head", "unlock": {"type": "campaign", "count": 20}},
+    {"id": "zip_helmet", "name": "Safety helmet", "art": "helmet", "slot": "head", "unlock": {"type": "world", "world": "parcel"}},
+    {"id": "zip_glasses", "name": "Tiny glasses", "art": "glasses", "slot": "eyes", "unlock": {"type": "perfect", "count": 10}}
+   ]
+  },
+  {
+   "id": "glitch", "name": "Glitch", "kind": "package", "color": 2,
+   "role": "Purple package",
+   "personality": "Chaotic, unpredictable, mischievous.",
+   "bio": "Arrived from a dimension with slightly different physics. Mostly harmless.",
+   "line": "That was probably supposed to happen.",
+   "style": {"body": "glitch", "size": 1.0, "radius": 0.24},
+   "cosmetics": [
+    {"id": "glitch_shades", "name": "Pixel sunglasses", "art": "pixel_shades", "slot": "eyes", "unlock": {"type": "stars", "count": 30}},
+    {"id": "glitch_antenna", "name": "Alien antenna", "art": "alien_antenna", "slot": "head", "unlock": {"type": "world", "world": "neon"}},
+    {"id": "glitch_holo", "name": "Holographic skin", "art": "holo", "slot": "skin", "unlock": {"type": "endless", "count": 10}}
+   ]
+  },
+  {
+   "id": "mochi", "name": "Mochi", "kind": "package", "color": 3,
+   "role": "Green package",
+   "personality": "Sleepy, adorable, relaxed.",
+   "bio": "Can fall asleep mid-delivery. Somehow always arrives on time anyway.",
+   "line": "Five more minutes…",
+   "style": {"body": "mochi", "size": 1.0, "radius": 0.42},
+   "cosmetics": [
+    {"id": "mochi_cap", "name": "Sleep cap", "art": "sleep_cap", "slot": "head", "unlock": {"type": "campaign", "count": 5}},
+    {"id": "mochi_backpack", "name": "Mini backpack", "art": "backpack", "slot": "back", "unlock": {"type": "daily_any", "count": 3}},
+    {"id": "mochi_pajamas", "name": "Space pajamas", "art": "pajamas", "slot": "skin", "unlock": {"type": "world", "world": "space"}}
+   ]
+  },
+  {
+   "id": "naps", "name": "Captain Naps", "kind": "mascot", "color": -1,
+   "role": "Interdimensional Delivery Supervisor",
+   "personality": "Sleepy, slightly sarcastic, secretly proud of you.",
+   "bio": "A space cat in a helmet three sizes too big. Supervises the whole operation, mostly with both eyes closed.",
+   "line": "Wow. The company might survive another day.",
+   "style": {"body": "naps"},
+   "cosmetics": [
+    {"id": "naps_detective", "name": "Detective hat", "art": "naps_detective", "slot": "head", "unlock": {"type": "world", "world": "workshop"}},
+    {"id": "naps_lab", "name": "Lab assistant coat", "art": "naps_lab", "slot": "suit", "unlock": {"type": "campaign", "count": 30}},
+    {"id": "naps_gold", "name": "Gold flight suit", "art": "naps_gold", "slot": "suit", "unlock": {"type": "all_campaign"}}
+   ]
+  },
+  {
+   "id": "rix", "name": "Dr. Rix", "kind": "engineer", "color": -1,
+   "role": "Alien engineer",
+   "personality": "Eccentric, enthusiastic, mildly dangerous.",
+   "bio": "Builds the factory's new machinery. Labels everything 'probably safe'.",
+   "line": "New machinery! Ninety percent tested.",
+   "style": {"body": "rix"},
+   "cosmetics": []
+  }
+ ],
+ "special": [
+  {"id": "starry_eyes", "name": "Starry-eyed celebration", "art": "starry_eyes", "slot": "expression", "unlock": {"type": "daily_any", "count": 5}}
+ ]
+}
