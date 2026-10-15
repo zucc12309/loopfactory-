@@ -326,9 +326,9 @@ unit suite (59 / 7,771, 0 failed), the Beta UI suite (173, 0 failed) and the UI 
 `apps/game/build/loopfactory-debug.apk`
 
 * **Command:** `GODOT=<4.5.1> scripts/build-android.sh debug`.
-* **Size:** 57,141,334 bytes. Built from `8778fe5`; `9bb106f` only removes a button in
-  Profile, so rebuild before installing.
-* **SHA-256:** `a752c1eecdb36a2a2ce2012c6cc17549fae6eef9f8e411624e81be78ae234d14`.
+* **Built from:** `c77ea18`.
+* **Size:** 57,141,334 bytes.
+* **SHA-256:** `998a8aa810c9f1950296a6c6919d4e05c2455cd1f228dc777beef0294842da8f`.
 * **ABIs:** arm64-v8a and armeabi-v7a; arm64 libraries 16 KB-aligned.
 * **Signing:** APK Signature Scheme v2, debug key.
 * **Packaged config:** `environment=development`, API `http://127.0.0.1:8080` (the phone itself),
