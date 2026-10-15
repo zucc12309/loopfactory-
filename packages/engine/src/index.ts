@@ -7,3 +7,4 @@ export * from './solver';
 export * from './generator';
 export * from './ascii';
 export * from './replay';
+export * from './difficulty';

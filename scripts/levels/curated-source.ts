@@ -107,11 +107,24 @@ export const CURATED: CuratedEntry[] = [
   { id: 'c23', name: 'Dispatch', tier: 'medium', seed: 1010 },
   { id: 'c24', name: 'Rush Hour', tier: 'medium', seed: 1016 },
   { id: 'c25', name: 'Overtime', tier: 'medium', seed: 1012 },
-  { id: 'c26', name: 'Interchange', tier: 'hard', seed: 1006, tip: 'Packages wait their turn at busy tiles. The earliest one goes first.' },
+  {
+    // Transition level (Neon Circuit opener): the only new idea is right of way at a busy crossing.
+    id: 'x26', name: 'Right of Way', difficulty: 'medium',
+    tip: 'Busy crossing! Packages take turns — the one that left first goes first.',
+    ascii: `
+      .    .  S2b .  .
+      .    L0 I0  L2 .
+      S1a2 I0 X   I0 Da
+      .    L3 I1  L1 .
+      #    .  Db  .  #`,
+  },
+  { id: 'c26', name: 'Interchange', tier: 'hard', seed: 1006 },
   { id: 'c27', name: 'Flyover', tier: 'hard', seed: 1001 },
   { id: 'c28', name: 'Bottleneck', tier: 'hard', seed: 1020 },
   { id: 'c29', name: 'Gridlock', tier: 'hard', seed: 1003 },
   { id: 'c30', name: 'Freight', tier: 'hard', seed: 1018 },
+  // Transition level (Space Logistics opener): three colours on the easiest expert layout we found.
+  { id: 'x31', name: 'Third Shift', tier: 'expert', seed: 2020, tip: 'A third colour joins the line. Trace all three routes before you run.' },
   { id: 'c31', name: 'Tri-Color', tier: 'expert', seed: 1012 },
   { id: 'c32', name: 'Clockwork', tier: 'expert', seed: 1004 },
   { id: 'c33', name: 'Mainframe', tier: 'expert', seed: 1021 },
