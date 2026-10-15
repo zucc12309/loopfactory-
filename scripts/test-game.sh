@@ -23,7 +23,7 @@ fi
 # Scene-level UI tests (layout on five aspect ratios, rapid taps, failure/celebration flow). They
 # need real font metrics, so they use the GL renderer under a virtual display when available.
 # The crew suite compares rendered pixels, so it needs the GL renderer too.
-for SUITE in ui_tests crew_ui_tests; do
+for SUITE in ui_tests crew_ui_tests beta_ui_tests; do
   if command -v xvfb-run >/dev/null 2>&1; then
     UI_CMD=(xvfb-run -a "$GODOT" --path . --rendering-driver opengl3 -s "res://tests_ui/$SUITE.gd")
   else

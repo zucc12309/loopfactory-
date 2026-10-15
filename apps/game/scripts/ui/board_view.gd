@@ -149,6 +149,10 @@ var hint_dir := 1
 var hint_taps := 0
 var hint_level := 3          # 1 = area, 2 = tile, 3 = tile + rotation
 var tutorial_tile := -1
+## Draw the tutorial cue as a press-and-hold (counter-clockwise) instead of a tap.
+var tutorial_hold := false
+## Accessible alternative to long-press: while on, a tap turns counter-clockwise (and a hold clockwise).
+var reverse_mode := false
 
 # characters (configured by LFCrew.configure_board)
 var crew_on := false
@@ -379,7 +383,7 @@ func _gui_input(event: InputEvent) -> void:
 			_press_index = -1
 			_tilt_target[i] = 0.0
 			if not _press_fired and interactive and _cell_at(event.position) == i:
-				_activate(i, 1)
+				_activate(i, -1 if reverse_mode else 1)
 			accept_event()
 
 
@@ -558,7 +562,7 @@ func _process(delta: float) -> void:
 			_press_fired = true
 			_tilt_target[_press_index] = 0.0
 			Sfx.haptic(20)
-			_activate(_press_index, -1)
+			_activate(_press_index, 1 if reverse_mode else -1)
 	var k := minf(1.0, delta * 30.0)
 	for i in _rot_t.size():
 		if _rot_t[i] < 1.0:
@@ -1257,9 +1261,32 @@ func _draw_hint(ci: CanvasItem, i: int, dir: int, taps: int) -> void:
 
 func _draw_tutorial(ci: CanvasItem, i: int) -> void:
 	var c := cell_center(i)
-	var k := fmod(_time, 1.4) / 1.4
+	if tutorial_hold:
+		_draw_hold_cue(ci, c)
+		return
+	var k := 0.5 if reduced_motion else fmod(_time, 1.4) / 1.4
 	ci.draw_arc(c, _cell * (0.2 + k * 0.35), 0, TAU, 32, Color(LFStyle.PRIMARY, 1.0 - k), maxf(3.0, _cell * 0.05), true)
 	# Finger
-	var tip := c + Vector2(_cell * 0.12, _cell * 0.12) + Vector2(0, sin(_time * 5.0) * _cell * 0.03)
+	var tip := c + Vector2(_cell * 0.12, _cell * 0.12) + Vector2(0, 0.0 if reduced_motion else sin(_time * 5.0) * _cell * 0.03)
+	ci.draw_circle(tip + Vector2(_cell * 0.1, _cell * 0.16), _cell * 0.13, Color(LFStyle.TEXT, 0.85))
+	ci.draw_rect(Rect2(tip + Vector2(0.02, 0) * _cell, Vector2(_cell * 0.11, _cell * 0.2)), Color(LFStyle.TEXT, 0.85))
+
+
+## Press-and-hold cue: a ring fills counter-clockwise over the long-press time, with a ↺ arrow head,
+## and a resting finger. Static (full ring) under reduced motion.
+func _draw_hold_cue(ci: CanvasItem, c: Vector2) -> void:
+	var cycle := LONG_PRESS + 0.9
+	var k := 1.0 if reduced_motion else clampf(fmod(_time, cycle) / LONG_PRESS, 0.0, 1.0)
+	var r := _cell * 0.36
+	var w := maxf(4.0, _cell * 0.06)
+	ci.draw_arc(c, r, 0, TAU, 40, Color(LFStyle.PRIMARY, 0.22), w, true)
+	var start := -PI * 0.5
+	var sweep := -TAU * k
+	ci.draw_arc(c, r, start, start + sweep, 40, LFStyle.PRIMARY, w, true)
+	var a := start + sweep
+	var tp := c + Vector2(cos(a), sin(a)) * r
+	var tan := Vector2(sin(a), -cos(a))
+	ci.draw_colored_polygon(PackedVector2Array([tp + tan * w * 1.6, tp + tan.orthogonal() * w * 1.2, tp - tan.orthogonal() * w * 1.2]), LFStyle.PRIMARY)
+	var tip := c + Vector2(_cell * 0.12, _cell * 0.12)
 	ci.draw_circle(tip + Vector2(_cell * 0.1, _cell * 0.16), _cell * 0.13, Color(LFStyle.TEXT, 0.85))
 	ci.draw_rect(Rect2(tip + Vector2(0.02, 0) * _cell, Vector2(_cell * 0.11, _cell * 0.2)), Color(LFStyle.TEXT, 0.85))

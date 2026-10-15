@@ -43,7 +43,7 @@ static func defaults() -> Dictionary:
 		"progress": {},
 		"active": null,
 		"stats": {"campaign": 0, "perfect": 0, "dailies": 0, "endless": 0, "rotations": 0, "hints": 0, "sessions": 0, "challenges": 0},
-		"onboarding": {"tutorialStarted": false, "tutorialDone": false},
+		"onboarding": {"tutorialStarted": false, "tutorialDone": false, "reverseLearned": false},
 		"challenges": {"created": {}, "played": {}},
 		# Interdimensional Delivery Crew: cosmetic unlocks/equips and dialogue cooldowns (LFCrew).
 		"crew": {"equipped": {}, "unlocked": {}, "seen": {}, "dialogue": {}, "celebration": ""},

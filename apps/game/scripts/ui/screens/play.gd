@@ -27,6 +27,15 @@ const COACH := {
 	"c05": {"title": "Plan ahead", "text": "Fewest turns wins. Match par for three stars.", "finger": "none"},
 }
 const HINT_CAPTIONS := ["Hint", "Closer", "Show me", "Show me"]
+## First level whose par needs a counter-clockwise turn (audit G1); taught here, before c09's tip.
+const REVERSE_TEACH_LEVEL := "c08"
+const REVERSE_COPY := {"title": "Turn it back", "text": "Tap to turn ↻. Hold to turn ↺."}
+## Hint copy per outcome (audit G3). Never claims a solution exists without one.
+const HINT_COPY := {
+	"solved": ["Looks ready", "Your belts are ready. Hit Run!"],
+	"exhausted": ["No hint yet", "No hint found yet. Try again or reset."],
+	"unsolvable": ["No route from here", "These belts can't reach every dock from this position. Reset to start fresh."],
+}
 const STEP_NORMAL := 0.3
 const STEP_FAST := 0.14
 
@@ -60,6 +69,11 @@ var _last_fail_reason := ""
 var _poked := false
 var _moments: Array = []
 var _win_line: Dictionary = {}
+var reverse_btn: LFIconButton
+var _reverse_tile := -1        # tile the "hold to turn back" cue points at (-1 = not teaching)
+var _cw_streak := [-1, 0]      # [tile, consecutive clockwise taps] for the contextual tip
+var _reverse_tip_shown := false
+var _hint_budget := 100000
 
 
 func setup(args: Dictionary) -> void:
@@ -179,7 +193,13 @@ func _build() -> void:
 	run_btn.add_theme_font_size_override("font_size", 38)
 	run_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	run_btn.pressed.connect(_run)
-	for c in [undo_btn, reset, hint_btn, run_btn]:
+	# Accessible alternative to long-press (audit G1/U2): a toggle that makes taps turn ↺.
+	reverse_btn = LFIconButton.make("rotate_ccw", "Turn ↺", "SecondaryButton", 96)
+	reverse_btn.toggle_mode = true
+	reverse_btn.tooltip_text = "Taps turn belts counter-clockwise while on"
+	reverse_btn.toggled.connect(_on_reverse_toggled)
+	reverse_btn.visible = reverse_available(kind, campaign_index, Game.state.campaign)
+	for c in [undo_btn, reset, hint_btn, reverse_btn, run_btn]:
 		edit_bar.add_child(c)
 	root.add_child(edit_bar)
 
@@ -197,8 +217,9 @@ func _build() -> void:
 	run_bar.visible = false
 	root.add_child(run_bar)
 
+	_reverse_tile = reverse_teach_tile(level, kind, Game.state.data, Game.state.campaign)
 	_update_coach()
-	if _coach.is_empty():
+	if _coach.is_empty() and _reverse_tile < 0:
 		_crew_intro()
 	_refresh()
 	if board.crew_on:
@@ -354,8 +375,50 @@ func _show_tip() -> void:
 
 # ----------------------------------------------------------------- onboarding
 
+## Tile to teach "hold to turn back" on, or -1. Only on the first level that needs it, only until the
+## player has turned a belt counter-clockwise once (or already finished the formal lesson, c09).
+static func reverse_teach_tile(lvl: Dictionary, p_kind: String, data: Dictionary, campaign: Array) -> int:
+	if p_kind != "campaign" or str(lvl.get("id", "")) != REVERSE_TEACH_LEVEL:
+		return -1
+	if bool(data.get("onboarding", {}).get("reverseLearned", false)):
+		return -1
+	for i in campaign.size():
+		if str(campaign[i]["id"]) == "c09" and data.get("progress", {}).has("c09"):
+			return -1
+	for mv in lvl.get("solution", {}).get("moves", []):
+		if int(mv[1]) == -1:
+			return int(mv[0])
+	return -1
+
+
+## The ↺ toggle is offered from the first level that needs reverse turns, and on every non-campaign
+## puzzle; earlier levels keep the bar uncluttered.
+static func reverse_available(p_kind: String, index: int, campaign: Array) -> bool:
+	if p_kind != "campaign":
+		return true
+	for i in campaign.size():
+		if str(campaign[i]["id"]) == REVERSE_TEACH_LEVEL:
+			return index >= i
+	return true
+
+
+func _on_reverse_toggled(on: bool) -> void:
+	board.reverse_mode = on
+	reverse_btn.icon_color = LFStyle.PRIMARY if on else LFStyle.TEXT
+	reverse_btn.queue_redraw()
+
+
 func _update_coach() -> void:
 	board.tutorial_tile = -1
+	board.tutorial_hold = false
+	if _reverse_tile >= 0:
+		if LFSimulation.is_solved(level, Game.state.active()["rotations"]):
+			_set_banner("ready", "Path ready!", "Press Run to send the packages.")
+			return
+		board.tutorial_tile = _reverse_tile
+		board.tutorial_hold = true
+		_set_banner("coach", REVERSE_COPY["title"], REVERSE_COPY["text"])
+		return
 	if _coach.is_empty():
 		_show_tip()
 		return
@@ -397,7 +460,7 @@ func _after_edit() -> void:
 	board.clear_failure()
 	if _banner_kind == "fail" or _banner_kind == "hint" or _banner_kind == "crew":
 		_show_tip()
-	if not _coach.is_empty():
+	if not _coach.is_empty() or _reverse_tile >= 0:
 		_update_coach()
 	_refresh()
 	Game.request_save()
@@ -409,7 +472,29 @@ func _on_rotate(i: int, dir: int) -> void:
 	board.animate_rotation(i, dir)
 	Sfx.play("rotate" if dir == 1 else "ccw", 0.97 + randf() * 0.06)
 	Sfx.haptic_pattern("tick")
+	_note_direction(i, dir)
 	_after_edit()
+
+
+## Reverse-turn learning: the first counter-clockwise turn ends the lesson for good. Before then,
+## three clockwise taps in a row on one belt earn a one-time tip (that's one ↺ turn, not three).
+func _note_direction(i: int, dir: int) -> void:
+	var ob: Dictionary = Game.state.data["onboarding"]
+	if dir == -1:
+		if not bool(ob.get("reverseLearned", false)):
+			ob["reverseLearned"] = true
+		if _reverse_tile >= 0:
+			_reverse_tile = -1
+			board.tutorial_tile = -1
+			board.tutorial_hold = false
+			_show_tip()
+		return
+	if bool(ob.get("reverseLearned", false)) or _reverse_tip_shown or kind != "campaign":
+		return
+	_cw_streak = [i, _cw_streak[1] + 1] if _cw_streak[0] == i else [i, 1]
+	if _cw_streak[1] >= 3:
+		_reverse_tip_shown = true
+		_set_banner("coach", "Tip: turn it back", "Tap to turn ↻. Hold to turn ↺ — one move instead of three.")
 
 
 ## Tapping a source pokes the character waiting in it.
@@ -452,12 +537,22 @@ func _reset() -> void:
 	_after_edit()
 
 
-## Three-step hints from a solver-verified optimal solution: area → tile → exact rotation.
+## Banner [title, text] for a hint outcome that has no move to show.
+static func hint_copy(outcome_kind: String) -> Array:
+	return HINT_COPY.get(outcome_kind, HINT_COPY["exhausted"])
+
+
+## Three-step hints from a solver-verified solution: area → tile → exact rotation. When there is no
+## move to show, the banner says exactly why (solved / search ran out / no route from here).
 func _hint() -> void:
-	var h = LFSolver.hint(level, Game.state.active()["rotations"])
-	if h == null:
-		_set_banner("ready", "Looks ready", "Your path already works — press Run!")
+	var o := LFSolver.hint_outcome(level, Game.state.active()["rotations"], _hint_budget)
+	if o["kind"] != "hint":
+		var copy := hint_copy(o["kind"])
+		_set_banner("ready" if o["kind"] == "solved" else "hint", copy[0], copy[1])
+		if o["kind"] == "exhausted":
+			_hint_budget = mini(_hint_budget * 4, 1600000)  # "try again" searches deeper
 		return
+	var h: Dictionary = o["hint"]
 	var step := Game.state.next_hint_step(int(h["tile"]))
 	board.show_hint(h["tile"], h["dir"], h["taps"], step)
 	Sfx.play("hint")
