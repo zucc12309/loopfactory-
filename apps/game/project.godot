@@ -18,6 +18,11 @@ config/icon="res://assets/icons/icon.svg"
 config/quit_on_go_back=false
 run/low_processor_mode=true
 
+[audio]
+
+general/ios/session_category=0
+general/ios/mix_with_others=true
+
 [autoload]
 
 Game="*res://scripts/core/game.gd"
@@ -35,6 +40,9 @@ window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 window/handheld/orientation=1
 window/energy_saving/keep_screen_on=false
+window/ios/hide_home_indicator=true
+window/ios/hide_status_bar=true
+window/ios/suppress_ui_gesture=true
 
 [gui]
 

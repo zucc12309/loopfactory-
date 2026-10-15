@@ -44,7 +44,7 @@ set_preset() { # set_preset <preset name> <key> <value>  (only within that prese
 import re, sys
 path, preset, key, value = sys.argv[1:]
 text = open(path).read()
-blocks = re.split(r'(?m)^(?=\[preset\.\d+\]$)', text)
+blocks = re.split(r'(?m)^(?=\[preset\.\d+(?:\.options)?\]$)', text)
 idx = None
 for b in blocks:
     m = re.match(r'\[preset\.(\d+)\]\n', b)
@@ -60,7 +60,10 @@ for b in blocks:
         else:
             b = b.rstrip('\n') + '\n%s=%s\n\n' % (key, value)
     out.append(b)
-open(path, 'w').write(''.join(out))
+new = ''.join(out)
+if not re.search(r'(?m)^%s=%s$' % (re.escape(key), re.escape(value)), new):
+    sys.exit('set_preset: %s was not applied to preset %s' % (key, preset))
+open(path, 'w').write(new)
 EOF
 }
 
