@@ -19,7 +19,9 @@
     "levels:check": "tsx scripts/build-levels.ts --check",
     "fixtures:build": "tsx scripts/build-parity-fixtures.ts",
     "fixtures:check": "tsx scripts/build-parity-fixtures.ts --check",
-    "game:test": "bash scripts/test-game.sh"
+    "game:test": "bash scripts/test-game.sh",
+    "config:check": "tsx scripts/client-config.ts selftest",
+    "config:write": "tsx scripts/client-config.ts write"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

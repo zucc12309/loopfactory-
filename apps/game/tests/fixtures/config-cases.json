@@ -1,0 +1,413 @@
+{
+ "_comment": "Shared client-config validation cases: scripts/client-config.ts (build time) and LFReleaseConfig (runtime) must agree.",
+ "cases": [
+  {
+   "name": "dev loopback is fine",
+   "valid": true,
+   "config": {
+    "environment": "development",
+    "apiBaseUrl": "http://127.0.0.1:8080"
+   }
+  },
+  {
+   "name": "dev localhost and no public URLs",
+   "valid": true,
+   "config": {
+    "environment": "development",
+    "apiBaseUrl": "http://localhost:8080"
+   }
+  },
+  {
+   "name": "dev with empty api (offline-only)",
+   "valid": true,
+   "config": {
+    "environment": "development",
+    "apiBaseUrl": ""
+   }
+  },
+  {
+   "name": "staging complete",
+   "valid": true,
+   "config": {
+    "environment": "staging",
+    "build": 7,
+    "apiBaseUrl": "https://api.staging.loopfactory.app",
+    "privacyPolicyUrl": "https://loopfactory.app/privacy",
+    "supportUrl": "https://loopfactory.app/support",
+    "analytics": {
+     "provider": "posthog",
+     "posthogHost": "https://eu.i.posthog.com",
+     "posthogKey": "phc_public_project_key"
+    },
+    "crashReporting": {
+     "provider": "local"
+    },
+    "appLinks": {
+     "host": "play.loopfactory.app"
+    }
+   }
+  },
+  {
+   "name": "production complete",
+   "valid": true,
+   "config": {
+    "environment": "production",
+    "build": 10003,
+    "apiBaseUrl": "https://api.loopfactory.app",
+    "privacyPolicyUrl": "https://loopfactory.app/privacy",
+    "supportUrl": "https://loopfactory.app/support",
+    "analytics": {
+     "provider": "posthog",
+     "posthogHost": "https://eu.i.posthog.com",
+     "posthogKey": "phc_public_project_key"
+    },
+    "crashReporting": {
+     "provider": "local"
+    }
+   }
+  },
+  {
+   "name": "unknown environment",
+   "valid": false,
+   "config": {
+    "environment": "prod",
+    "build": 10003,
+    "apiBaseUrl": "https://api.loopfactory.app",
+    "privacyPolicyUrl": "https://loopfactory.app/privacy",
+    "supportUrl": "https://loopfactory.app/support",
+    "analytics": {
+     "provider": "posthog",
+     "posthogHost": "https://eu.i.posthog.com",
+     "posthogKey": "phc_public_project_key"
+    },
+    "crashReporting": {
+     "provider": "local"
+    }
+   }
+  },
+  {
+   "name": "release with localhost",
+   "valid": false,
+   "config": {
+    "environment": "production",
+    "build": 10003,
+    "apiBaseUrl": "https://localhost/api",
+    "privacyPolicyUrl": "https://loopfactory.app/privacy",
+    "supportUrl": "https://loopfactory.app/support",
+    "analytics": {
+     "provider": "posthog",
+     "posthogHost": "https://eu.i.posthog.com",
+     "posthogKey": "phc_public_project_key"
+    },
+    "crashReporting": {
+     "provider": "local"
+    }
+   }
+  },
+  {
+   "name": "release with 127.0.0.1",
+   "valid": false,
+   "config": {
+    "environment": "production",
+    "build": 10003,
+    "apiBaseUrl": "https://127.0.0.1:8080",
+    "privacyPolicyUrl": "https://loopfactory.app/privacy",
+    "supportUrl": "https://loopfactory.app/support",
+    "analytics": {
+     "provider": "posthog",
+     "posthogHost": "https://eu.i.posthog.com",
+     "posthogKey": "phc_public_project_key"
+    },
+    "crashReporting": {
+     "provider": "local"
+    }
+   }
+  },
+  {
+   "name": "release with http",
+   "valid": false,
+   "config": {
+    "environment": "production",
+    "build": 10003,
+    "apiBaseUrl": "http://api.loopfactory.app",
+    "privacyPolicyUrl": "https://loopfactory.app/privacy",
+    "supportUrl": "https://loopfactory.app/support",
+    "analytics": {
+     "provider": "posthog",
+     "posthogHost": "https://eu.i.posthog.com",
+     "posthogKey": "phc_public_project_key"
+    },
+    "crashReporting": {
+     "provider": "local"
+    }
+   }
+  },
+  {
+   "name": "release with private LAN host",
+   "valid": false,
+   "config": {
+    "environment": "production",
+    "build": 10003,
+    "apiBaseUrl": "https://192.168.1.20",
+    "privacyPolicyUrl": "https://loopfactory.app/privacy",
+    "supportUrl": "https://loopfactory.app/support",
+    "analytics": {
+     "provider": "posthog",
+     "posthogHost": "https://eu.i.posthog.com",
+     "posthogKey": "phc_public_project_key"
+    },
+    "crashReporting": {
+     "provider": "local"
+    }
+   }
+  },
+  {
+   "name": "release with 172.16 host",
+   "valid": false,
+   "config": {
+    "environment": "production",
+    "build": 10003,
+    "apiBaseUrl": "https://172.20.0.5",
+    "privacyPolicyUrl": "https://loopfactory.app/privacy",
+    "supportUrl": "https://loopfactory.app/support",
+    "analytics": {
+     "provider": "posthog",
+     "posthogHost": "https://eu.i.posthog.com",
+     "posthogKey": "phc_public_project_key"
+    },
+    "crashReporting": {
+     "provider": "local"
+    }
+   }
+  },
+  {
+   "name": "release with .example privacy URL",
+   "valid": false,
+   "config": {
+    "environment": "production",
+    "build": 10003,
+    "apiBaseUrl": "https://api.loopfactory.app",
+    "privacyPolicyUrl": "https://loopfactory.example/privacy",
+    "supportUrl": "https://loopfactory.app/support",
+    "analytics": {
+     "provider": "posthog",
+     "posthogHost": "https://eu.i.posthog.com",
+     "posthogKey": "phc_public_project_key"
+    },
+    "crashReporting": {
+     "provider": "local"
+    }
+   }
+  },
+  {
+   "name": "release with example.com",
+   "valid": false,
+   "config": {
+    "environment": "production",
+    "build": 10003,
+    "apiBaseUrl": "https://api.loopfactory.app",
+    "privacyPolicyUrl": "https://loopfactory.app/privacy",
+    "supportUrl": "https://example.com/help",
+    "analytics": {
+     "provider": "posthog",
+     "posthogHost": "https://eu.i.posthog.com",
+     "posthogKey": "phc_public_project_key"
+    },
+    "crashReporting": {
+     "provider": "local"
+    }
+   }
+  },
+  {
+   "name": "release with placeholder",
+   "valid": false,
+   "config": {
+    "environment": "production",
+    "build": 10003,
+    "apiBaseUrl": "https://api.YOUR-DOMAIN.com",
+    "privacyPolicyUrl": "https://loopfactory.app/privacy",
+    "supportUrl": "https://loopfactory.app/support",
+    "analytics": {
+     "provider": "posthog",
+     "posthogHost": "https://eu.i.posthog.com",
+     "posthogKey": "phc_public_project_key"
+    },
+    "crashReporting": {
+     "provider": "local"
+    }
+   }
+  },
+  {
+   "name": "release missing privacy URL",
+   "valid": false,
+   "config": {
+    "environment": "production",
+    "build": 10003,
+    "apiBaseUrl": "https://api.loopfactory.app",
+    "supportUrl": "https://loopfactory.app/support",
+    "analytics": {
+     "provider": "posthog",
+     "posthogHost": "https://eu.i.posthog.com",
+     "posthogKey": "phc_public_project_key"
+    },
+    "crashReporting": {
+     "provider": "local"
+    }
+   }
+  },
+  {
+   "name": "release missing support URL",
+   "valid": false,
+   "config": {
+    "environment": "production",
+    "build": 10003,
+    "apiBaseUrl": "https://api.loopfactory.app",
+    "privacyPolicyUrl": "https://loopfactory.app/privacy",
+    "analytics": {
+     "provider": "posthog",
+     "posthogHost": "https://eu.i.posthog.com",
+     "posthogKey": "phc_public_project_key"
+    },
+    "crashReporting": {
+     "provider": "local"
+    }
+   }
+  },
+  {
+   "name": "release without build number",
+   "valid": false,
+   "config": {
+    "environment": "production",
+    "apiBaseUrl": "https://api.loopfactory.app",
+    "privacyPolicyUrl": "https://loopfactory.app/privacy",
+    "supportUrl": "https://loopfactory.app/support",
+    "analytics": {
+     "provider": "posthog",
+     "posthogHost": "https://eu.i.posthog.com",
+     "posthogKey": "phc_public_project_key"
+    },
+    "crashReporting": {
+     "provider": "local"
+    }
+   }
+  },
+  {
+   "name": "release with credentials in URL",
+   "valid": false,
+   "config": {
+    "environment": "production",
+    "build": 10003,
+    "apiBaseUrl": "https://user:pw@api.loopfactory.app",
+    "privacyPolicyUrl": "https://loopfactory.app/privacy",
+    "supportUrl": "https://loopfactory.app/support",
+    "analytics": {
+     "provider": "posthog",
+     "posthogHost": "https://eu.i.posthog.com",
+     "posthogKey": "phc_public_project_key"
+    },
+    "crashReporting": {
+     "provider": "local"
+    }
+   }
+  },
+  {
+   "name": "release with test switch",
+   "valid": false,
+   "config": {
+    "environment": "production",
+    "build": 10003,
+    "apiBaseUrl": "https://api.loopfactory.app",
+    "privacyPolicyUrl": "https://loopfactory.app/privacy",
+    "supportUrl": "https://loopfactory.app/support",
+    "analytics": {
+     "provider": "posthog",
+     "posthogHost": "https://eu.i.posthog.com",
+     "posthogKey": "phc_public_project_key"
+    },
+    "crashReporting": {
+     "provider": "local"
+    },
+    "devAuth": true
+   }
+  },
+  {
+   "name": "secret in client",
+   "valid": false,
+   "config": {
+    "environment": "production",
+    "build": 10003,
+    "apiBaseUrl": "https://api.loopfactory.app",
+    "privacyPolicyUrl": "https://loopfactory.app/privacy",
+    "supportUrl": "https://loopfactory.app/support",
+    "analytics": {
+     "provider": "posthog",
+     "posthogHost": "https://eu.i.posthog.com",
+     "posthogKey": "phc_public_project_key"
+    },
+    "crashReporting": {
+     "provider": "local"
+    },
+    "jwtSecret": "abc"
+   }
+  },
+  {
+   "name": "nested secret in client",
+   "valid": false,
+   "config": {
+    "environment": "production",
+    "build": 10003,
+    "apiBaseUrl": "https://api.loopfactory.app",
+    "privacyPolicyUrl": "https://loopfactory.app/privacy",
+    "supportUrl": "https://loopfactory.app/support",
+    "analytics": {
+     "provider": "posthog",
+     "personalApiSecret": "x"
+    },
+    "crashReporting": {
+     "provider": "local"
+    }
+   }
+  },
+  {
+   "name": "release with .local app link host",
+   "valid": false,
+   "config": {
+    "environment": "production",
+    "build": 10003,
+    "apiBaseUrl": "https://api.loopfactory.app",
+    "privacyPolicyUrl": "https://loopfactory.app/privacy",
+    "supportUrl": "https://loopfactory.app/support",
+    "analytics": {
+     "provider": "posthog",
+     "posthogHost": "https://eu.i.posthog.com",
+     "posthogKey": "phc_public_project_key"
+    },
+    "crashReporting": {
+     "provider": "local"
+    },
+    "appLinks": {
+     "host": "loopfactory.local"
+    }
+   }
+  },
+  {
+   "name": "release with single-label host",
+   "valid": false,
+   "config": {
+    "environment": "production",
+    "build": 10003,
+    "apiBaseUrl": "https://api",
+    "privacyPolicyUrl": "https://loopfactory.app/privacy",
+    "supportUrl": "https://loopfactory.app/support",
+    "analytics": {
+     "provider": "posthog",
+     "posthogHost": "https://eu.i.posthog.com",
+     "posthogKey": "phc_public_project_key"
+    },
+    "crashReporting": {
+     "provider": "local"
+    }
+   }
+  }
+ ]
+}

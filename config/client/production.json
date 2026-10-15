@@ -1,0 +1,19 @@
+{
+ "_comment": "Production template. Real values come from CI/environment (LF_API_BASE_URL, LF_PRIVACY_POLICY_URL, LF_SUPPORT_URL, LF_APP_LINK_HOST, LF_BUILD, LF_POSTHOG_KEY). The placeholders below intentionally FAIL validation so an unconfigured release build cannot be produced.",
+ "environment": "production",
+ "build": 0,
+ "apiBaseUrl": "https://api.YOUR-DOMAIN",
+ "privacyPolicyUrl": "https://YOUR-DOMAIN/privacy",
+ "supportUrl": "https://YOUR-DOMAIN/support",
+ "analytics": {
+  "provider": "none",
+  "posthogHost": "https://eu.i.posthog.com",
+  "posthogKey": ""
+ },
+ "crashReporting": {
+  "provider": "local"
+ },
+ "appLinks": {
+  "host": ""
+ }
+}

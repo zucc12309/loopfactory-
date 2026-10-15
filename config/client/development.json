@@ -1,0 +1,19 @@
+{
+ "_comment": "Development config (committed, also the default inside apps/game/config/client.json). Contains NO secrets.",
+ "environment": "development",
+ "build": 0,
+ "apiBaseUrl": "http://127.0.0.1:8080",
+ "privacyPolicyUrl": "",
+ "supportUrl": "",
+ "analytics": {
+  "provider": "none",
+  "posthogHost": "https://eu.i.posthog.com",
+  "posthogKey": ""
+ },
+ "crashReporting": {
+  "provider": "local"
+ },
+ "appLinks": {
+  "host": ""
+ }
+}

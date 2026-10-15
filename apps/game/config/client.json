@@ -1,15 +1,19 @@
 {
- "_comment": "Client configuration. Contains NO secrets \u2014 only public endpoints and public analytics keys. Production values are injected by scripts/set-client-config.sh during release builds.",
- "apiBaseUrl": "http://127.0.0.1:8080",
+ "_comment": "Development config (committed, also the default inside apps/game/config/client.json). Contains NO secrets.",
  "environment": "development",
+ "build": 0,
+ "apiBaseUrl": "http://127.0.0.1:8080",
+ "privacyPolicyUrl": "",
+ "supportUrl": "",
  "analytics": {
   "provider": "none",
   "posthogHost": "https://eu.i.posthog.com",
   "posthogKey": ""
  },
  "crashReporting": {
-  "provider": "none",
-  "dsn": ""
+  "provider": "local"
  },
- "privacyPolicyUrl": "https://loopfactory.example/privacy"
+ "appLinks": {
+  "host": ""
+ }
 }
