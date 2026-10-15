@@ -113,6 +113,7 @@ def main():
         need(not ats.get("NSAllowsArbitraryLoads", False), "Info.plist: no NSAllowsArbitraryLoads", "Info.plist: NSAllowsArbitraryLoads must never be set")
         local = bool(ats.get("NSAllowsLocalNetworking", False))
         need(local == (a.env == "development"), f"Info.plist: local networking {'allowed (development)' if local else 'off'}", "Info.plist: NSAllowsLocalNetworking only belongs in development builds")
+        need(("NSLocalNetworkUsageDescription" in info) == (a.env == "development"), "Info.plist: local-network prompt text only in development", "Info.plist: NSLocalNetworkUsageDescription only belongs in development builds")
         for key in ("NSPhotoLibraryAddUsageDescription", "NSCameraUsageDescription", "NSMicrophoneUsageDescription", "NSPhotoLibraryUsageDescription"):
             need(str(info.get(key, "")).strip() != "", f"Info.plist: {key} set", f"Info.plist: {key} missing or empty")
         need(info.get("ITSAppUsesNonExemptEncryption") is False, "Info.plist: exempt encryption (HTTPS only)", "Info.plist: ITSAppUsesNonExemptEncryption should be false")

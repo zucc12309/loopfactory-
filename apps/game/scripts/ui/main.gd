@@ -1,5 +1,6 @@
 extends Control
-## Root router: screen stack, transitions, toasts, modal overlays, Android back button.
+## Root router: screen stack, transitions, toasts, modal overlays, Android back button, incoming
+## challenge links (LFPlatform).
 
 const SCREENS := {
 	"splash": "res://scripts/ui/screens/splash.gd",
@@ -181,10 +182,24 @@ func reduced_motion() -> bool:
 	return bool(Game.settings().get("reducedMotion", false))
 
 
-## Safe-area top/bottom padding in viewport units (notches, gesture bars).
+## Test seam: simulated physical screen + safe area (e.g. an iPhone with a Dynamic Island).
+static var _test_screen := Vector2i()
+static var _test_safe := Rect2i()
+
+
+static func simulate_safe_area(screen: Vector2i, safe: Rect2i) -> void:
+	_test_screen = screen
+	_test_safe = safe
+
+
+## Safe-area top/bottom padding in viewport units (notches, Dynamic Island, home indicator,
+## gesture bars).
 func safe_margins() -> Vector2:
 	var safe := DisplayServer.get_display_safe_area()
 	var screen := DisplayServer.screen_get_size()
+	if _test_screen != Vector2i():
+		safe = _test_safe
+		screen = _test_screen
 	if screen.y <= 0 or safe.size.y <= 0:
 		return Vector2(0, 0)
 	var scale := get_viewport_rect().size.y / float(screen.y)

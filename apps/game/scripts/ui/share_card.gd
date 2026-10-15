@@ -200,11 +200,15 @@ static func share_native(main: Node, text: String, file_path: String, kind: Stri
 		LFShare.OPENED:
 			Analytics.track("share_sheet_opened", {"kind": kind, "with_image": file_path != ""})
 			# iOS reports when the sheet closes (done / cancelled / failed); never who received what.
+			# Bound to the Analytics node (not a free lambda): connections that never fire, e.g. an
+			# app quit with the sheet open, are released with that node instead of outliving the
+			# script runtime in LFPlatform's static adapter (crashes Godot at exit).
 			var a := LFPlatform.adapter()
-			for c in a.share_closed.get_connections():
-				a.share_closed.disconnect(c["callable"])
-			a.share_closed.connect(func(result: String, _activity: String):
-				Analytics.track("share_sheet_closed", {"kind": kind, "result": result}), CONNECT_ONE_SHOT)
+			if a.reports_share_close():
+				var cb := Analytics.on_share_sheet_closed.bind(kind)
+				if a.share_closed.is_connected(cb):
+					a.share_closed.disconnect(cb)
+				a.share_closed.connect(cb, CONNECT_ONE_SHOT)
 		_:
 			DisplayServer.clipboard_set(text)
 			Analytics.track("share_text_copied", {"kind": kind, "fallback": true})

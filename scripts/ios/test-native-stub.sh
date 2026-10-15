@@ -42,7 +42,9 @@ $KEY = "res://native/stub/$(basename "$LIB")"
 EOF
 "$GODOT" --headless --path "$WORK" --import >/dev/null 2>&1 || true
 LOG="$WORK/out.log"
-timeout 120 "$GODOT" --headless --path "$WORK" -s res://tests_e2e/ios_native_binding_tests.gd 2>&1 | tee "$LOG"
+TIMEOUT=""
+command -v timeout >/dev/null 2>&1 && TIMEOUT="timeout 120"
+$TIMEOUT "$GODOT" --headless --path "$WORK" -s res://tests_e2e/ios_native_binding_tests.gd 2>&1 | tee "$LOG"
 STATUS=${PIPESTATUS[0]}
 if grep -E "SCRIPT ERROR|Parse Error" "$LOG" >/dev/null || ! grep -q "iOS native binding tests: .* 0 failed" "$LOG"; then
   STATUS=1

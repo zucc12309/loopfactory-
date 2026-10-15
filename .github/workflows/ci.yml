@@ -4,6 +4,12 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
+    inputs:
+      ios_simulator:
+        description: Also compile the iOS app for the Simulator on macOS (uses macOS runner minutes)
+        type: boolean
+        default: false
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -43,6 +49,8 @@ jobs:
         run: npm run openapi -w @loopfactory/api -- --check
       - name: Build API bundle
         run: npm run build -w @loopfactory/api
+      - name: Shared GDScript has no platform-specific references (scripts/platform/ only)
+        run: python3 scripts/check-platform-refs.py --selftest && python3 scripts/check-platform-refs.py
 
   api:
     name: API integration tests (PostgreSQL)
@@ -175,3 +183,59 @@ jobs:
         with:
           name: loopfactory-debug-apk
           path: apps/game/build/loopfactory-debug.apk
+
+  ios-export:
+    name: iOS Xcode project export + native binding layer (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - name: Install Godot + export templates (cached)
+        uses: actions/cache@v4
+        id: godot-cache
+        with:
+          path: ~/godot-cache
+          key: godot-${{ env.GODOT_VERSION }}
+      - if: steps.godot-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/godot-cache && cd ~/godot-cache
+          curl -sSL -o godot.zip "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_linux.x86_64.zip"
+          curl -sSL -o templates.tpz "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_export_templates.tpz"
+      - name: Install Godot and the iOS template
+        run: |
+          cd ~/godot-cache && unzip -oq godot.zip && sudo cp "Godot_v${GODOT_VERSION}_linux.x86_64" /usr/local/bin/godot
+          mkdir -p ~/.local/share/godot/export_templates/$GODOT_TEMPLATES_DIR
+          unzip -oq templates.tpz 'templates/ios.zip' 'templates/version.txt' -d /tmp/tpl
+          cp /tmp/tpl/templates/* ~/.local/share/godot/export_templates/$GODOT_TEMPLATES_DIR/
+      - name: Export the Xcode project and validate it (unsigned; compile needs macOS)
+        run: ./scripts/build-ios.sh development export
+      - name: Compile the LoopFactoryIOS binding layer for the host and test it in Godot
+        run: pipx install scons && ./scripts/ios/test-native-stub.sh
+
+  ios-simulator:
+    name: iOS Simulator build (macOS, on demand)
+    if: github.event_name == 'workflow_dispatch' && inputs.ios_simulator
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - name: Install Godot (macOS) and the iOS template
+        run: |
+          curl -sSL -o godot.zip "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_macos.universal.zip"
+          unzip -q godot.zip
+          curl -sSL -o templates.tpz "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_export_templates.tpz"
+          T="$HOME/Library/Application Support/Godot/export_templates/$GODOT_TEMPLATES_DIR"
+          mkdir -p "$T" && unzip -oq templates.tpz 'templates/ios.zip' 'templates/version.txt' -d /tmp/tpl && cp /tmp/tpl/templates/* "$T/"
+      - name: Native module + Xcode project + simulator build and launch
+        run: |
+          pipx install scons
+          GODOT="$PWD/Godot.app/Contents/MacOS/Godot" ./scripts/build-ios.sh development simulator --native
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ios-simulator-logs
+          path: apps/game/build/ios/development/logs

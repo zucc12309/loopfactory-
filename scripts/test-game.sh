@@ -13,8 +13,9 @@ if grep -E "SCRIPT ERROR|Parse Error" "$LOG" >/dev/null; then
   STATUS=1
 fi
 # Headless client suites with fake servers/providers (no network): auth resilience; analytics,
-# diagnostics, config rules and local deletion.
-for SUITE in auth_tests:Auth analytics_tests:Analytics; do
+# diagnostics, config rules and local deletion; cross-platform services (Android/iOS adapter
+# contracts, secure token storage).
+for SUITE in auth_tests:Auth analytics_tests:Analytics platform_tests:Platform; do
   FILE=${SUITE%%:*}; LABEL=${SUITE##*:}
   timeout 200 "$GODOT" --headless --path . -s "res://tests_e2e/$FILE.gd" 2>&1 | tee "$LOG"
   S_STATUS=${PIPESTATUS[0]}
@@ -27,7 +28,7 @@ done
 # Scene-level UI tests (layout on five aspect ratios, rapid taps, failure/celebration flow). They
 # need real font metrics, so they use the GL renderer under a virtual display when available.
 # The crew suite compares rendered pixels, so it needs the GL renderer too.
-for SUITE in ui_tests crew_ui_tests beta_ui_tests; do
+for SUITE in ui_tests crew_ui_tests beta_ui_tests ios_ui_tests; do
   if command -v xvfb-run >/dev/null 2>&1; then
     UI_CMD=(xvfb-run -a "$GODOT" --path . --rendering-driver opengl3 -s "res://tests_ui/$SUITE.gd")
   else

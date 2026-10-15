@@ -191,6 +191,11 @@ func once(event: String, props := {}) -> void:
 	track(event, props)
 
 
+## LFPlatform share_closed (iOS) → share_sheet_closed. Never claims a recipient got anything.
+func on_share_sheet_closed(result: String, _activity: String, kind: String) -> void:
+	track("share_sheet_closed", {"kind": kind, "result": result})
+
+
 func track(event: String, props := {}) -> void:
 	if not EVENTS.has(event):
 		push_warning("Unknown analytics event " + event)

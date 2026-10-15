@@ -27,6 +27,10 @@ func native_available() -> bool:
 	return v is int and int(v) >= API_VERSION
 
 
+func reports_share_close() -> bool:
+	return native_available()
+
+
 func supports_secure_storage() -> bool:
 	return native_available() and call_native("isKeychainAvailable") == true
 

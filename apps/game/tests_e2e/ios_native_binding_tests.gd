@@ -100,5 +100,7 @@ func _run() -> void:
 		DirAccess.remove_absolute(ProjectSettings.globalize_path("user://native-binding-save.json" + s))
 	check(Platform.system_reduce_motion() == -1, "reduce motion unknown on the host stub")
 
+	# Drop the adapter (and the lambdas connected to it above) while the script runtime is alive.
+	Platform.use_adapter(load("res://scripts/platform/platform_adapter.gd").new())
 	print("\niOS native binding tests: %d checks, %d failed" % [checks, failures])
 	quit(1 if failures > 0 else 0)

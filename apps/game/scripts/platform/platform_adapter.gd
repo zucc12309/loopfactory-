@@ -49,6 +49,11 @@ func supports_secure_storage() -> bool:
 	return false
 
 
+## True when share_closed will fire after a sheet opens (iOS). Android's chooser reports nothing.
+func reports_share_close() -> bool:
+	return false
+
+
 ## Open the system share sheet. abs_path is an absolute path to an existing file, or "".
 func share(_text: String, _abs_path: String, _mime: String, _title: String) -> String:
 	return UNAVAILABLE

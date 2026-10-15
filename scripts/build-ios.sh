@@ -157,8 +157,11 @@ gd_str() { python3 -c 'import json,sys; print(json.dumps(sys.argv[1]))' "$1"; }
 # ---------------------------------------------------------------- 2. client configuration
 step "Client configuration ($ENV_NAME)"
 # Fails (writing nothing) on loopback/placeholder/insecure/missing values for staging/production.
-LF_BUILD="$BUILD" node "$ROOT/node_modules/.bin/tsx" "$ROOT/scripts/client-config.ts" write "$ENV_NAME" 2>&1 | tee "$LOGS/config.log"
-[ "${PIPESTATUS[0]}" -eq 0 ] || die "client config invalid (see $LOGS/config.log)"
+if ! LF_BUILD="$BUILD" node "$ROOT/node_modules/.bin/tsx" "$ROOT/scripts/client-config.ts" write "$ENV_NAME" >"$LOGS/config.log" 2>&1; then
+  cat "$LOGS/config.log" >&2
+  die "client config invalid (see $LOGS/config.log)"
+fi
+cat "$LOGS/config.log"
 cp "$CFG" "$OUT_DIR/client.json.expected"
 LINK_HOST="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("appLinks",{}).get("host",""))' "$CFG")"
 echo "Universal Links domain: ${LINK_HOST:-none (manual code entry only)}"
@@ -218,6 +221,7 @@ PLIST_EXTRA='<key>NSPhotoLibraryAddUsageDescription</key><string>Lets you save L
 if [ "$ENV_NAME" = "development" ]; then
   # Development builds talk to a local API over plain HTTP; never allowed in staging/production.
   PLIST_EXTRA="$PLIST_EXTRA<key>NSAppTransportSecurity</key><dict><key>NSAllowsLocalNetworking</key><true/></dict>"
+  PLIST_EXTRA="$PLIST_EXTRA<key>NSLocalNetworkUsageDescription</key><string>Development build: connects to the Loop Factory test server on your local network.</string>"
 fi
 ENTITLEMENTS=""
 [ -n "$LINK_HOST" ] && ENTITLEMENTS="<key>com.apple.developer.associated-domains</key><array><string>applinks:$LINK_HOST</string></array>"
@@ -248,10 +252,12 @@ grep -q "ERROR: Project export for preset" "$LOGS/godot-export.log" && die "Godo
 # ---------------------------------------------------------------- 6. validate generated project
 step "Validate export"
 NATIVE_FLAG=$([ "$NATIVE" = 1 ] && echo --native || true)
+CHECK_OK=1
 python3 "$ROOT/scripts/ios/check-ios-export.py" --dir "$OUT_DIR" --name "$NAME" --config "$OUT_DIR/client.json.expected" \
   --env "$ENV_NAME" --bundle-id "$BUNDLE_ID" --team "$TEAM" --version "$VERSION_NAME" --build "$BUILD" \
-  --associated-domain "$LINK_HOST" --min-ios "$MIN_IOS" $NATIVE_FLAG | tee "$LOGS/check.log"
-[ "${PIPESTATUS[0]}" -eq 0 ] || die "export check failed (see $LOGS/check.log)"
+  --associated-domain "$LINK_HOST" --min-ios "$MIN_IOS" $NATIVE_FLAG >"$LOGS/check.log" 2>&1 || CHECK_OK=0
+cat "$LOGS/check.log"
+[ "$CHECK_OK" = 1 ] || die "export check failed (see $LOGS/check.log)"
 
 # ---------------------------------------------------------------- 7. compile (macOS)
 PROJ="$OUT_DIR/$NAME.xcodeproj"
@@ -272,7 +278,7 @@ case "$MODE" in
     APP="$(find "$OUT_DIR/DerivedData/Build/Products" -maxdepth 2 -name "$NAME.app" -path "*iphonesimulator*" | head -1)"
     [ -n "$APP" ] || die "no .app produced"
     echo "App: $APP"
-    SIM="${LF_IOS_SIM_DEVICE:-$(xcrun simctl list devices available | grep -E '^\s+iPhone' | head -1 | sed -E 's/^\s+(.*) \([0-9A-F-]+\).*/\1/')}"
+    SIM="${LF_IOS_SIM_DEVICE:-$(xcrun simctl list devices available | grep -E '^[[:space:]]+iPhone' | head -1 | sed -E 's/^[[:space:]]+(.*) \([0-9A-F-]+\).*/\1/')}"
     if [ -n "$SIM" ]; then
       echo "Installing on simulator: $SIM"
       xcrun simctl boot "$SIM" 2>/dev/null || true
