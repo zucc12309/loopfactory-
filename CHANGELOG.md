@@ -2,6 +2,50 @@
 
 All notable changes to this project are documented here (format: Keep a Changelog, versions: SemVer).
 
+## [0.3.0] — 2026-10-15 — the Interdimensional Delivery Crew
+
+See [docs/CHARACTER_SYSTEM.md](docs/CHARACTER_SYSTEM.md) for the audit, architecture and risks.
+
+### Added
+- Character system: packages are the Interdimensional Delivery Crew — Bloop (orange ●), Zip
+  (blue ■), Glitch (purple ▲), Mochi (green ◆) — plus the mascot Captain Naps and engineer
+  Dr. Rix. Original procedural vector art in a consistent direction (v1, not a final
+  illustration pass), full and compact detail levels chosen by pixel size.
+- Animation state machine (idle, selected, moving, waiting, surprised, failed, delivered,
+  celebrating) as pure functions of simulation frames: interruptible, deterministic, frozen by
+  Reduce motion. Characters wait in source "pods", react when tapped, celebrate together on
+  their docks; per-world celebration themes.
+- Captain Naps on Home (optional bubble, tap for a line), on the win card (reacts to real
+  moments: first win, perfect, all-together arrival, near miss, efficient big solve) and
+  presenting the daily. Dr. Rix introduces crossings, junctions and three colours; Captain Naps
+  introduces new worlds — all in the existing banner, never a modal.
+- Data-driven dialogue engine (`data/crew/dialogue.en.json`): events, priority, cooldown
+  (incl. show-once), probability, conditions, templates; per-id translation fallback.
+- The Crew collection: roster, detail page with animation preview, 15 looks + a starry-eyed
+  celebration unlocked through play (validated against current content), equip persistence,
+  unseen markers and a single unlock toast. Existing saves receive looks already earned.
+- Share card crew lineup with a featured character (the run's final delivery) and one reaction.
+- Feature flags `characters_enabled`, `character_animations_enabled`,
+  `mascot_dialogue_enabled`, `character_collection_enabled`, `sci_fi_theme_enabled`;
+  `presentation` experiment (`hybrid` control, `minimal`, `full` with a sci-fi backdrop).
+- Settings: Character packages, Character animations, Captain Naps chatter.
+- Analytics: `character_exposed`, `character_animation_played`, `character_collection_opened`,
+  `cosmetic_unlocked`, `cosmetic_equipped`, `character_dialogue_shown`,
+  `character_dialogue_dismissed`; documented per-arm queries.
+- Tests: 18 crew unit tests, a 121-check crew scene suite (incl. pixel tests that no look covers
+  a symbol), character sheet renderer, crew benchmark.
+
+### Changed
+- Failure banner names the character and shows its confused face; a repeat of the same failure
+  may add a character quip after the tip.
+- Home bottom row: Worlds · The Crew · Friends (when the collection is enabled).
+- Characters are pooled canvas items re-recorded only when their face changes; running cost
+  equals the classic boxes.
+
+### Fixed
+- Tapping a source showed the "Pinned belt" coach message (sources were never belts).
+- Reset after a failed run with no moves didn't clear the failure marks.
+
 ## [0.2.0] — 2026-10-15 — gameplay, retention and sharing upgrade
 
 See [docs/UPGRADE_AUDIT.md](docs/UPGRADE_AUDIT.md) for the audit that drove these changes.

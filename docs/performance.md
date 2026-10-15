@@ -24,6 +24,23 @@ What changed (see [game-feel.md](game-feel.md#rendering-architecture-performance
 * Animated colours and radii are quantised so the `StyleBoxFlat` cache stops churning. In
   steady state the cache adds about 6 new boxes per 120 frames on the largest board.
 
+## Characters (Interdimensional Delivery Crew)
+
+Same benchmark, characters on vs off (classic boxes), two runs each, after the pooled
+character-node optimisation:
+
+| Board | Classic: running · idle (p50) | Characters: running · idle (p50) | Characters p95 running |
+|---|---|---|---|
+| c06, 4×4 | 0.64–0.78 ms · 0.26–0.28 ms | 0.63–0.66 ms · 0.40–0.41 ms | 1.36–1.44 ms |
+| c34, 6×7 | 1.28–1.34 ms · 0.52–0.59 ms | 1.05–1.16 ms · 0.79 ms | 2.15–2.17 ms |
+
+How it got there: the first version drew every character every frame in GDScript (c34 running
+p50 2.4 ms, p95 up to 4.6 ms; profiled at ≈ 85 µs per character). Characters are now pooled canvas
+items moved by transforms and re-recorded only when the face changes, and bodies use cached native
+style boxes. While running, characters are slightly cheaper than the classic boxes (which are
+redrawn every frame); while idle they cost ≈ 0.25 ms more because the waiting characters in sources
+blink and glance (a source re-records only when its face changes).
+
 ## Other measurements
 
 * **Rapid input:** 40 taps and undos in one frame converge to the model within 0.4 s, with every

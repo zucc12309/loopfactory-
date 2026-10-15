@@ -15,11 +15,11 @@
 <p align="center">
   <b>Tap a belt to turn it. Press Run. Watch every package glide home.</b><br>
   A tactile conveyor-belt puzzle game built for one-minute breaks — fully offline, instant resume,<br>
-  five themed worlds, a daily puzzle and friend challenges where every score is re-verified by the server.
+  starring <b>the Interdimensional Delivery Crew</b>: packages with personalities, supervised by a very sleepy space cat.
 </p>
 
 <p align="center">
-  <img src="docs/assets/showcase.png" alt="Home, onboarding coach, a run with path illumination, the success celebration and the result card" width="100%">
+  <img src="docs/assets/showcase.png" alt="Home with Captain Naps, the onboarding coach with Bloop, the crew celebrating on their docks, the result card with Captain Naps' reaction, and The Crew collection" width="100%">
 </p>
 
 ---
@@ -39,6 +39,8 @@
 
 | | |
 |---|---|
+| 📦 **The Interdimensional Delivery Crew** | Packages are characters — overconfident Bloop, nervous Zip, chaotic Glitch, sleepy Mochi — who react to every route; Captain Naps supervises (barely) and Dr. Rix introduces new machinery. Same rules, same symbols, never in the way ([character system](docs/CHARACTER_SYSTEM.md)) |
+| 🎩 **Looks you earn** | 15 cosmetic looks and a starry-eyed celebration unlock through normal play — nothing to buy, never covering a colour or symbol |
 | ✨ **Satisfying to touch** | Tiles sink and pre-tilt under your finger, snap in 140 ms, belts roll under packages, paths light up, docks pop — and a skippable 1.2 s celebration ([game feel](docs/game-feel.md)) |
 | 🧩 **36 curated puzzles, 5 worlds** | Little Workshop → Candy Factory → Parcel Station → Neon Circuit → Space Logistics; a CI-enforced [difficulty model](docs/difficulty.md) keeps the curve fair |
 | 🤝 **Friend challenges** | Share a code, a friend plays the same puzzle with no sign-up, and the server verifies who used fewer rotations ([sharing](docs/sharing.md)) |
@@ -48,22 +50,28 @@
 | ⚖️ **Fair leaderboards** | Scores come from server re-simulation of move replays — never from client counters |
 | 📴 **Offline-first** | Atomic autosave after every move, instant resume, corrupted-save recovery, idempotent sync queue |
 | 🔁 **One rules engine, two runtimes** | TypeScript (server) and GDScript (device) proven identical on 180 simulations, every curated solve and hint, and 15 generated levels |
-| ♿ **Accessible** | One-handed play, shapes on every package (never colour alone), reduced motion, separate sound / music / vibration |
+| ♿ **Accessible** | One-handed play, shapes on every package (never colour alone), reduced motion, separate sound / music / vibration, character animation and chatter toggles |
 | 🔒 **Privacy by design** | No sign-up, opt-in analytics, random ids, privacy-safe A/B bucketing, in-app data export and account deletion |
 
 ## How it plays
 
 <table>
 <tr>
+<td align="center" width="25%"><img src="docs/screenshots/home.png" alt="Home with Captain Naps"><br><sub><b>Meet Captain Naps</b><br>The supervisor. Mostly asleep. Tap for a line</sub></td>
+<td align="center" width="25%"><img src="docs/screenshots/crew.png" alt="The Crew"><br><sub><b>The Crew</b><br>Bloop, Zip, Glitch, Mochi, Captain Naps, Dr. Rix</sub></td>
+<td align="center" width="25%"><img src="docs/screenshots/crew-detail.png" alt="Character detail with looks"><br><sub><b>Looks you earn</b><br>Preview every animation; unlock looks by playing</sub></td>
+<td align="center" width="25%"><img src="docs/screenshots/rix-intro.png" alt="Dr. Rix introduces crossings"><br><sub><b>Dr. Rix explains</b><br>New machinery, introduced in one optional line</sub></td>
+</tr>
+<tr>
 <td align="center" width="25%"><img src="docs/screenshots/tutorial.png" alt="Onboarding coach"><br><sub><b>Learn by doing</b><br>A coach shows where to tap on the first levels</sub></td>
 <td align="center" width="25%"><img src="docs/screenshots/hint-area.png" alt="Progressive hint"><br><sub><b>Hints that teach</b><br>Area first, then the tile, then the turn</sub></td>
 <td align="center" width="25%"><img src="docs/screenshots/running.png" alt="Simulation with path illumination"><br><sub><b>Watch it run</b><br>Belts roll, routes light up in package colours</sub></td>
-<td align="center" width="25%"><img src="docs/screenshots/fail.png" alt="Failure feedback"><br><sub><b>Failures that explain</b><br>Which package, why, and where — never over the board</sub></td>
+<td align="center" width="25%"><img src="docs/screenshots/fail.png" alt="Failure feedback"><br><sub><b>Failures that explain</b><br>Who, why, and where — never over the board</sub></td>
 </tr>
 <tr>
-<td align="center"><img src="docs/screenshots/celebration.png" alt="Success celebration"><br><sub><b>A rewarding finish</b><br>Light wave, docks fill, confetti — tap to skip</sub></td>
-<td align="center"><img src="docs/screenshots/win.png" alt="Result card"><br><sub><b>One big Next</b><br>Stars revealed one by one; replay or challenge</sub></td>
-<td align="center"><img src="docs/screenshots/share-card.png" alt="Share card"><br><sub><b>Share without spoilers</b><br>1080×1350 card: date, rotations, stars, code</sub></td>
+<td align="center"><img src="docs/screenshots/crew-celebration.png" alt="The crew celebrating"><br><sub><b>A rewarding finish</b><br>Everyone celebrates on their dock — tap to skip</sub></td>
+<td align="center"><img src="docs/screenshots/win.png" alt="Result card"><br><sub><b>One big Next</b><br>Stars one by one; Captain Naps reacts to what happened</sub></td>
+<td align="center"><img src="docs/screenshots/share-card.png" alt="Share card"><br><sub><b>Share without spoilers</b><br>Result, stars and a crew reaction — never the solution</sub></td>
 <td align="center"><img src="docs/screenshots/challenge.png" alt="Friend challenge"><br><sub><b>Challenge a friend</b><br>Same puzzle, verified head-to-head</sub></td>
 </tr>
 <tr>
@@ -153,15 +161,17 @@ npm run dev -w @loopfactory/api
 | Core game loop, 36 levels in 5 worlds, endless, offline play, resume | ✅ Done & tested |
 | Game feel, onboarding, hints, failure feedback, celebration, audio | ✅ Done & tested on desktop · ⚠️ feel not yet play-tested on a phone |
 | Friend challenges, share card, replays, experiments, analytics taxonomy | ✅ Done & tested · ⏳ native share sheet, app links, video export not built |
+| Interdimensional Delivery Crew: characters, Captain Naps, Dr. Rix, dialogue, The Crew, looks, flags | ✅ Done & tested on desktop · ⚠️ v1 procedural art (no illustrator pass), not tested on a phone, effect on retention unmeasured |
 | Backend: auth, sync, daily, challenges, leaderboards, achievements, privacy | ✅ Done & tested |
 | CI, Docker image, Render blueprint, load test | ✅ Done (not deployed) |
 | Android APK (debug + release signing) | ✅ Builds & verifies · ⚠️ not yet tested on a device |
 | Play Store AAB, iOS build | ⏳ Needs Gradle template / macOS + Xcode |
 | Google/Apple sign-in, store billing, ads, client crash reporting | ⏳ Interfaces ready, credentials pending |
 
-**Verification (latest run):** engine 41/41 (incl. 1,000 generated puzzles) · Godot 38 tests /
-4,053 assertions · UI 281 checks on 5 aspect ratios · API 41/41 · end-to-end 21/21 · typecheck,
-lint and `npm audit` clean. Details in
+**Verification (latest run):** engine 41/41 (incl. 1,000 generated puzzles) · Godot 56 tests /
+7,481 assertions · UI 281 checks on 5 aspect ratios · crew scene tests 121 checks (incl. pixel
+checks that no look covers a symbol) · API 41/41 · end-to-end 21/21 · typecheck, lint and
+`npm audit` clean. Details in
 [docs/testing.md](docs/testing.md) and [docs/load-testing.md](docs/load-testing.md).
 Everything not finished is listed honestly in [docs/known-limitations.md](docs/known-limitations.md).
 
@@ -187,6 +197,7 @@ Each package has its own README: [game](apps/game/README.md) ·
 
 | | |
 |---|---|
+| **Characters** | [Character system](docs/CHARACTER_SYSTEM.md) · [Art guide](docs/CHARACTER_ART_GUIDE.md) · [Animations](docs/CHARACTER_ANIMATIONS.md) · [Testing](docs/CHARACTER_TESTING.md) |
 | **Design** | [Gameplay rules](docs/gameplay-rules.md) · [Game feel](docs/game-feel.md) · [Difficulty model](docs/difficulty.md) · [Architecture](docs/architecture.md) · [Sync & persistence](docs/sync.md) |
 | **Backend** | [API overview](docs/api.md) · [OpenAPI spec](docs/api/openapi.json) · [Security review](docs/security.md) |
 | **Operations** | [Deployment, backups, rollback](docs/deployment.md) · [Load testing](docs/load-testing.md) · [Performance](docs/performance.md) · [Testing](docs/testing.md) |

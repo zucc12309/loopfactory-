@@ -25,6 +25,20 @@ served by `GET /api/v1/config` and stored in `remote_config_versions`.
 | `challenge_button` | `secondary_row`, `beside_next` | Placement of "Challenge a friend" on the result card |
 | `daily_entry` | `card`, `banner` | Daily challenge as a Home card vs. a banner above Continue |
 | `difficulty_ramp` | `standard`, `gentle` | Endless tier thresholds ×1.0 vs ×1.5 |
+| `presentation` | `hybrid`, `minimal`, `full` | Character presentation: expressive packages + Captain Naps (shipped), the pre-crew look, or hybrid + sci-fi backdrop ([CHARACTER_SYSTEM.md](CHARACTER_SYSTEM.md#7-presentation-variants-and-feature-flags)) |
+
+## Feature flags (kill switches)
+
+`remoteConfig.flags.<name>` — booleans, default `true` when absent (`LFFlags.FLAGS`). Turning one
+off removes that feature for everyone on their next config fetch, without a client update.
+
+| Flag | Turns off |
+|---|---|
+| `characters_enabled` | all character features (classic packages, logo on Home, no Crew, no lines) |
+| `character_animations_enabled` | character motion (expressions stay) |
+| `mascot_dialogue_enabled` | every crew line (banners, Home bubble, win card, daily) |
+| `character_collection_enabled` | The Crew screen and unlock toasts (unlocks are still recorded) |
+| `sci_fi_theme_enabled` | the backdrop of the `full` presentation variant |
 
 ## Remote config
 
@@ -32,8 +46,10 @@ served by `GET /api/v1/config` and stored in `remote_config_versions`.
 {
   "experiments": {
     "celebration_ms": { "enabled": true, "weights": [50, 50] },
-    "daily_entry": { "force": "banner" }
-  }
+    "daily_entry": { "force": "banner" },
+    "presentation": { "enabled": true, "weights": [34, 33, 33] }
+  },
+  "flags": { "mascot_dialogue_enabled": true }
 }
 ```
 
@@ -56,3 +72,4 @@ Unit tests cover: control by default, disabled experiments, a stable roughly 50/
 | `challenge_button` | `challenge_created` / `level_complete` | Next-level rate |
 | `daily_entry` | `daily_challenge_entry` / sessions | campaign progress |
 | `difficulty_ramp` | endless puzzles per session | endless abandonment |
+| `presentation` | D1 / D7 retention, levels per session (`hybrid` vs `minimal`) | tutorial completion, time to first success, crash-free sessions, share rate |

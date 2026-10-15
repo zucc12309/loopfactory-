@@ -42,8 +42,24 @@ is represented elsewhere as complete.
 * The **GDScript solver** runs on the main thread. Expert hints and endless generation take tens
   of milliseconds on desktop and should be profiled on a low-end phone (move to a thread if needed).
 
+## Character system (Interdimensional Delivery Crew)
+* **Art is v1 procedural vector art**, drawn in code in a consistent direction — not a final
+  illustrator pass ([CHARACTER_ART_GUIDE.md](CHARACTER_ART_GUIDE.md)). No image-generation tool
+  was available.
+* **Mochi never appears on a board:** current levels and the generator use at most three colours.
+  A four-colour world needs separate design and solver validation.
+* **No new mechanics or extra sci-fi worlds** (portals etc.). Dr. Rix introduces existing mechanics.
+* **Equipped looks and crew settings are device-local** (the API's settings schema strips unknown
+  keys; unlocks re-derive from synced progress).
+* **Localisation:** dialogue supports per-id translation files, but only English ships; roster
+  descriptions and UI labels are still inline. No machine translation by design.
+* **Effect on retention is unmeasured** — needs the `presentation` experiment with real players.
+* Character voice is two tiny synthesised sounds; no voice lines.
+
 ## Verification gaps
-* **No physical-device or emulator testing** (none available). Touch feel, haptics, audio output
+* **No physical-device or emulator testing** (none available). This includes the character
+  system's frame rate, readability, haptics and lifecycle behaviour on budget phones
+  ([manual test plan](CHARACTER_TESTING.md#manual-device-tests)). Touch feel, haptics, audio output
   and music mix, lifecycle events (backgrounding, calls, low memory), frame rate and battery on
   mid-range Android are untested. Layout was tested on five aspect ratios in a desktop renderer,
   and render cost was measured on desktop CPU only ([performance.md](performance.md)).

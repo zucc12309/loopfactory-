@@ -51,6 +51,13 @@ test scans the code to check that each `Analytics.track` call uses a declared na
 | `challenge_created` | server issued a code | `kind`, `level_id` |
 | `challenge_link_opened` | a code looked up | `source` |
 | `challenge_completed` | recipient solved, verified comparison | `outcome` (`win` / `tie` / `lose`) |
+| `character_exposed` | characters shown on a surface (once per session per surface) | `surface` (`board` / `home` / `daily`), `variant`, `detail`, `level_id` / `character` |
+| `character_animation_played` | notable crew animations only: first source poke per level, success celebration, Home tap, Crew preview | `character`, `animation`, `surface`, `moment` |
+| `character_collection_opened` | The Crew opened | `unseen` |
+| `cosmetic_unlocked` | a look unlocked through play | `cosmetic_id`, `character` |
+| `cosmetic_equipped` | a look worn (or removed: empty id) | `cosmetic_id`, `character` |
+| `character_dialogue_shown` | a crew line displayed | `character`, `event`, `line_id` |
+| `character_dialogue_dismissed` | Home bubble closed with × | `character`, `line_id`, `surface` |
 | `purchase_started` / `purchase_completed` | reserved; no store is integrated | `product_id` |
 
 ## Dashboards and queries
@@ -120,6 +127,47 @@ by `first_launch` events within 48 h of a `challenge_link_opened` with `source =
 A session counts as clean when it reaches background or close. Process death while in the
 background (normal on Android) is therefore not counted as a crash. Native crash reporting (Play
 Console vitals, or sentry-godot) is still needed for stack traces.
+
+## Character system
+
+The brief's `level_completed`, `level_retried`, `daily_challenge_completed` and `result_shared`
+are the existing `level_complete`, `level_retry`, `daily_challenge_completed` and
+`share_completed`. Compare the `presentation` experiment's arms (`exp_presentation`:
+`hybrid` vs `minimal`, plus `full`) — never before/after release, which mixes in seasonality and
+acquisition changes. Puzzles, difficulty and progression are identical across arms.
+
+| Metric | Definition (per arm) |
+|---|---|
+| Tutorial completion | `tutorial_complete` / `tutorial_start` |
+| First-session completion | share of new players clearing `c01` in their first session (query above, grouped by `exp_presentation`) |
+| Time to first successful action | median seconds from `first_launch` to that player's first `level_complete` |
+| D1 / D7 retention | retention query above, grouped by the arm of the `first_launch` event |
+| Levels per session | `count(level_complete)` / `count(distinct session_id)` |
+| Voluntary share rate | players with `share_completed` / players with a daily completion |
+| Crash-free sessions | proxy above, per arm |
+| Crew engagement (diagnostic, not a goal) | `character_collection_opened`, `cosmetic_equipped`, dialogue dismiss rate = `character_dialogue_dismissed` / `character_dialogue_shown` |
+
+```sql
+-- Time to first successful action, by presentation arm
+SELECT f.arm, quantile(0.5)(dateDiff('second', f.t0, c.t1)) AS median_seconds, count() AS players
+FROM (SELECT distinct_id, min(timestamp) AS t0, any(properties.exp_presentation) AS arm
+      FROM events WHERE event = 'first_launch' GROUP BY distinct_id) f
+JOIN (SELECT distinct_id, min(timestamp) AS t1 FROM events WHERE event = 'level_complete' GROUP BY distinct_id) c
+  USING distinct_id
+GROUP BY f.arm
+```
+
+```sql
+-- Levels per session and share rate, by arm
+SELECT properties.exp_presentation AS arm,
+  countIf(event = 'level_complete') / uniqIf(properties.session_id, event = 'session_start') AS levels_per_session,
+  uniqIf(distinct_id, event = 'share_completed') / uniqIf(distinct_id, event = 'daily_challenge_completed') AS share_rate
+FROM events GROUP BY arm
+```
+
+`exp_presentation` is only attached while the experiment is running; players who arrived before it
+started have no arm and must be excluded. **No result exists yet** — no analytics project is
+connected, so nothing here says the crew improves retention.
 
 ## Initial targets (hypotheses, not benchmarks)
 
