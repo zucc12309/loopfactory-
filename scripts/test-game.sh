@@ -12,6 +12,14 @@ if grep -E "SCRIPT ERROR|Parse Error" "$LOG" >/dev/null; then
   echo "::error::GDScript errors detected during tests"
   STATUS=1
 fi
+# Client auth resilience (fake token server; no network).
+timeout 200 "$GODOT" --headless --path . -s res://tests_e2e/auth_tests.gd 2>&1 | tee "$LOG"
+AUTH_STATUS=${PIPESTATUS[0]}
+if grep -E "SCRIPT ERROR|Parse Error|Failed to load script" "$LOG" >/dev/null || ! grep -q "Auth tests: .* 0 failed" "$LOG"; then
+  echo "::error::auth tests failed"
+  AUTH_STATUS=1
+fi
+[ "$AUTH_STATUS" -ne 0 ] && STATUS=1
 # Scene-level UI tests (layout on five aspect ratios, rapid taps, failure/celebration flow). They
 # need real font metrics, so they use the GL renderer under a virtual display when available.
 # The crew suite compares rendered pixels, so it needs the GL renderer too.

@@ -16,6 +16,16 @@ var _access_token := ""
 var _access_exp := 0
 var _syncing := false
 var _cfg := {}
+## Test seam: when set, called as transport.call(method, path, body, headers) instead of HTTP and must
+## return (or resolve to) {result, code, body}. Never set in the shipped game.
+var transport := Callable()
+## Single-flight refresh: concurrent callers share one in-flight authentication.
+var _auth_inflight := false
+var _auth_result := false
+var last_auth_error := ""  # "", "offline", "transient", "revoked", "guest_failed"
+signal _auth_done(ok: bool)
+
+const AUTH_RETRIES := 2
 
 
 static func client_config() -> Dictionary:
@@ -81,6 +91,15 @@ func call_api(method: int, path: String, body: Variant = null, auth := true) -> 
 
 
 func _raw(method: int, path: String, body: Variant, auth: bool) -> Dictionary:
+	if transport.is_valid():
+		var hdrs := {"Authorization": "Bearer " + _access_token} if auth and _access_token != "" else {}
+		var t: Dictionary = await transport.call(method, path, body, hdrs)
+		if int(t.get("result", 0)) != 0:
+			_set_online(false)
+			return {"ok": false, "code": 0, "body": null}
+		_set_online(true)
+		var c := int(t.get("code", 0))
+		return {"ok": c >= 200 and c < 300, "code": c, "body": t.get("body")}
 	var http := HTTPRequest.new()
 	http.timeout = TIMEOUT
 	add_child(http)
@@ -106,46 +125,99 @@ func _raw(method: int, path: String, body: Variant, auth: bool) -> Dictionary:
 	return {"ok": code >= 200 and code < 300, "code": code, "body": parsed}
 
 
+## True when a valid access token is available. Concurrent callers share one refresh (single
+## flight), so a rotated refresh token is never presented twice by this client.
 func _ensure_token() -> bool:
 	var now := int(Time.get_unix_time_from_system())
 	if _access_token != "" and now < _access_exp - 30:
 		return true
+	if _auth_inflight:
+		return await _auth_done
+	_auth_inflight = true
+	var ok := await _authenticate()
+	_auth_inflight = false
+	_auth_result = ok
+	_auth_done.emit(ok)
+	return ok
+
+
+static func is_transient(code: int) -> bool:
+	return code == 0 or code == 408 or code == 429 or code >= 500
+
+
+## Refresh, or create a guest only when there is no usable identity. Temporary failures (offline,
+## timeout, 429, 5xx) NEVER replace the stored guest: the refresh token is kept and the game simply
+## stays offline until the next attempt.
+func _authenticate() -> bool:
 	var auth: Dictionary = Game.state.data["auth"]
+	last_auth_error = ""
 	if str(auth.get("refreshToken", "")) != "":
-		var r := await _raw(HTTPClient.METHOD_POST, "/api/v1/auth/refresh", {"refreshToken": auth["refreshToken"]}, false)
-		if r["ok"]:
-			_store_tokens(r["body"])
-			return true
-		if r["code"] == 0:
+		var r := {}
+		for attempt in AUTH_RETRIES + 1:
+			var sent := str(auth["refreshToken"])
+			r = await _raw(HTTPClient.METHOD_POST, "/api/v1/auth/refresh", {"refreshToken": sent}, false)
+			if r["ok"]:
+				# Persist the successor before anything else can fail: losing it would strand the identity.
+				_store_tokens(r["body"], true)
+				return true
+			if r["code"] == 0:
+				last_auth_error = "offline"
+				return false
+			if not is_transient(r["code"]):
+				break
+			last_auth_error = "transient"
+			if attempt < AUTH_RETRIES:
+				await _backoff(attempt)
+		if is_transient(r["code"]):
 			return false
-		# Refresh token revoked/expired: fall through to a new guest only if never linked to an account.
-		if not auth.get("linked", false):
-			auth["refreshToken"] = ""
-		else:
+		# A definitive 4xx: the refresh token is expired, revoked or unknown.
+		last_auth_error = "revoked"
+		if auth.get("linked", false):
+			# A linked account is recoverable by signing in again; never silently swap it for a guest.
 			return false
+		var lost_id := str(auth.get("playerId", ""))
+		auth["refreshToken"] = ""
+		if lost_id != "":
+			auth["previousPlayerIds"] = (auth.get("previousPlayerIds", []) as Array) + [lost_id]
+		Game.save_now()
 	var g := await _raw(HTTPClient.METHOD_POST, "/api/v1/auth/guest", {"platform": OS.get_name()}, false)
 	if not g["ok"]:
+		if last_auth_error == "":
+			last_auth_error = "offline" if g["code"] == 0 else "guest_failed"
 		return false
 	auth["playerId"] = g["body"]["player"]["id"]
 	auth["displayName"] = g["body"]["player"]["displayName"]
-	_store_tokens(g["body"])
+	_store_tokens(g["body"], true)
+	Analytics.track("guest_identity_created", {"replaced": last_auth_error == "revoked"})
 	# A fresh server account: replay everything we know so it catches up.
 	_requeue_all_progress()
 	return true
 
 
-func _store_tokens(b: Dictionary) -> void:
+## Bounded exponential backoff with full jitter (0.4–1.2 s, then 0.8–2.4 s).
+func _backoff(attempt: int) -> void:
+	if transport.is_valid():
+		return
+	var base := 0.4 * pow(2.0, attempt)
+	await get_tree().create_timer(base + randf() * base * 2.0).timeout
+
+
+func _store_tokens(b: Dictionary, durable := false) -> void:
 	_access_token = str(b["accessToken"])
 	_access_exp = int(b.get("accessTokenExpiresIn", 900)) + int(Time.get_unix_time_from_system())
 	if b.has("refreshToken"):
 		Game.state.data["auth"]["refreshToken"] = str(b["refreshToken"])
-	Game.request_save()
+	if durable:
+		Game.save_now()
+	else:
+		Game.request_save()
 
 
 func _requeue_all_progress() -> void:
-	# Completed levels whose replay was already uploaded to a previous (lost) account carry no replay
-	# here; the server records them as unverified (kept, but not ranked). Levels with a replay still
-	# queued are skipped — that op will deliver a verified result.
+	# Replays the local campaign progress to a new/restored server account. Levels with a stored best
+	# replay are re-sent WITH their moves, so the server re-simulates them and they stay verified
+	# (ranked); only legacy entries without a replay go up unverified (kept, not ranked). Levels with a
+	# completion still queued are skipped — that op will deliver the result.
 	var pending := {}
 	for op in Game.state.data["syncQueue"]:
 		if op["type"] == "level_complete":
@@ -157,7 +229,13 @@ func _requeue_all_progress() -> void:
 		var kind := str(p.get("kind", "campaign"))
 		if kind != "campaign":
 			continue
-		Game.state.enqueue("level_complete", {"kind": kind, "levelId": key, "contentVersion": 1, "moves": null, "rotations": p["best"], "hints": 0, "completedAt": p.get("completedAt", 0)})
+		var rep = p.get("replay")
+		var moves = null
+		var version := 1
+		if rep is Dictionary and rep.get("moves") is Array:
+			moves = (rep["moves"] as Array).duplicate(true)
+			version = int(rep.get("contentVersion", 1))
+		Game.state.enqueue("level_complete", {"kind": kind, "levelId": key, "contentVersion": version, "moves": moves, "rotations": p["best"] if moves == null else (moves as Array).size(), "hints": 0, "completedAt": p.get("completedAt", 0)})
 
 
 ## Upload queued operations, then merge the server snapshot. Safe to call any time.
@@ -244,6 +322,42 @@ func update_display_name(name: String) -> bool:
 		Game.state.data["auth"]["displayName"] = r["body"]["displayName"]
 		Game.request_save()
 	return r["ok"]
+
+
+## Account recovery boundary (audit R5). Links a verified third-party identity (an ID token from a
+## platform sign-in plugin) to this guest, or switches to the account that already owns it (restore
+## after reinstall). No sign-in plugin ships yet, so the UI never calls this; it is exercised by the
+## e2e suite with the server's dev provider. Merge rules (docs/BETA_READINESS_IMPLEMENTATION.md):
+##  * linked:   nothing moves; the guest simply becomes recoverable.
+##  * switched: the device adopts the restored account. Local completions are replayed to it (the
+##              server keeps the minimum, so nothing regresses), looks re-derive from progress, the
+##              old guest id is remembered for support.
+## Returns {ok, mode, error}.
+func link_identity(provider: String, id_token: String, allow_switch := false) -> Dictionary:
+	var body := {"provider": provider, "idToken": id_token}
+	if allow_switch:
+		body["onConflict"] = "switch"
+	var r := await call_api(HTTPClient.METHOD_POST, "/api/v1/auth/link", body)
+	if not r["ok"]:
+		var code := ""
+		if r["body"] is Dictionary and r["body"].get("error") is Dictionary:
+			code = str(r["body"]["error"].get("code", ""))
+		return {"ok": false, "mode": "", "error": code if code != "" else ("offline" if r["code"] == 0 else str(r["code"]))}
+	var auth: Dictionary = Game.state.data["auth"]
+	var mode := str(r["body"].get("mode", ""))
+	auth["linked"] = true
+	auth["linkedProvider"] = provider
+	if mode == "switched":
+		var old := str(auth.get("playerId", ""))
+		if old != "":
+			auth["previousPlayerIds"] = (auth.get("previousPlayerIds", []) as Array) + [old]
+		auth["playerId"] = r["body"]["player"]["id"]
+		auth["displayName"] = r["body"]["player"]["displayName"]
+		_store_tokens(r["body"]["tokens"], true)
+		_requeue_all_progress()
+		await sync()
+	Game.save_now()
+	return {"ok": true, "mode": mode, "error": ""}
 
 
 func export_data() -> Variant:

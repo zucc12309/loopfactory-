@@ -43,11 +43,26 @@ func setup(_args: Dictionary) -> void:
 	policy.pressed.connect(func(): OS.shell_open(str(Net.client_config().get("privacyPolicyUrl", "https://loopfactory.example/privacy"))))
 	v.add_child(policy)
 	v.add_child(_section("Account"))
+	var acct := LFStyle.label(account_status(Game.state.data), 22, LFStyle.TEXT_MUTED, 400)
+	acct.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	acct.name = "AccountStatus"
+	v.add_child(acct)
 	var del := LFStyle.button("Delete account & data", "SecondaryButton", 90)
 	del.add_theme_color_override("font_color", LFStyle.ERROR)
 	del.pressed.connect(func(): main.confirm("Delete everything?", "This permanently deletes your progress on this device and on our servers. It cannot be undone.", "Delete", _delete, true))
 	v.add_child(del)
 	v.add_child(LFStyle.label("Loop Factory %s" % ProjectSettings.get_setting("application/config/version", ""), 20, LFStyle.TEXT_MUTED, 400, HORIZONTAL_ALIGNMENT_CENTER))
+
+
+## Plain statement of what survives what (audit R5). No sign-in/restore flow ships in this beta,
+## so nothing here promises that progress survives an uninstall.
+static func account_status(data: Dictionary) -> String:
+	var auth: Dictionary = data.get("auth", {})
+	var pid := str(auth.get("playerId", ""))
+	var support := ("Support ID: %s. " % pid.substr(0, 8)) if pid.length() >= 8 else ""
+	if bool(auth.get("linked", false)):
+		return support + "Your account is linked, so it can be restored after reinstalling."
+	return support + "You're playing as a guest. Progress is saved on this device and kept through app updates. Uninstalling the app or clearing its data erases it, and guest accounts can't be restored yet."
 
 
 func _section(text: String) -> Label:

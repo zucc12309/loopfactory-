@@ -10,7 +10,7 @@ extends Node
 const EVENTS := [
 	# lifecycle
 	"app_open", "first_launch", "session_start", "session_end", "app_background", "app_resume",
-	"previous_session_unclean",
+	"previous_session_unclean", "guest_identity_created",
 	# onboarding & core loop
 	"tutorial_start", "tutorial_complete", "level_start", "level_complete", "level_fail", "level_retry",
 	"hint_used", "replay_viewed",
