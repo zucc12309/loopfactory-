@@ -67,7 +67,15 @@ build AABs on a developer machine or in CI (the `android` CI job is the starting
 - [ ] Kill the app mid-level and mid-run → resumes on the editable board with moves intact.
 - [ ] Back button: closes overlays, then navigates back, then exits from Home.
 - [ ] Reconnect: queued completions sync; daily submission appears on the leaderboard.
-- [ ] Vibration and sound toggles work; reduced motion removes transitions; colour symbols visible.
+- [ ] Vibration, sound and music toggles work independently; reduced motion removes transitions,
+      pre-tilt, confetti and the long celebration; larger shape symbols visible.
+- [ ] Game feel on device: tap response feels immediate, rotation snap (140 ms) is neither sluggish
+      nor jittery, haptic strength is subtle, music sits under the effects (−17 dB).
+- [ ] Frame time while running the 6×7 boards (levels 33–36) on the low-end device; record it in
+      docs/performance.md.
+- [ ] Incoming call / home button mid-run: `app_background` then `app_resume`; board resumes editable.
+- [ ] Friend challenge: create on device A, enter the code on device B (fresh install, no sign-up).
+- [ ] Share: result card saves; text reaches the clipboard (no native share sheet yet).
 - [ ] Notch / gesture-bar devices: nothing clipped (safe-area margins).
 - [ ] Delete account works online; offline it explains that the server copy needs a connection.
 - [ ] Data safety form in Play Console matches docs/privacy-policy.md.

@@ -16,25 +16,39 @@ is represented elsewhere as complete.
 | iOS | Export preset and docs only; no macOS/Xcode was available, so no iOS build exists. |
 
 ## Product / feature gaps
-* **Unlockable themes and premium packs:** product ids exist server-side, but the client has a
-  single (classic) theme and no theme picker or store screen.
-* **Friend comparisons:** not implemented (leaderboards are global/weekly/daily only).
-* **Weekly challenges:** a weekly leaderboard aggregates daily results; there is no separate
-  weekly puzzle.
-* **Native share sheet:** "Share" copies the result text to the clipboard; Android/iOS share
-  intents need a small plugin.
+* **Unlockable themes and premium packs:** product ids exist server-side. The five campaign
+  worlds each have their own board palette and are reached through progress, but there is no
+  theme picker, no store screen and no purchasable theme.
+* **Native share sheet:** the result card PNG and challenge invite are generated. On Android and
+  iOS the text goes to the clipboard and the image stays in app storage. `LFShareCard.native_share()`
+  is the boundary for a share plugin, and no plugin ships. See [sharing.md](sharing.md).
+* **Deep links into the app:** challenge links open a landing page that shows the code. App Links
+  and Universal Links (intent filter in a Gradle Android export, `assetlinks.json`,
+  `apple-app-site-association`, a launch-URL plugin) are not configured, so players type the code.
+* **Video export of replays:** not implemented. The replay screen has a clean view meant for the
+  OS screen recorder. There is no automatic zoom.
+* **Friends leaderboard:** comparisons are per challenge code (everyone who played it). There is
+  no friend graph or contacts import, by design.
+* **Weekly challenges:** a weekly leaderboard aggregates daily results. There is no separate
+  weekly puzzle pack.
 * **Active puzzle cross-device resume:** synced to the server, but the client only adopts the
   server's active puzzle when it has none locally (conservative by design).
-* **Future tile types** (splitter, switch, portal, one-way/timed gate, colour filter) are designed
-  for (separate input/output masks) but not implemented.
-* **Localisation:** English only; strings are inline in screen scripts.
-* **Music:** only synthesised sound effects; no background music.
-* The **GDScript solver** runs on the main thread; expert hints/endless generation take tens of
-  milliseconds on desktop and should be profiled on a low-end phone (move to a thread if needed).
+* **Replays** are stored on the device only and are not synced.
+* **Future tile types** (splitter, switch, portal, one-way/timed gate, colour filter) are
+  designed for (separate input/output masks) but not implemented.
+* **Localisation:** English only. Strings are inline in screen scripts.
+* **Difficulty weights and experiment defaults** are hypotheses. They have not been fitted to
+  real player data (no analytics project is connected).
+* The **GDScript solver** runs on the main thread. Expert hints and endless generation take tens
+  of milliseconds on desktop and should be profiled on a low-end phone (move to a thread if needed).
 
 ## Verification gaps
-* **No physical-device or emulator testing** (none available). Touch feel, haptics, audio output,
-  lifecycle events (backgrounding, low memory) and frame rate on mid-range Android are untested.
+* **No physical-device or emulator testing** (none available). Touch feel, haptics, audio output
+  and music mix, lifecycle events (backgrounding, calls, low memory), frame rate and battery on
+  mid-range Android are untested. Layout was tested on five aspect ratios in a desktop renderer,
+  and render cost was measured on desktop CPU only ([performance.md](performance.md)).
+* The **friend-challenge endpoints** have integration and E2E tests but were not included in the
+  load test.
 * Load tests ran on one shared 4-vCPU VM with the generator co-located (see load-testing.md);
   re-run against staging from a separate machine before launch.
 * The Docker image was validated using a registry mirror and the full `node:22-bookworm` base,

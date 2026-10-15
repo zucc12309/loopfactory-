@@ -10,13 +10,14 @@ Loop Factory is a minimalist puzzle game about building tiny conveyor networks. 
 about a minute, starts instantly and saves itself — close the app on the metro, open it at lunch
 and you're exactly where you left off.
 
-• 34 hand-picked puzzles from first tap to expert — plus endless puzzles generated for you
+• 36 hand-picked puzzles across five themed worlds — plus endless puzzles generated for you
 • A new daily puzzle for everyone, with a fair leaderboard (fewest rotations wins, every result
   re-checked by our server)
 • Junctions, crossings, locked belts and multi-colour deliveries
 • Fully offline. No sign-up. No energy, no timers, no waiting
-• Unlimited retries and hints when you want them
-• Accessibility: colour symbols, reduced motion, one-handed play, long-press to turn back
+• Unlimited retries and gentle step-by-step hints when you want them
+• Challenge a friend to beat your rotations on the same puzzle — no account needed
+• Accessibility: a shape on every package, reduced motion, one-handed play, long-press to turn back
 
 Made to be enjoyed in 60 seconds — and to keep you coming back because solving feels good.
 

@@ -31,6 +31,16 @@ implemented (✔) or explicitly tracked as pending (◻).
 * ◻ A determined player can still use an external solver; rankings are by rotations, and par is
   the proven optimum, so the leaderboard top will saturate at par. Ties break by server time.
 
+### Friend challenges
+* The server rebuilds the puzzle from a reference (campaign id, daily date or generator parameters
+  with a version check) and never accepts a client-sent board. The creator's moves and every
+  attempt are re-simulated, so a comparison can only show verified rotation counts.
+* Codes are 8 characters from a 31-symbol alphabet (~8.5 × 10¹¹ combinations), generated with
+  `crypto.randomInt`, unique, and valid for 30 days. Lookups are rate limited by the global limiter.
+  Creating and attempting use the per-player submit limiter.
+* Public views never include the solution or the creator's moves. The `/c/:code` landing page is
+  static HTML with every value escaped, no scripts and `noindex`.
+
 ## Transport, headers, logging
 * ✔ HTTPS terminated by the platform (Render); HSTS via Helmet; `x-powered-by` disabled; CORS
   closed by default.

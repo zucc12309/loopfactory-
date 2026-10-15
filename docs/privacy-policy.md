@@ -11,6 +11,7 @@ the game to work without an account and to collect as little as possible.
 | Random account id + server-issued credentials | when cloud sync is on (default) | to back up and sync your progress | until you delete your account |
 | Game progress: levels solved, best rotations, move replays of completed puzzles, settings | cloud sync | sync, verifying leaderboard results | until deletion; sync logs 90 days |
 | Display name you choose (or a random one) | cloud sync | shown on leaderboards | until deletion |
+| Friend challenges you create or play: the puzzle, your verified rotation count and move replay | only when you tap Challenge or open a code | showing the challenge (your display name and rotations — never your moves) to anyone with the code | challenge expires after 30 days; deleted with your account |
 | Google/Apple account id (and email, if the provider shares it) | only if you link an account | account recovery on a new device | until deletion |
 | Purchase records (product, store transaction id) | only if you buy something | restore purchases, handle refunds | as required by law |
 | Anonymous gameplay analytics (levels started/finished, hints, retries, app version) | **only if you opt in** | improve puzzle difficulty | per provider retention (≤ 1 year) |

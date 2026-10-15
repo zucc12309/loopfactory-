@@ -20,12 +20,14 @@ the route registry; also served at `GET /openapi.json`). Errors always use
 | Progress | `GET /progress`, `POST /progress/sync`, `GET /progress/history` |
 | Levels | `GET /levels`, `GET /levels/packs`, `GET /levels/:id` |
 | Daily | `GET /challenges/daily?date=`, `POST /challenges/daily/submit`, `GET /challenges/daily/leaderboard` |
+| Friend challenges | `POST /challenges/friend`, `GET /challenges/friend/:code`, `POST /challenges/friend/:code/attempts`, `GET /challenges/friend/:code/results` ([sharing.md](sharing.md)) |
 | Leaderboards | `GET /leaderboards/global`, `/weekly?week=YYYY-Www`, `/daily?date=` |
 | Achievements | `GET /achievements`, `GET /achievements/me` |
-| Config | `GET /config` (ETag) |
+| Config | `GET /config` (ETag); includes `experiments` ([experiments.md](experiments.md)) |
 | Privacy | `GET /privacy/export`, `POST /privacy/delete-request {confirm:true}` |
 | Purchases | `POST /purchases/verify`, `GET /purchases/entitlements` |
 | Ops | `GET /health`, `GET /ready` |
+| Web | `GET /c/:code` — challenge landing page (HTML, no scripts) |
 
 ## Sync operation types
 `level_complete` (with `moves` replay, or `null` for legacy/unverifiable), `settings`,
