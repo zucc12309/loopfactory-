@@ -13,7 +13,7 @@ is represented elsewhere as complete.
 | Crash/error monitoring | Server Sentry adapter (needs DSN + `@sentry/node`). Client: `LFDiagnostics` records game-detected errors (save, network, config, unclean exit) locally and, with consent, as analytics events. **Native crash capture is not integrated** (needs a native SDK/plugin); no crash-free-session rate is reported. |
 | Production deployment | `render.yaml`, Dockerfile, migration/rollback/backup docs ready. Nothing was deployed (no authorisation to create billable resources). |
 | Play Store upload | Godot 4.5.1 is the Android build target (4.3 templates are not Play-compliant). The AAB needs the Gradle template and Android SDK platform 36, which were unavailable here; only a debug APK was built. Nothing has been uploaded. |
-| iOS | Export preset and docs only; no macOS/Xcode was available, so no iOS build exists. |
+| iOS | Source-ready: platform services layer, iOS export preset (Godot 4.5.1), `scripts/build-ios.sh`, LoopFactoryIOS extension (share sheet, Universal Links, Keychain). The Xcode project **exports and validates on Linux**; it has **not been compiled, run on a simulator or installed on an iPhone** (no macOS/Xcode here). The UIKit half of the extension is uncompiled. See [IOS_READINESS.md](IOS_READINESS.md). |
 
 ## Product / feature gaps
 * **Unlockable themes and premium packs:** product ids exist server-side. The five campaign

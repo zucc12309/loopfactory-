@@ -166,7 +166,7 @@ npm run dev -w @loopfactory/api
 | CI, Docker image, Render blueprint, load test | ✅ Done (not deployed) |
 | Android debug APK (Godot 4.5.1: 16 KB-aligned arm64 libs) | ✅ Built; packaged config and alignment verified · ⚠️ not installed on a device |
 | Play Store AAB (target API 36), release signing | ⏳ Pipeline and validation ready; needs Android SDK platform 36, an HTTPS host and the upload key · not uploaded |
-| iOS build | ⏳ Needs macOS + Xcode |
+| iOS (same Godot game, Godot 4.5.1) | ✅ Platform services layer, iOS preset, `scripts/build-ios.sh`, LoopFactoryIOS extension (share sheet, Universal Links, Keychain), AASA endpoint · Xcode project exports and validates on Linux · ⏳ compile/simulator/iPhone need a Mac ([IOS_READINESS](docs/IOS_READINESS.md), verdict **iOS source ready**) |
 | Google/Apple sign-in, store billing, ads, native crash capture | ⏳ Interfaces ready, credentials/plugins pending (local diagnostics boundary active) |
 
 **Beta readiness:** [docs/BETA_READINESS_IMPLEMENTATION.md](docs/BETA_READINESS_IMPLEMENTATION.md)
@@ -174,9 +174,11 @@ npm run dev -w @loopfactory/api
 device testing** (not yet a closed beta).
 
 **Verification (latest run, Godot 4.3 and 4.5.1):** engine 46/46 (incl. 1,000 generated puzzles) ·
-Godot 59 tests / 7,771 assertions · auth 32 · analytics 74 · UI 301 checks on 5 aspect ratios · crew
-scene tests 201 · beta flows 173 · API 70/70 (real Postgres, incl. concurrency and rate limits) ·
-end-to-end 28/28 · typecheck, lint, config rules and production `npm audit` clean. Details in
+Godot 59 tests / 7,778 assertions · auth 32 · analytics 74 · platform services 66 · UI 301 checks on 5
+aspect ratios · crew scene tests 201 · beta flows 173 · iOS UI 93 (4 iPhone safe-area geometries,
+links, lifecycle) · iOS native binding layer 33 (host build, 4.5.1) · iOS Xcode export 26 checks ·
+API 73/73 (real Postgres, incl. concurrency and rate limits) · end-to-end 28/28 · typecheck, lint,
+config rules, platform-refs guard and production `npm audit` clean. Details in
 [docs/testing.md](docs/testing.md) and [docs/load-testing.md](docs/load-testing.md).
 Everything not finished is listed honestly in [docs/known-limitations.md](docs/known-limitations.md).
 

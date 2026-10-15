@@ -2,6 +2,35 @@
 
 All notable changes to this project are documented here (format: Keep a Changelog, versions: SemVer).
 
+## [Unreleased] — iOS readiness
+
+See [docs/IOS_READINESS.md](docs/IOS_READINESS.md). Verdict: iOS source ready (not yet compiled on a Mac).
+
+### Added
+- `LFPlatform` cross-platform services (`apps/game/scripts/platform/`): Android, iOS and safe
+  fallback adapters for sharing, links, external URLs, haptics, secure storage and Reduce Motion.
+- `LoopFactoryIOS` GDExtension (`ios/loopfactory-native`): UIActivityViewController sharing,
+  Universal Links through Godot 4.5's app-delegate services, Keychain, Reduce Motion. The
+  binding layer is compiled and tested on the host; the UIKit half still needs a Mac.
+- Refresh token in the iOS Keychain (`LFSecureTokens`), with read-back verification, migration and
+  reinstall handling; Android unchanged.
+- Links delivered to a running app are routed on both platforms (signal + resume poll).
+- API: `apple-app-site-association` (`IOS_APP_IDS`).
+- `scripts/build-ios.sh`, `scripts/ios/check-ios-export.py`, `scripts/ios/test-native-stub.sh`,
+  `scripts/check-platform-refs.py`; CI jobs `ios-export` and on-demand `ios-simulator`.
+- Tests: `tests_e2e/platform_tests.gd`, `tests_ui/ios_ui_tests.gd` (4 iPhone safe-area
+  geometries), `tests_e2e/ios_native_binding_tests.gd`, AASA API tests.
+- Docs: IOS_READINESS, IOS_BUILD_RUNBOOK, IOS_DEVICE_TEST_MATRIX.
+
+### Changed
+- iOS preset rebuilt for Godot 4.5.1 (iOS 15.0+, opaque icon, purpose strings incl. add-to-Photos,
+  privacy manifest data types); iOS audio session Ambient + mix.
+- Memory warnings save immediately.
+
+### Fixed
+- `build-android.sh` / `build-ios.sh` `set_preset` never applied options (the Android version code
+  from `LF_BUILD` was silently ignored for release/AAB builds).
+
 ## [Unreleased] — Android beta readiness
 
 See [docs/BETA_READINESS_IMPLEMENTATION.md](docs/BETA_READINESS_IMPLEMENTATION.md).

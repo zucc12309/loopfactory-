@@ -9,6 +9,13 @@ implemented (✔) or explicitly tracked as pending (◻).
 * ✔ Refresh tokens: 256-bit random, stored as SHA-256 hashes, single use. Reuse of a rotated
   token revokes the entire token family (stolen-token detection); concurrent rotation is guarded by
   a conditional update (tested). Logout revokes the family. Tokens expire after 90 days.
+* ✔ Client token storage: on iOS builds with the LoopFactoryIOS extension the refresh token lives
+  in the **Keychain** (generic password, after-first-unlock, this device only, not in backups)
+  and the save file carries only a marker. The Keychain copy is read back before the plaintext is
+  dropped; on failure the token stays in the save (an identity is never lost for secrecy). Android
+  and desktop keep the token in the app-private save file as before (Android Keystore-backed
+  storage would need a native plugin: not done). A reinstall deletes a stale Keychain token, so a
+  reinstalled app is a new guest on both platforms.
 * ✔ Account linking verifies Google/Apple ID tokens against provider JWKS with audience pinning.
   The dev provider is refused at startup in production.
 * ✔ Production startup fails if secrets contain placeholder values or dev providers are enabled.

@@ -11,8 +11,14 @@ when there is one. **It never shows the solution.** The share sheet previews the
 * **Copy text:** a short text result with emoji stars, copied to the clipboard.
 * **Save image** (desktop only): writes the PNG to the Pictures folder and shows that path.
 
-On phones without the plugin there is no "Save image": the PNG would only land in private app
-storage, which the player can't open. iOS would need its own `UIActivityViewController` plugin.
+On phones without a native module there is no "Save image": the PNG would only land in private app
+storage, which the player can't open. On iOS the LoopFactoryIOS extension provides the
+`UIActivityViewController` share sheet, which itself offers Save Image (add-only photo access,
+purpose string in the iOS preset).
+
+All of this goes through `LFPlatform` (`apps/game/scripts/platform/`), so screens never know
+whether they run on Android, iOS or desktop. `scripts/check-platform-refs.py` (CI) fails the build
+if shared code reaches around it.
 
 ## Friend challenges
 
@@ -50,6 +56,9 @@ GET /challenges/friend/:code/results ─▶ head-to-head table for everyone who 
 | Android App Links + `loopfactory://challenge/CODE` opening the installed app | **Implemented in source, not built or device-tested.** The intent filters (with `autoVerify`) and `consumeLaunchUri()` live in `android/share-plugin`, which needs the Android SDK + Gradle export. Until that plugin ships, phones type the code. |
 | Deferred deep link (install, then open the same puzzle) | **Not possible with App Links alone.** The landing page shows the code; manual entry is the supported path. |
 | `--challenge=CODE` launch argument | Works on desktop. |
+| `/.well-known/apple-app-site-association` (+ `/apple-app-site-association`) | Served by the API as `application/json` once `IOS_APP_IDS` (`<TEAM_ID>.<bundle id>`) is set; 404 otherwise; placeholder team IDs are refused at startup. Tested. |
+| iOS Universal Links opening the installed app | **Implemented in source, not built or device-tested.** The `LoopFactoryIOS` extension registers with Godot 4.5's app delegate (`GDTApplicationDelegate +addService:`) and receives `continueUserActivity`. The entitlement `applinks:<LF_APP_LINK_HOST>` is added by `scripts/build-ios.sh`. Needs a paid Apple team, the deployed AASA file and a real device ([IOS_BUILD_RUNBOOK.md](IOS_BUILD_RUNBOOK.md) §5). |
+| Links while the app is running (both platforms) | `main.gd` routes a link delivered while the game runs: the iOS signal, plus a check on every resume (covers Android App Links reaching a running activity). Same link → reopened, not stacked; consecutive links → latest wins; invalid → plain message; offline → code kept. Simulated in `tests_ui/ios_ui_tests.gd`. |
 
 ### Native share sheet
 

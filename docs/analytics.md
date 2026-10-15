@@ -66,6 +66,7 @@ test scans the code to check that each `Analytics.track` call uses a declared na
 | `share_text_copied` | Copy text / Copy invite pressed, or the fallback after a failed native share | `kind`, `fallback` |
 | `share_image_saved` | image written to a folder the player can open (desktop Pictures) | `kind` |
 | `share_sheet_opened` | the native chooser OPENED (plugin builds only). Which app was picked, or whether anything was sent, is not observable | `kind`, `with_image` |
+| `share_sheet_closed` | iOS only: the share sheet closed. `result` is `completed` (the chosen activity said it finished — **not** proof anyone received it), `cancelled` or `failed` | `kind`, `result` |
 | `challenge_create_clicked` | "Challenge" tapped | `kind`, `level_id` |
 | `challenge_created` | server issued a code | `kind`, `level_id` |
 | `challenge_link_opened` | a code looked up / an App Link or launch argument received | `source` (`code_entry` / `app_link` / `launch_argument`) |

@@ -9,6 +9,7 @@
 | Product | [analytics](analytics.md) · [experiments](experiments.md) · [sharing & challenges](sharing.md) · [monetization](monetization.md) · [store-listing](store-listing.md) · [privacy-policy](privacy-policy.md) |
 | Upgrade | [UPGRADE_AUDIT](UPGRADE_AUDIT.md) — audit findings and what changed · [BETA_READINESS_IMPLEMENTATION](BETA_READINESS_IMPLEMENTATION.md) — production fixes, Android beta status, device QA checklist |
 | Release | [release-android](release-android.md) · [release-ios](release-ios.md) · [known-limitations](known-limitations.md) |
+| iOS | [IOS_READINESS](IOS_READINESS.md) · [IOS_BUILD_RUNBOOK](IOS_BUILD_RUNBOOK.md) · [IOS_DEVICE_TEST_MATRIX](IOS_DEVICE_TEST_MATRIX.md) |
 
 Screenshots in `screenshots/` are produced by the QA tour: `godot --path apps/game -- --tour=/abs/dir`.
 `assets/crew-sheet.png` is rendered by `apps/game/tests_ui/crew_sheet.gd`.

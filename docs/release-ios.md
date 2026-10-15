@@ -1,22 +1,20 @@
-# iOS readiness
+# iOS release
 
-**Status: prepared, not built.** iOS builds require macOS with Xcode and an Apple Developer
-account; neither was available, so **no iOS build has been produced or tested**.
+This page used to hold the iOS readiness notes. They now live in:
 
-What is ready:
-* `export_presets.cfg` → preset `iOS`: bundle id `com.loopfactory.game`, iOS 14+, arm64,
-  icons, storyboard background, privacy manifest entries (gameplay content and product
-  interaction, not linked to identity, no tracking).
-* Engine and UI are platform-neutral (GL Compatibility renderer → Metal via MoltenVK/ANGLE in
-  Godot 4.3; touch input via emulated mouse; safe-area margins).
-* Backend supports **Sign in with Apple** (`APPLE_BUNDLE_IDS`) and the App Store purchase
-  verifier slot (pending credentials).
-* Haptics use `Input.vibrate_handheld`, which works on iOS.
+* [IOS_READINESS.md](IOS_READINESS.md): status, compatibility matrix, architecture, evidence and
+  blockers.
+* [IOS_BUILD_RUNBOOK.md](IOS_BUILD_RUNBOOK.md): exact Mac steps for the Simulator, your iPhone,
+  staging/production archives and Universal Links.
+* [IOS_DEVICE_TEST_MATRIX.md](IOS_DEVICE_TEST_MATRIX.md): what to test on which iPhones, with an
+  evidence level for every row.
 
-Steps on a Mac:
-1. Install Xcode (current), Godot 4.3 + export templates.
-2. Fill `application/app_store_team_id` and code-signing identities in the iOS preset.
-3. Export → Xcode project; open in Xcode, set signing, run on a device.
-4. Add Sign in with Apple capability and a StoreKit plugin when enabling linking/purchases
-   (App Store rule: an app offering third-party login must also offer Sign in with Apple).
-5. TestFlight internal testing with the same checklist as Android.
+App Store submission is out of scope for now. Before it happens:
+* Apple Developer Program membership, App Store Connect record, and privacy "nutrition label" from
+  the data inventory in IOS_READINESS.md §8.
+* Real privacy policy and support URLs (the release config refuses placeholders).
+* If third-party sign-in (Google) is ever offered for account linking, App Store Review Guideline
+  4.8 requires an equivalent privacy-preserving option, such as **Sign in with Apple**. The backend
+  already verifies Apple ID tokens (`APPLE_BUNDLE_IDS`); no client sign-in is shipped on any
+  platform.
+* StoreKit is not integrated (no purchases are offered).
