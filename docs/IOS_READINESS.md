@@ -225,6 +225,7 @@ demand via `workflow_dispatch`. **Both are new and have not run yet.**
 | `share_image` validates the file first | A missing or non-image file is `invalid_file` (→ copy-text fallback) instead of a plugin failure. |
 | Settings URLs via `LFPlatform.open_external_url` | Only `https:`/`mailto:` URLs reach the OS (release config already guaranteed https); a failure now shows the URL. |
 | Haptics via `LFPlatform.vibrate` | Same `Input.vibrate_handheld` call on phones. |
+| Share-sheet close handler | Only connected where the platform reports a close (iOS). On Android nothing stays connected after sharing; an earlier draft of this branch left one connected, which crashed at quit (§4). |
 | Memory-warning save | Also applies wherever Godot delivers `NOTIFICATION_OS_MEMORY_WARNING`; not verified on Android. |
 | `LFSecureTokens` | Android has no secure backend here, so the save is written **exactly as before** (tested). |
 | Analytics `share_sheet_closed`, diagnostics `secure_token`/`memory_warning`/`link` | Additive; never emitted by Android's plugin except `link` (invalid link). |
