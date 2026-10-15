@@ -21,7 +21,7 @@ func platform_name() -> String:
 
 
 func native_available() -> bool:
-	if not super():
+	if not _linked():
 		return false
 	var v = call_native("apiVersion")
 	return v is int and int(v) >= API_VERSION

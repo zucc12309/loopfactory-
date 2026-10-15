@@ -1,0 +1,32 @@
+#!/usr/bin/env python
+# LoopFactoryIOS GDExtension (docs/IOS_BUILD_RUNBOOK.md). Built by scripts/build-ios.sh --native.
+#
+#   scons platform=ios arch=arm64 target=template_release                      # device
+#   scons platform=ios ios_simulator=yes arch=universal target=template_debug  # simulator
+#   scons platform=linux target=template_debug                                 # host stub (tests only)
+#
+# godot-cpp must match the engine: tag godot-4.5-stable for Godot 4.5.x. Path: godot_cpp=<dir> or
+# $GODOT_CPP (default ./godot-cpp, cloned by the build script).
+import os
+
+godot_cpp = ARGUMENTS.pop("godot_cpp", os.environ.get("GODOT_CPP", "godot-cpp"))
+env = SConscript(os.path.join(godot_cpp, "SConstruct"))
+
+env.Append(CPPPATH=["src/"])
+sources = ["src/register_types.cpp", "src/loopfactory_ios.cpp"]
+
+if env["platform"] == "ios":
+    sources.append("src/lf_bridge_ios.mm")
+    env.Append(CCFLAGS=["-fobjc-arc"])
+    env.Append(LINKFLAGS=["-framework", "Foundation", "-framework", "UIKit", "-framework", "Security"])
+    env.Append(LINKFLAGS=["-Wl,-install_name,@rpath/LoopFactoryNative.framework/LoopFactoryNative"])
+else:
+    # Host build: binding-layer tests only (scripts/ios/test-native-stub.sh). Never shipped.
+    sources.append("src/lf_bridge_stub.cpp")
+    env.Append(CPPDEFINES=["LF_STUB_BRIDGE"])
+
+library = env.SharedLibrary(
+    "bin/libloopfactory_native{}{}".format(env["suffix"], env["SHLIBSUFFIX"]),
+    source=sources,
+)
+Default(library)

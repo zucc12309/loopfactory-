@@ -1,0 +1,13 @@
+; LoopFactoryIOS GDExtension. Installed into apps/game/native/ios/ by scripts/build-ios.sh --native
+; only for the duration of an iOS export, so desktop/Android builds never reference it.
+; Framework and xcframework share one name (Godot loads <name>.framework/<name> from the bundle).
+[configuration]
+
+entry_symbol = "loopfactory_native_init"
+compatibility_minimum = "4.5"
+reloadable = false
+
+[libraries]
+
+ios.debug = "res://native/ios/bin/debug/LoopFactoryNative.xcframework"
+ios.release = "res://native/ios/bin/release/LoopFactoryNative.xcframework"

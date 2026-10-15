@@ -19,6 +19,12 @@ func _init(native: Variant) -> void:
 
 
 func native_available() -> bool:
+	return _linked()
+
+
+## The native object (or fake) is present. Never overridden, so call_native() cannot recurse
+## through a subclass's native_available().
+func _linked() -> bool:
 	return _fake.is_valid() or (_native != null and is_instance_valid(_native))
 
 
@@ -33,7 +39,7 @@ func supports_deep_links() -> bool:
 func call_native(method: String, args: Array = []) -> Variant:
 	if _fake.is_valid():
 		return _fake.call(method, args)
-	if native_available() and _native.has_method(method):
+	if _linked() and _native.has_method(method):
 		return _native.callv(method, args)
 	return null
 
