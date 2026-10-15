@@ -1,0 +1,4947 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Loop Factory API",
+    "version": "1.0.0",
+    "description": "REST API for the Loop Factory puzzle game. All competitive scores are derived from server-verified move replays."
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Liveness probe",
+        "tags": [
+          "ops"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/ready": {
+      "get": {
+        "summary": "Readiness probe (database reachable)",
+        "tags": [
+          "ops"
+        ],
+        "responses": {
+          "200": {
+            "description": "Ready"
+          },
+          "503": {
+            "description": "Not ready"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/guest": {
+      "post": {
+        "summary": "Create an anonymous guest account and receive server-issued credentials",
+        "tags": [
+          "auth"
+        ],
+        "operationId": "postAuthGuest",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "accessToken": {
+                      "type": "string"
+                    },
+                    "accessTokenExpiresIn": {
+                      "type": "integer"
+                    },
+                    "refreshToken": {
+                      "type": "string"
+                    },
+                    "player": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "displayName"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "accessToken",
+                    "accessTokenExpiresIn",
+                    "refreshToken",
+                    "player"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "platform": {
+                    "type": "string",
+                    "maxLength": 32
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "summary": "Rotate a refresh token (single use; reuse revokes the session family)",
+        "tags": [
+          "auth"
+        ],
+        "operationId": "postAuthRefresh",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "accessToken": {
+                      "type": "string"
+                    },
+                    "accessTokenExpiresIn": {
+                      "type": "integer"
+                    },
+                    "refreshToken": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "accessToken",
+                    "accessTokenExpiresIn",
+                    "refreshToken"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "refreshToken": {
+                    "type": "string",
+                    "minLength": 20,
+                    "maxLength": 200
+                  }
+                },
+                "required": [
+                  "refreshToken"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/link": {
+      "post": {
+        "summary": "Link a Google/Apple identity to this account, or switch to the account that already owns it (restore after reinstall)",
+        "tags": [
+          "auth"
+        ],
+        "operationId": "postAuthLink",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "mode": {
+                      "type": "string",
+                      "enum": [
+                        "linked",
+                        "already_linked",
+                        "switched"
+                      ]
+                    },
+                    "player": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "displayName"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "tokens": {
+                      "type": "object",
+                      "properties": {
+                        "accessToken": {
+                          "type": "string"
+                        },
+                        "accessTokenExpiresIn": {
+                          "type": "integer"
+                        },
+                        "refreshToken": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "accessToken",
+                        "accessTokenExpiresIn",
+                        "refreshToken"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "mode",
+                    "player"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "provider": {
+                    "type": "string",
+                    "enum": [
+                      "google",
+                      "apple",
+                      "dev"
+                    ]
+                  },
+                  "idToken": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096
+                  },
+                  "onConflict": {
+                    "type": "string",
+                    "enum": [
+                      "fail",
+                      "switch"
+                    ],
+                    "default": "fail"
+                  }
+                },
+                "required": [
+                  "provider",
+                  "idToken"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "summary": "Revoke the refresh-token family of this session",
+        "tags": [
+          "auth"
+        ],
+        "operationId": "postAuthLogout",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "No content"
+          },
+          "4XX": {
+            "description": "Client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "refreshToken": {
+                    "type": "string",
+                    "minLength": 20,
+                    "maxLength": 200
+                  }
+                },
+                "required": [
+                  "refreshToken"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/player/me": {
+      "get": {
+        "summary": "Current player profile and stats",
+        "tags": [
+          "player"
+        ],
+        "operationId": "getPlayerMe",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "displayName": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "linkedProviders": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "stats": {
+                      "type": "object",
+                      "properties": {
+                        "campaign": {
+                          "type": "integer"
+                        },
+                        "perfect": {
+                          "type": "integer"
+                        },
+                        "dailies": {
+                          "type": "integer"
+                        },
+                        "endless": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "campaign",
+                        "perfect",
+                        "dailies",
+                        "endless"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "displayName",
+                    "createdAt",
+                    "linkedProviders",
+                    "stats"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "patch": {
+        "summary": "Update display name",
+        "tags": [
+          "player"
+        ],
+        "operationId": "patchPlayerMe",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "displayName": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "displayName"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "displayName": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 20,
+                    "pattern": "^[\\p{L}\\p{N} _.-]+$"
+                  }
+                },
+                "required": [
+                  "displayName"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete account and all associated data",
+        "tags": [
+          "player"
+        ],
+        "operationId": "deletePlayerMe",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "No content"
+          },
+          "4XX": {
+            "description": "Client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/progress": {
+      "get": {
+        "summary": "Full progress snapshot for merge",
+        "tags": [
+          "progress"
+        ],
+        "operationId": "getProgress",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "progress": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "levelId": {
+                            "type": "string"
+                          },
+                          "kind": {
+                            "type": "string"
+                          },
+                          "bestRotations": {
+                            "type": "integer"
+                          },
+                          "par": {
+                            "type": "integer"
+                          },
+                          "verified": {
+                            "type": "boolean"
+                          },
+                          "completedAt": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "levelId",
+                          "kind",
+                          "bestRotations",
+                          "par",
+                          "verified",
+                          "completedAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "settings": {
+                      "type": "object",
+                      "properties": {
+                        "sfx": {
+                          "type": "boolean"
+                        },
+                        "haptics": {
+                          "type": "boolean"
+                        },
+                        "reducedMotion": {
+                          "type": "boolean"
+                        },
+                        "colorblind": {
+                          "type": "boolean"
+                        },
+                        "analytics": {
+                          "type": "boolean"
+                        },
+                        "analyticsAsked": {
+                          "type": "boolean"
+                        },
+                        "cloudSync": {
+                          "type": "boolean"
+                        },
+                        "updatedAt": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "additionalProperties": false,
+                      "nullable": true
+                    },
+                    "activePuzzle": {
+                      "type": "object",
+                      "properties": {
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "campaign",
+                            "endless",
+                            "daily",
+                            "offline_daily"
+                          ]
+                        },
+                        "levelId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 96
+                        },
+                        "rotations": {
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 3
+                          },
+                          "maxItems": 144
+                        },
+                        "history": {
+                          "type": "array",
+                          "items": {
+                            "type": "array",
+                            "minItems": 2,
+                            "maxItems": 2,
+                            "items": [
+                              {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 143
+                              },
+                              {
+                                "anyOf": [
+                                  {
+                                    "type": "number",
+                                    "enum": [
+                                      1
+                                    ]
+                                  },
+                                  {
+                                    "type": "number",
+                                    "enum": [
+                                      -1
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          "maxItems": 500
+                        },
+                        "updatedAt": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "levelId",
+                        "rotations",
+                        "history",
+                        "updatedAt"
+                      ],
+                      "additionalProperties": false,
+                      "nullable": true
+                    },
+                    "stats": {
+                      "type": "object",
+                      "properties": {
+                        "campaign": {
+                          "type": "integer"
+                        },
+                        "perfect": {
+                          "type": "integer"
+                        },
+                        "dailies": {
+                          "type": "integer"
+                        },
+                        "endless": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "campaign",
+                        "perfect",
+                        "dailies",
+                        "endless"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "achievements": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "serverTime": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "progress",
+                    "settings",
+                    "activePuzzle",
+                    "stats",
+                    "achievements",
+                    "serverTime"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/progress/sync": {
+      "post": {
+        "summary": "Upload queued offline operations (idempotent by opId) and receive the merged snapshot",
+        "tags": [
+          "progress"
+        ],
+        "operationId": "postProgressSync",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "opId": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "applied",
+                              "duplicate",
+                              "rejected"
+                            ]
+                          },
+                          "error": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "opId",
+                          "status"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "snapshot": {
+                      "type": "object",
+                      "properties": {
+                        "progress": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "levelId": {
+                                "type": "string"
+                              },
+                              "kind": {
+                                "type": "string"
+                              },
+                              "bestRotations": {
+                                "type": "integer"
+                              },
+                              "par": {
+                                "type": "integer"
+                              },
+                              "verified": {
+                                "type": "boolean"
+                              },
+                              "completedAt": {
+                                "type": "integer"
+                              }
+                            },
+                            "required": [
+                              "levelId",
+                              "kind",
+                              "bestRotations",
+                              "par",
+                              "verified",
+                              "completedAt"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "settings": {
+                          "type": "object",
+                          "properties": {
+                            "sfx": {
+                              "type": "boolean"
+                            },
+                            "haptics": {
+                              "type": "boolean"
+                            },
+                            "reducedMotion": {
+                              "type": "boolean"
+                            },
+                            "colorblind": {
+                              "type": "boolean"
+                            },
+                            "analytics": {
+                              "type": "boolean"
+                            },
+                            "analyticsAsked": {
+                              "type": "boolean"
+                            },
+                            "cloudSync": {
+                              "type": "boolean"
+                            },
+                            "updatedAt": {
+                              "type": "integer",
+                              "minimum": 0
+                            }
+                          },
+                          "additionalProperties": false,
+                          "nullable": true
+                        },
+                        "activePuzzle": {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "campaign",
+                                "endless",
+                                "daily",
+                                "offline_daily"
+                              ]
+                            },
+                            "levelId": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 96
+                            },
+                            "rotations": {
+                              "type": "array",
+                              "items": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 3
+                              },
+                              "maxItems": 144
+                            },
+                            "history": {
+                              "type": "array",
+                              "items": {
+                                "type": "array",
+                                "minItems": 2,
+                                "maxItems": 2,
+                                "items": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 143
+                                  },
+                                  {
+                                    "anyOf": [
+                                      {
+                                        "type": "number",
+                                        "enum": [
+                                          1
+                                        ]
+                                      },
+                                      {
+                                        "type": "number",
+                                        "enum": [
+                                          -1
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              "maxItems": 500
+                            },
+                            "updatedAt": {
+                              "type": "integer",
+                              "minimum": 0
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "levelId",
+                            "rotations",
+                            "history",
+                            "updatedAt"
+                          ],
+                          "additionalProperties": false,
+                          "nullable": true
+                        },
+                        "stats": {
+                          "type": "object",
+                          "properties": {
+                            "campaign": {
+                              "type": "integer"
+                            },
+                            "perfect": {
+                              "type": "integer"
+                            },
+                            "dailies": {
+                              "type": "integer"
+                            },
+                            "endless": {
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "campaign",
+                            "perfect",
+                            "dailies",
+                            "endless"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "achievements": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "serverTime": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "progress",
+                        "settings",
+                        "activePuzzle",
+                        "stats",
+                        "achievements",
+                        "serverTime"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "results",
+                    "snapshot"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "operations": {
+                    "type": "array",
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "opId": {
+                              "type": "string",
+                              "minLength": 8,
+                              "maxLength": 64
+                            },
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "level_complete"
+                              ]
+                            },
+                            "payload": {
+                              "type": "object",
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
+                                  "enum": [
+                                    "campaign",
+                                    "endless"
+                                  ]
+                                },
+                                "levelId": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 96
+                                },
+                                "contentVersion": {
+                                  "type": "integer",
+                                  "minimum": 1
+                                },
+                                "moves": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "array",
+                                    "minItems": 2,
+                                    "maxItems": 2,
+                                    "items": [
+                                      {
+                                        "type": "integer",
+                                        "minimum": 0,
+                                        "maximum": 143
+                                      },
+                                      {
+                                        "anyOf": [
+                                          {
+                                            "type": "number",
+                                            "enum": [
+                                              1
+                                            ]
+                                          },
+                                          {
+                                            "type": "number",
+                                            "enum": [
+                                              -1
+                                            ]
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  "maxItems": 500,
+                                  "nullable": true
+                                },
+                                "rotations": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 500
+                                },
+                                "hints": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 1000,
+                                  "default": 0
+                                },
+                                "completedAt": {
+                                  "type": "integer",
+                                  "minimum": 0
+                                },
+                                "generator": {
+                                  "type": "object",
+                                  "properties": {
+                                    "version": {
+                                      "type": "string",
+                                      "maxLength": 16
+                                    },
+                                    "seed": {
+                                      "type": "integer",
+                                      "minimum": 0
+                                    },
+                                    "tier": {
+                                      "type": "string",
+                                      "enum": [
+                                        "beginner",
+                                        "easy",
+                                        "medium",
+                                        "hard",
+                                        "expert"
+                                      ]
+                                    }
+                                  },
+                                  "required": [
+                                    "version",
+                                    "seed",
+                                    "tier"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              },
+                              "required": [
+                                "kind",
+                                "levelId",
+                                "contentVersion",
+                                "moves",
+                                "rotations",
+                                "completedAt"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "clientTs": {
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "opId",
+                            "type",
+                            "payload",
+                            "clientTs"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "opId": {
+                              "type": "string",
+                              "minLength": 8,
+                              "maxLength": 64
+                            },
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "settings"
+                              ]
+                            },
+                            "payload": {
+                              "type": "object",
+                              "properties": {
+                                "settings": {
+                                  "type": "object",
+                                  "properties": {
+                                    "sfx": {
+                                      "type": "boolean"
+                                    },
+                                    "haptics": {
+                                      "type": "boolean"
+                                    },
+                                    "reducedMotion": {
+                                      "type": "boolean"
+                                    },
+                                    "colorblind": {
+                                      "type": "boolean"
+                                    },
+                                    "analytics": {
+                                      "type": "boolean"
+                                    },
+                                    "analyticsAsked": {
+                                      "type": "boolean"
+                                    },
+                                    "cloudSync": {
+                                      "type": "boolean"
+                                    },
+                                    "updatedAt": {
+                                      "type": "integer",
+                                      "minimum": 0
+                                    }
+                                  },
+                                  "additionalProperties": false
+                                },
+                                "updatedAt": {
+                                  "type": "integer",
+                                  "minimum": 0
+                                }
+                              },
+                              "required": [
+                                "settings",
+                                "updatedAt"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "clientTs": {
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "opId",
+                            "type",
+                            "payload",
+                            "clientTs"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "opId": {
+                              "type": "string",
+                              "minLength": 8,
+                              "maxLength": 64
+                            },
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "active_puzzle"
+                              ]
+                            },
+                            "payload": {
+                              "type": "object",
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
+                                  "enum": [
+                                    "campaign",
+                                    "endless",
+                                    "daily",
+                                    "offline_daily"
+                                  ]
+                                },
+                                "levelId": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 96
+                                },
+                                "rotations": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 3
+                                  },
+                                  "maxItems": 144
+                                },
+                                "history": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "array",
+                                    "minItems": 2,
+                                    "maxItems": 2,
+                                    "items": [
+                                      {
+                                        "type": "integer",
+                                        "minimum": 0,
+                                        "maximum": 143
+                                      },
+                                      {
+                                        "anyOf": [
+                                          {
+                                            "type": "number",
+                                            "enum": [
+                                              1
+                                            ]
+                                          },
+                                          {
+                                            "type": "number",
+                                            "enum": [
+                                              -1
+                                            ]
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  "maxItems": 500
+                                },
+                                "updatedAt": {
+                                  "type": "integer",
+                                  "minimum": 0
+                                }
+                              },
+                              "required": [
+                                "kind",
+                                "levelId",
+                                "rotations",
+                                "history",
+                                "updatedAt"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "clientTs": {
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "opId",
+                            "type",
+                            "payload",
+                            "clientTs"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    },
+                    "maxItems": 100
+                  }
+                },
+                "required": [
+                  "operations"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/progress/history": {
+      "get": {
+        "summary": "Completion history, newest first",
+        "tags": [
+          "progress"
+        ],
+        "operationId": "getProgressHistory",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            }
+          },
+          {
+            "name": "before",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "levelId": {
+                            "type": "string"
+                          },
+                          "kind": {
+                            "type": "string"
+                          },
+                          "bestRotations": {
+                            "type": "integer"
+                          },
+                          "par": {
+                            "type": "integer"
+                          },
+                          "verified": {
+                            "type": "boolean"
+                          },
+                          "completedAt": {
+                            "type": "integer"
+                          },
+                          "completions": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "levelId",
+                          "kind",
+                          "bestRotations",
+                          "par",
+                          "verified",
+                          "completedAt",
+                          "completions"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "nextBefore": {
+                      "type": "integer",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "nextBefore"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/levels/packs": {
+      "get": {
+        "summary": "Level packs",
+        "tags": [
+          "levels"
+        ],
+        "operationId": "getLevelsPacks",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "packs": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "levelIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "description",
+                          "levelIds"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "packs"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/levels": {
+      "get": {
+        "summary": "List levels (cursor pagination)",
+        "tags": [
+          "levels"
+        ],
+        "operationId": "getLevels",
+        "parameters": [
+          {
+            "name": "pack",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 32
+            }
+          },
+          {
+            "name": "difficulty",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "beginner",
+                "easy",
+                "medium",
+                "hard",
+                "expert"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 64
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "levels": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "difficulty": {
+                            "type": "string",
+                            "enum": [
+                              "beginner",
+                              "easy",
+                              "medium",
+                              "hard",
+                              "expert"
+                            ]
+                          },
+                          "par": {
+                            "type": "integer"
+                          },
+                          "packId": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "ordinal": {
+                            "type": "integer"
+                          },
+                          "contentVersion": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "difficulty",
+                          "par",
+                          "packId",
+                          "ordinal",
+                          "contentVersion"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "nextCursor": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "levels",
+                    "nextCursor"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/levels/{id}": {
+      "get": {
+        "summary": "Full level definition",
+        "tags": [
+          "levels"
+        ],
+        "operationId": "getLevels/Id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Level id",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "integer"
+                    },
+                    "difficulty": {
+                      "type": "string",
+                      "enum": [
+                        "beginner",
+                        "easy",
+                        "medium",
+                        "hard",
+                        "expert"
+                      ]
+                    },
+                    "difficultyScore": {
+                      "type": "integer"
+                    },
+                    "width": {
+                      "type": "integer"
+                    },
+                    "height": {
+                      "type": "integer"
+                    },
+                    "tiles": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "t": {
+                            "type": "string",
+                            "enum": [
+                              "empty",
+                              "blocked",
+                              "straight",
+                              "corner",
+                              "tee",
+                              "cross",
+                              "source",
+                              "dest"
+                            ]
+                          },
+                          "r": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 3
+                          },
+                          "l": {
+                            "type": "boolean"
+                          },
+                          "c": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 3
+                          },
+                          "n": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 9
+                          }
+                        },
+                        "required": [
+                          "t",
+                          "r"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "generator": {
+                      "type": "object",
+                      "properties": {
+                        "version": {
+                          "type": "string",
+                          "maxLength": 16
+                        },
+                        "seed": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "tier": {
+                          "type": "string",
+                          "enum": [
+                            "beginner",
+                            "easy",
+                            "medium",
+                            "hard",
+                            "expert"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "version",
+                        "seed",
+                        "tier"
+                      ],
+                      "additionalProperties": false,
+                      "nullable": true
+                    },
+                    "par": {
+                      "type": "integer"
+                    },
+                    "tip": {
+                      "type": "string"
+                    },
+                    "solution": {
+                      "type": "object",
+                      "properties": {
+                        "rotations": {
+                          "type": "array",
+                          "items": {
+                            "type": "integer"
+                          }
+                        },
+                        "moves": {
+                          "type": "array",
+                          "items": {
+                            "type": "array",
+                            "minItems": 2,
+                            "maxItems": 2,
+                            "items": [
+                              {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 143
+                              },
+                              {
+                                "anyOf": [
+                                  {
+                                    "type": "number",
+                                    "enum": [
+                                      1
+                                    ]
+                                  },
+                                  {
+                                    "type": "number",
+                                    "enum": [
+                                      -1
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          "maxItems": 500
+                        }
+                      },
+                      "required": [
+                        "rotations",
+                        "moves"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "solutionCount": {
+                      "type": "integer"
+                    },
+                    "solutionCountCapped": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "version",
+                    "difficulty",
+                    "difficultyScore",
+                    "width",
+                    "height",
+                    "tiles",
+                    "generator",
+                    "par"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/challenges/daily": {
+      "get": {
+        "summary": "Today's (or a recent) official daily puzzle",
+        "tags": [
+          "daily"
+        ],
+        "operationId": "getChallengesDaily",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "date": {
+                      "type": "string",
+                      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                    },
+                    "tier": {
+                      "type": "string",
+                      "enum": [
+                        "beginner",
+                        "easy",
+                        "medium",
+                        "hard",
+                        "expert"
+                      ]
+                    },
+                    "generatorVersion": {
+                      "type": "string"
+                    },
+                    "level": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "version": {
+                          "type": "integer"
+                        },
+                        "difficulty": {
+                          "type": "string",
+                          "enum": [
+                            "beginner",
+                            "easy",
+                            "medium",
+                            "hard",
+                            "expert"
+                          ]
+                        },
+                        "difficultyScore": {
+                          "type": "integer"
+                        },
+                        "width": {
+                          "type": "integer"
+                        },
+                        "height": {
+                          "type": "integer"
+                        },
+                        "tiles": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "t": {
+                                "type": "string",
+                                "enum": [
+                                  "empty",
+                                  "blocked",
+                                  "straight",
+                                  "corner",
+                                  "tee",
+                                  "cross",
+                                  "source",
+                                  "dest"
+                                ]
+                              },
+                              "r": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 3
+                              },
+                              "l": {
+                                "type": "boolean"
+                              },
+                              "c": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 3
+                              },
+                              "n": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 9
+                              }
+                            },
+                            "required": [
+                              "t",
+                              "r"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "generator": {
+                          "type": "object",
+                          "properties": {
+                            "version": {
+                              "type": "string",
+                              "maxLength": 16
+                            },
+                            "seed": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "tier": {
+                              "type": "string",
+                              "enum": [
+                                "beginner",
+                                "easy",
+                                "medium",
+                                "hard",
+                                "expert"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "version",
+                            "seed",
+                            "tier"
+                          ],
+                          "additionalProperties": false,
+                          "nullable": true
+                        },
+                        "par": {
+                          "type": "integer"
+                        },
+                        "tip": {
+                          "type": "string"
+                        },
+                        "solution": {
+                          "type": "object",
+                          "properties": {
+                            "rotations": {
+                              "type": "array",
+                              "items": {
+                                "type": "integer"
+                              }
+                            },
+                            "moves": {
+                              "type": "array",
+                              "items": {
+                                "type": "array",
+                                "minItems": 2,
+                                "maxItems": 2,
+                                "items": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 143
+                                  },
+                                  {
+                                    "anyOf": [
+                                      {
+                                        "type": "number",
+                                        "enum": [
+                                          1
+                                        ]
+                                      },
+                                      {
+                                        "type": "number",
+                                        "enum": [
+                                          -1
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              "maxItems": 500
+                            }
+                          },
+                          "required": [
+                            "rotations",
+                            "moves"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "solutionCount": {
+                          "type": "integer"
+                        },
+                        "solutionCountCapped": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "version",
+                        "difficulty",
+                        "difficultyScore",
+                        "width",
+                        "height",
+                        "tiles",
+                        "generator",
+                        "par"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "par": {
+                      "type": "integer"
+                    },
+                    "closesAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "date",
+                    "tier",
+                    "generatorVersion",
+                    "level",
+                    "par",
+                    "closesAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/challenges/daily/submit": {
+      "post": {
+        "summary": "Submit a move replay; the server re-simulates it and ranks by verified rotation count",
+        "tags": [
+          "daily"
+        ],
+        "operationId": "postChallengesDailySubmit",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "valid": {
+                      "type": "boolean"
+                    },
+                    "rotations": {
+                      "type": "integer"
+                    },
+                    "best": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "rank": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "error": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "duplicate": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "valid",
+                    "rotations",
+                    "best",
+                    "rank",
+                    "error",
+                    "duplicate"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "date": {
+                    "type": "string",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                  },
+                  "moves": {
+                    "type": "array",
+                    "items": {
+                      "type": "array",
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "items": [
+                        {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 143
+                        },
+                        {
+                          "anyOf": [
+                            {
+                              "type": "number",
+                              "enum": [
+                                1
+                              ]
+                            },
+                            {
+                              "type": "number",
+                              "enum": [
+                                -1
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    "maxItems": 500
+                  },
+                  "submissionId": {
+                    "type": "string",
+                    "minLength": 8,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "date",
+                  "moves",
+                  "submissionId"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/challenges/daily/leaderboard": {
+      "get": {
+        "summary": "Daily leaderboard",
+        "tags": [
+          "daily"
+        ],
+        "operationId": "getChallengesDailyLeaderboard",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            }
+          },
+          {
+            "name": "week",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-W\\d{2}$"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "board": {
+                      "type": "string"
+                    },
+                    "entries": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "rank": {
+                            "type": "integer"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "score": {
+                            "type": "integer"
+                          },
+                          "rotations": {
+                            "type": "integer"
+                          },
+                          "solved": {
+                            "type": "integer"
+                          },
+                          "isMe": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "rank",
+                          "displayName",
+                          "score",
+                          "rotations",
+                          "isMe"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "me": {
+                      "type": "object",
+                      "properties": {
+                        "rank": {
+                          "type": "integer"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "score": {
+                          "type": "integer"
+                        },
+                        "rotations": {
+                          "type": "integer"
+                        },
+                        "solved": {
+                          "type": "integer"
+                        },
+                        "isMe": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "rank",
+                        "displayName",
+                        "score",
+                        "rotations",
+                        "isMe"
+                      ],
+                      "additionalProperties": false,
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "board",
+                    "entries",
+                    "me"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {},
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/leaderboards/global": {
+      "get": {
+        "summary": "All-time ranking by verified campaign solves",
+        "tags": [
+          "leaderboards"
+        ],
+        "operationId": "getLeaderboardsGlobal",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            }
+          },
+          {
+            "name": "week",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-W\\d{2}$"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "board": {
+                      "type": "string"
+                    },
+                    "entries": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "rank": {
+                            "type": "integer"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "score": {
+                            "type": "integer"
+                          },
+                          "rotations": {
+                            "type": "integer"
+                          },
+                          "solved": {
+                            "type": "integer"
+                          },
+                          "isMe": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "rank",
+                          "displayName",
+                          "score",
+                          "rotations",
+                          "isMe"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "me": {
+                      "type": "object",
+                      "properties": {
+                        "rank": {
+                          "type": "integer"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "score": {
+                          "type": "integer"
+                        },
+                        "rotations": {
+                          "type": "integer"
+                        },
+                        "solved": {
+                          "type": "integer"
+                        },
+                        "isMe": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "rank",
+                        "displayName",
+                        "score",
+                        "rotations",
+                        "isMe"
+                      ],
+                      "additionalProperties": false,
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "board",
+                    "entries",
+                    "me"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {},
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/leaderboards/weekly": {
+      "get": {
+        "summary": "ISO-week ranking by dailies solved, then rotations",
+        "tags": [
+          "leaderboards"
+        ],
+        "operationId": "getLeaderboardsWeekly",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            }
+          },
+          {
+            "name": "week",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-W\\d{2}$"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "board": {
+                      "type": "string"
+                    },
+                    "entries": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "rank": {
+                            "type": "integer"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "score": {
+                            "type": "integer"
+                          },
+                          "rotations": {
+                            "type": "integer"
+                          },
+                          "solved": {
+                            "type": "integer"
+                          },
+                          "isMe": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "rank",
+                          "displayName",
+                          "score",
+                          "rotations",
+                          "isMe"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "me": {
+                      "type": "object",
+                      "properties": {
+                        "rank": {
+                          "type": "integer"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "score": {
+                          "type": "integer"
+                        },
+                        "rotations": {
+                          "type": "integer"
+                        },
+                        "solved": {
+                          "type": "integer"
+                        },
+                        "isMe": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "rank",
+                        "displayName",
+                        "score",
+                        "rotations",
+                        "isMe"
+                      ],
+                      "additionalProperties": false,
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "board",
+                    "entries",
+                    "me"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {},
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/leaderboards/daily": {
+      "get": {
+        "summary": "Daily ranking (alias of /challenges/daily/leaderboard)",
+        "tags": [
+          "leaderboards"
+        ],
+        "operationId": "getLeaderboardsDaily",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            }
+          },
+          {
+            "name": "week",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-W\\d{2}$"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "board": {
+                      "type": "string"
+                    },
+                    "entries": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "rank": {
+                            "type": "integer"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "score": {
+                            "type": "integer"
+                          },
+                          "rotations": {
+                            "type": "integer"
+                          },
+                          "solved": {
+                            "type": "integer"
+                          },
+                          "isMe": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "rank",
+                          "displayName",
+                          "score",
+                          "rotations",
+                          "isMe"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "me": {
+                      "type": "object",
+                      "properties": {
+                        "rank": {
+                          "type": "integer"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "score": {
+                          "type": "integer"
+                        },
+                        "rotations": {
+                          "type": "integer"
+                        },
+                        "solved": {
+                          "type": "integer"
+                        },
+                        "isMe": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "rank",
+                        "displayName",
+                        "score",
+                        "rotations",
+                        "isMe"
+                      ],
+                      "additionalProperties": false,
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "board",
+                    "entries",
+                    "me"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {},
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/achievements": {
+      "get": {
+        "summary": "Achievement definitions",
+        "tags": [
+          "achievements"
+        ],
+        "operationId": "getAchievements",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "achievements": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "metric": {
+                            "type": "string"
+                          },
+                          "threshold": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "title",
+                          "description",
+                          "metric",
+                          "threshold"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "achievements"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/achievements/me": {
+      "get": {
+        "summary": "Achievements unlocked by the current player",
+        "tags": [
+          "achievements"
+        ],
+        "operationId": "getAchievementsMe",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "achievements": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "unlockedAt": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "unlockedAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "achievements"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/config": {
+      "get": {
+        "summary": "Active remote configuration",
+        "tags": [
+          "config"
+        ],
+        "operationId": "getConfig",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "version": {
+                      "type": "integer"
+                    },
+                    "config": {
+                      "type": "object",
+                      "additionalProperties": {}
+                    }
+                  },
+                  "required": [
+                    "version",
+                    "config"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/privacy/export": {
+      "get": {
+        "summary": "Export all personal data as JSON",
+        "tags": [
+          "privacy"
+        ],
+        "operationId": "getPrivacyExport",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {}
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/privacy/delete-request": {
+      "post": {
+        "summary": "Erase the account and all data (immediate, irreversible)",
+        "tags": [
+          "privacy"
+        ],
+        "operationId": "postPrivacyDeleteRequest",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "requestId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "completed"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "requestId",
+                    "status"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "confirm": {
+                    "type": "boolean",
+                    "enum": [
+                      true
+                    ]
+                  }
+                },
+                "required": [
+                  "confirm"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/purchases/verify": {
+      "post": {
+        "summary": "Verify a store purchase server-side and grant the entitlement",
+        "tags": [
+          "purchases"
+        ],
+        "operationId": "postPurchasesVerify",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "entitlements": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "productId": {
+                            "type": "string"
+                          },
+                          "store": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string"
+                          },
+                          "verifiedAt": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "productId",
+                          "store",
+                          "status",
+                          "verifiedAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "entitlements"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "store": {
+                    "type": "string",
+                    "enum": [
+                      "google_play",
+                      "app_store",
+                      "dev"
+                    ]
+                  },
+                  "productId": {
+                    "type": "string",
+                    "maxLength": 64
+                  },
+                  "purchaseToken": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096
+                  }
+                },
+                "required": [
+                  "store",
+                  "productId",
+                  "purchaseToken"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/purchases/entitlements": {
+      "get": {
+        "summary": "Active entitlements (restore purchases)",
+        "tags": [
+          "purchases"
+        ],
+        "operationId": "getPurchasesEntitlements",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "entitlements": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "productId": {
+                            "type": "string"
+                          },
+                          "store": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string"
+                          },
+                          "verifiedAt": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "productId",
+                          "store",
+                          "status",
+                          "verifiedAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "entitlements"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    }
+  }
+}

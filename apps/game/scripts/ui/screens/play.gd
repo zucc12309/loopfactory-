@@ -162,6 +162,9 @@ func on_back() -> bool:
 	if board.playing or not board._frames.is_empty():
 		_stop()
 		return true
+	var a = Game.state.active()
+	if a != null and kind != "offline_daily":
+		Game.state.enqueue("active_puzzle", {"kind": a["kind"], "levelId": a["levelId"], "rotations": a["rotations"].duplicate(), "history": a["history"].duplicate(true), "updatedAt": a["updatedAt"]})
 	Game.save_now()
 	return false
 

@@ -143,8 +143,16 @@ func _store_tokens(b: Dictionary) -> void:
 
 
 func _requeue_all_progress() -> void:
-	# Completed levels carry no replay here; the server records them as unverified (not ranked).
+	# Completed levels whose replay was already uploaded to a previous (lost) account carry no replay
+	# here; the server records them as unverified (kept, but not ranked). Levels with a replay still
+	# queued are skipped — that op will deliver a verified result.
+	var pending := {}
+	for op in Game.state.data["syncQueue"]:
+		if op["type"] == "level_complete":
+			pending[str(op["payload"]["levelId"])] = true
 	for key in Game.state.data["progress"]:
+		if pending.has(key):
+			continue
 		var p: Dictionary = Game.state.data["progress"][key]
 		var kind := str(p.get("kind", "campaign"))
 		if kind != "campaign":
