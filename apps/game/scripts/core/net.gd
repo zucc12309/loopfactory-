@@ -269,6 +269,7 @@ func sync() -> void:
 		synced.emit()
 	elif not batch.is_empty():
 		Game.state.retry_later(batch.map(func(o): return o["opId"]), now)
+		LFDiagnostics.record("network", false, {"status": int(r2["code"]), "queued": batch.size(), "reason": last_auth_error})
 	Game.request_save()
 	_syncing = false
 
@@ -405,16 +406,29 @@ func create_challenge(kind: String, level: Dictionary, moves: Array) -> Variant:
 ## Fetch a challenge by code. Returns {code, level, creatorName, creatorRotations, attempts} or
 ## null. The response never contains the creator's moves.
 func get_challenge(code: String) -> Variant:
-	var clean := code.strip_edges().to_upper().replace(" ", "")
-	if base_url == "" or clean.is_empty():
-		return null
+	var r := await get_challenge_result(code)
+	return r["body"] if r["status"] == "ok" else null
+
+
+## Like get_challenge, but says why it failed: {status: ok | invalid | not_found | offline | error, body}.
+## "not_found" covers unknown and expired codes (the server doesn't distinguish them).
+func get_challenge_result(code: String) -> Dictionary:
+	var clean := code.strip_edges().to_upper().replace(" ", "").replace("-", "")
+	if not LFShare.valid_code(clean):
+		return {"status": "invalid", "body": null}
+	if base_url == "":
+		return {"status": "offline", "body": null}
 	var r := await call_api(HTTPClient.METHOD_GET, "/api/v1/challenges/friend/" + clean.uri_encode(), null, false)
+	if r["code"] == 0:
+		return {"status": "offline", "body": null}
+	if r["code"] == 404 or r["code"] == 400:
+		return {"status": "not_found", "body": null}
 	if r["ok"] and r["body"] is Dictionary:
 		var lvl := LFTiles.normalize_level(r["body"]["level"])
 		if LFTiles.validate_board(lvl) == "":
 			r["body"]["level"] = lvl
-			return r["body"]
-	return null
+			return {"status": "ok", "body": r["body"]}
+	return {"status": "error", "body": null}
 
 
 ## Submit an attempt; the server re-simulates it. Returns {rotations, creatorRotations, outcome} or null.

@@ -46,25 +46,85 @@ func _ready() -> void:
 	Game.achievements_unlocked.connect(_on_achievements)
 	Game.cosmetics_unlocked.connect(_on_cosmetics)
 	goto("splash", {}, false)
+	_check_build_config.call_deferred()
 	if Array(OS.get_cmdline_user_args()).any(func(a): return a.begins_with("--tour=")):
 		add_child(load("res://scripts/core/dev_tour.gd").new())
 
 
-## Challenge code from a deep link / launch argument: `loopfactory://challenge/CODE`,
-## `https://<host>/c/CODE` or `--challenge=CODE`. On Android/iOS the OS only passes these to the app
-## once intent filters / associated domains are configured (docs/sharing.md); until then players
-## enter the code on the Challenge screen.
+## Challenge code from an App Link (via the share plugin), a launch argument
+## (`--challenge=CODE`, `loopfactory://challenge/CODE`, `https://<host>/c/CODE`), or a code saved
+## while offline. Invalid codes are dropped here, before any request. Android App Links only reach
+## an INSTALLED app (and only once the domain is verified, docs/sharing.md); they do not survive an
+## install from the store, so the landing page always shows the code for manual entry.
 func launch_challenge_code() -> String:
+	var uri := LFShare.launch_uri()
+	if uri != "":
+		Analytics.track("challenge_link_opened", {"source": "app_link"})
+		var c := LFShare.parse_challenge(uri)
+		if c != "":
+			return c
 	var args := Array(OS.get_cmdline_args()) + Array(OS.get_cmdline_user_args())
 	for a in args:
 		var s := str(a)
-		for prefix in ["--challenge=", "loopfactory://challenge/"]:
-			if s.begins_with(prefix):
-				return s.substr(prefix.length()).strip_edges().to_upper()
-		var i := s.find("/c/")
-		if s.begins_with("http") and i >= 0:
-			return s.substr(i + 3).split("?")[0].strip_edges().to_upper()
-	return ""
+		if s.begins_with("--challenge=") or s.begins_with("loopfactory://") or (s.begins_with("http") and s.contains("/c/")):
+			var code := LFShare.parse_challenge(s)
+			if code != "":
+				Analytics.track("challenge_link_opened", {"source": "launch_argument"})
+				return code
+	return str(Game.state.data["challenges"].get("pending", ""))
+
+
+## A staging build with a broken config or no error monitoring says so on screen, so testers never
+## assume problems are being collected. (Release builds can't be produced with an invalid config:
+## scripts/client-config.ts fails the build.) Problems are also recorded as diagnostics.
+func _check_build_config() -> void:
+	var cfg := LFReleaseConfig.load_client()
+	var errs := LFReleaseConfig.validate(cfg)
+	var mon := LFDiagnostics.monitoring_status(cfg)
+	if errs.is_empty() and (mon == "ok" or mon == "not_configured"):
+		return
+	LFDiagnostics.record("config", false, {"problems": errs.size(), "monitoring": mon})
+	if str(cfg.get("environment", "")) == "staging":
+		var what := ("config: " + str(errs[0])) if not errs.is_empty() else ("error monitoring " + mon)
+		toast("Staging build problem — %s" % what, LFStyle.ERROR, 6.0)
+
+
+## Optional analytics consent is due once: after the first completed puzzle, if never answered.
+func consent_due() -> bool:
+	return not bool(Game.settings().get("analyticsAsked", false)) and not Game.state.data["progress"].is_empty() and _overlay_layer.get_child_count() == 0
+
+
+## The consent card. Both answers are one tap; Back dismisses without answering (asked again later).
+func ask_consent() -> void:
+	if not consent_due():
+		return
+	var card := LFStyle.card()
+	card.name = "ConsentCard"
+	var v := LFStyle.vbox(18)
+	card.add_child(LFStyle.margin(v, 16, 16, 16, 16))
+	v.add_child(LFStyle.label("Help us tune the puzzles?", 36, LFStyle.TEXT, 800))
+	var body := LFStyle.label("Share anonymous gameplay stats (levels played, retries, hints). No name, contacts, location or ad tracking. You can change this any time in Settings.", 25, LFStyle.TEXT_MUTED, 400)
+	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	v.add_child(body)
+	var r := LFStyle.hbox(16)
+	var no := LFStyle.button("No thanks", "SecondaryButton", 88)
+	var yes := LFStyle.button("Share stats", "", 88)
+	no.name = "ConsentNo"
+	yes.name = "ConsentYes"
+	no.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	yes.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	no.pressed.connect(func(): answer_consent(false))
+	yes.pressed.connect(func(): answer_consent(true))
+	r.add_child(no)
+	r.add_child(yes)
+	v.add_child(r)
+	overlay(card, false)
+
+
+func answer_consent(v: bool) -> void:
+	Game.set_setting("analyticsAsked", true)
+	Game.set_setting("analytics", v)
+	close_overlay()
 
 
 func reduced_motion() -> bool:

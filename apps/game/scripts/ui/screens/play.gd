@@ -113,8 +113,14 @@ func setup(args: Dictionary) -> void:
 		_coach = COACH.get(level["id"], {})
 	if level["id"] == "c01" and not st.data["onboarding"]["tutorialStarted"]:
 		st.data["onboarding"]["tutorialStarted"] = true
-		Analytics.track("tutorial_start", {"flow": str(LFFlags.get_variant("tutorial_flow"))})
+		Analytics.once("tutorial_start", {"flow": str(LFFlags.get_variant("tutorial_flow"))})
+	if kind == "challenge":
+		Analytics.track("challenge_started", {"source": str(challenge.get("source", "code_entry"))})
 	_build()
+	if bool(args.get("from_win", false)):
+		# Optional consent is asked at a transition AFTER the first delivery (never over the
+		# celebration or before the first puzzle), once the next board has appeared.
+		get_tree().create_timer(0.45).timeout.connect(func(): if is_inside_tree() and main.current == self: main.ask_consent())
 
 
 func _palette() -> Dictionary:
@@ -473,6 +479,7 @@ func _on_rotate(i: int, dir: int) -> void:
 	Sfx.play("rotate" if dir == 1 else "ccw", 0.97 + randf() * 0.06)
 	Sfx.haptic_pattern("tick")
 	_note_direction(i, dir)
+	Analytics.once("first_rotation", {"level_id": level["id"], "kind": kind})
 	_after_edit()
 
 
@@ -574,6 +581,7 @@ func _run() -> void:
 	board.clear_failure()
 	var runs := Game.state.record_run()
 	var result := LFSimulation.simulate(level, Game.state.active()["rotations"])
+	Analytics.once("first_run", {"level_id": level["id"], "kind": kind})
 	if _failed_once:
 		Analytics.track("level_retry", {"level_id": level["id"], "kind": kind, "attempt": runs})
 	board.interactive = false
@@ -627,6 +635,7 @@ func _on_finished(result: Dictionary) -> void:
 		var perfect: bool = res["moves"] <= res["par"]
 		Sfx.play("perfect" if perfect else "win")
 		Sfx.haptic_pattern("success")
+		Analytics.once("first_delivery", {"level_id": level["id"], "kind": kind, "attempts": res["runs"]})
 		Analytics.track("level_complete", {"level_id": level["id"], "kind": kind, "moves": res["moves"], "par": res["par"], "stars": res["stars"], "hints": res["hints"], "attempts": res["runs"], "level_number": campaign_index + 1})
 		if kind == "daily":
 			Analytics.track("daily_challenge_completed", {"moves": res["moves"], "attempts": res["runs"]})
@@ -808,12 +817,12 @@ func _next(res: Dictionary) -> void:
 		"campaign":
 			main.close_overlay()
 			if campaign_index + 1 < Game.state.campaign.size():
-				main.replace("play", {"kind": "campaign", "index": campaign_index + 1})
+				main.replace("play", {"kind": "campaign", "index": campaign_index + 1, "from_win": true})
 			else:
 				main.home()
 		"endless":
 			main.close_overlay()
-			main.replace("play", {"kind": "endless"})
+			main.replace("play", {"kind": "endless", "from_win": true})
 		"daily", "offline_daily":
 			_share(res)
 		_:
@@ -838,7 +847,6 @@ func _share(res: Dictionary) -> void:
 		card_data["starry"] = bool(board.crew_ctx.get("starry", false))
 		card_data["reaction"] = ("%s: “%s”" % [_win_line["speaker"], _win_line["text"]]) if not _win_line.is_empty() else ("%s: “%s”" % [def["name"], def.get("line", "")])
 	LFShareCard.present(main, card_data, func(): _show_win(res, false))
-	Analytics.track("share_clicked", {"kind": kind, "surface": "result_card"})
 
 
 ## Featured character for the share card: the colour that made the last delivery in this run

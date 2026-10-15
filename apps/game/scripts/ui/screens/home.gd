@@ -110,7 +110,7 @@ func setup(_args: Dictionary) -> void:
 		crew.pressed.connect(func(): main.goto("crew"))
 		bottom.add_child(crew)
 	if LFFlags.get_variant("daily_entry") != "banner":
-		var code := LFStyle.button("Friend code" if not pres["collection"] else "Friends", "SecondaryButton", 96)
+		var code := LFStyle.button("Friends", "SecondaryButton", 96)
 		code.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		code.pressed.connect(func(): main.goto("challenge"))
 		bottom.add_child(code)
@@ -205,37 +205,9 @@ func _dismiss_bubble() -> void:
 
 
 func on_shown() -> void:
-	if not Game.settings().get("analyticsAsked", false):
-		get_tree().create_timer(0.6).timeout.connect(_ask_consent)
-
-
-func _ask_consent() -> void:
-	if not is_inside_tree() or Game.settings().get("analyticsAsked", false):
-		return
-	var card := LFStyle.card()
-	var v := LFStyle.vbox(18)
-	card.add_child(LFStyle.margin(v, 16, 16, 16, 16))
-	v.add_child(LFStyle.label("Help us tune the puzzles?", 36, LFStyle.TEXT, 800))
-	var body := LFStyle.label("Share anonymous gameplay stats (levels played, retries, hints). No name, contacts, location or ad tracking. You can change this any time in Settings.", 25, LFStyle.TEXT_MUTED, 400)
-	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	v.add_child(body)
-	var r := LFStyle.hbox(16)
-	var no := LFStyle.button("No thanks", "SecondaryButton", 88)
-	var yes := LFStyle.button("Share stats", "", 88)
-	no.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	yes.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	no.pressed.connect(func(): _consent(false))
-	yes.pressed.connect(func(): _consent(true))
-	r.add_child(no)
-	r.add_child(yes)
-	v.add_child(r)
-	main.overlay(card, false)
-
-
-func _consent(v: bool) -> void:
-	Game.set_setting("analytics", v)
-	Game.set_setting("analyticsAsked", true)
-	main.close_overlay()
+	# Never on a fresh install: the optional consent waits until the player has delivered a package.
+	if main.consent_due():
+		get_tree().create_timer(0.6).timeout.connect(func(): if is_inside_tree() and main.current == self: main.ask_consent())
 
 
 func _tile_card(icon: String, title: String, sub: String, action: Callable) -> Control:

@@ -213,5 +213,5 @@ func test_every_tracked_event_is_in_the_taxonomy() -> void:
 				found += 1
 				check(events.has(m.get_string(1)), "event %s (%s) is declared" % [m.get_string(1), f])
 	check(found >= 15, "scanned the tracking calls (%d)" % found)
-	for e in ["first_launch", "tutorial_start", "tutorial_complete", "level_start", "level_complete", "level_fail", "level_retry", "hint_used", "daily_challenge_entry", "daily_challenge_completed", "share_completed", "challenge_link_opened", "challenge_completed", "session_end", "app_background", "app_resume"]:
+	for e in ["first_launch", "tutorial_start", "tutorial_complete", "level_start", "level_complete", "level_fail", "level_retry", "hint_used", "daily_challenge_entry", "daily_challenge_completed", "share_card_created", "share_text_copied", "share_sheet_opened", "share_image_saved", "consent_granted", "first_rotation", "first_run", "first_delivery", "challenge_loaded", "challenge_started", "network_error", "app_error", "challenge_link_opened", "challenge_completed", "session_end", "app_background", "app_resume"]:
 		check(events.has(e), "required event %s" % e)

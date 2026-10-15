@@ -59,8 +59,12 @@ func load_data() -> Dictionary:
 	return {}
 
 
-func wipe() -> void:
-	for suffix in ["", ".tmp", ".bak"]:
+## Remove the save. `everything` also removes quarantined .corrupt copies (explicit deletion only).
+func wipe(everything := false) -> void:
+	var suffixes := ["", ".tmp", ".bak"]
+	if everything:
+		suffixes += [".corrupt", ".tmp.corrupt", ".bak.corrupt"]
+	for suffix in suffixes:
 		if FileAccess.file_exists(path + suffix):
 			DirAccess.remove_absolute(ProjectSettings.globalize_path(path + suffix))
 

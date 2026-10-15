@@ -18,10 +18,14 @@ func _ready() -> void:
 	var campaign := _load_campaign()
 	var ach: Array = _read_json("res://data/achievements.json").get("achievements", [])
 	state = LFGameState.new(campaign, ach)
+	var had_save := FileAccess.file_exists(store.path) or FileAccess.file_exists(store.path + ".bak")
 	state.load_from(store.load_data())
 	load_source = store.last_load_source
 	state.data["stats"]["sessions"] += 1
 	save_now()
+	if load_source == "tmp" or load_source == "bak" or (load_source == "default" and had_save):
+		# A damaged main save was recovered from a backup (or nothing usable was left).
+		LFDiagnostics.record.call_deferred("save_recovered", load_source == "default", {"source": load_source})
 
 
 func _load_campaign() -> Array:
@@ -54,6 +58,7 @@ func _flush() -> void:
 func save_now() -> void:
 	if not store.save(state.data):
 		push_warning("Save failed: " + store.last_error)
+		LFDiagnostics.record("save_failed", false, {"error": store.last_error})
 
 
 func _notification(what: int) -> void:
@@ -85,9 +90,39 @@ func complete_active() -> Dictionary:
 	return res
 
 
-## Wipe local data (after account deletion or "reset progress").
+## Wipe local data (after account deletion or "reset progress"): the save and its backups,
+## quarantined corrupt copies, the analytics queue, diagnostics, exported data and share images.
+## Ordinary saves never touch the backups; only this explicit deletion removes them.
 func wipe_local() -> void:
-	store.wipe()
+	store.wipe(true)
+	Analytics.clear()
+	LFDiagnostics.clear()
+	for f in ["user://loop-factory-export.json"]:
+		if FileAccess.file_exists(f):
+			DirAccess.remove_absolute(ProjectSettings.globalize_path(f))
+	_remove_dir("user://share")
 	state.data = LFGameState.defaults()
 	save_now()
 	state_changed.emit()
+
+
+static func _remove_dir(dir_path: String) -> void:
+	var d := DirAccess.open(dir_path)
+	if d == null:
+		return
+	for f in d.get_files():
+		d.remove(f)
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(dir_path))
+
+
+## Every local file holding player data (for tests and the deletion audit).
+func residual_files() -> Array:
+	var out: Array = []
+	for f in [store.path, store.path + ".tmp", store.path + ".bak", store.path + ".corrupt", store.path + ".tmp.corrupt", store.path + ".bak.corrupt", Analytics.queue_path, LFDiagnostics.path, "user://loop-factory-export.json"]:
+		if FileAccess.file_exists(f):
+			out.append(f)
+	var d := DirAccess.open("user://share")
+	if d != null:
+		for f in d.get_files():
+			out.append("user://share/" + f)
+	return out
