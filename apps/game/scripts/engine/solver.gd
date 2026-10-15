@@ -37,7 +37,9 @@ func _init(b: Dictionary, start_rot: Array, p_max_nodes: int, p_count_mode: bool
 	count_cap = p_count_cap
 
 
-## Returns {status, minCost, rotations, moves, routeOrder, nodes, solutionCount, solutionCountCapped}.
+## Returns {status, optimal, minCost, rotations, moves, routeOrder, nodes, solutionCount, solutionCountCapped}.
+## status: "solved" (proven optimal) | "feasible" (verified solution, budget ran out before proving it
+## cheapest; minCost is an upper bound) | "budget_exceeded" (no solution found yet) | "unsolvable".
 static func solve(b: Dictionary, start_rot: Array, max_nodes := 200000, count_cap := 0) -> Dictionary:
 	var s := LFSolver.new(b, start_rot, max_nodes, false, 0)
 	s._solve_source(0)
@@ -51,13 +53,14 @@ static func solve(b: Dictionary, start_rot: Array, max_nodes := 200000, count_ca
 		capped = c.count >= c.count_cap or c.exceeded
 		total_nodes += c.nodes
 	if s.best != null:
+		var optimal := not s.exceeded or s.best_cost == 0
 		return {
-			"status": "solved", "minCost": s.best_cost, "rotations": s.best,
+			"status": "solved" if optimal else "feasible", "optimal": optimal, "minCost": s.best_cost, "rotations": s.best,
 			"moves": moves_between(b, start_rot, s.best), "routeOrder": s.best_order,
 			"nodes": total_nodes, "solutionCount": solution_count, "solutionCountCapped": capped,
 		}
 	return {
-		"status": "budget_exceeded" if s.exceeded else "unsolvable", "minCost": -1, "rotations": null,
+		"status": "budget_exceeded" if s.exceeded else "unsolvable", "optimal": false, "minCost": -1, "rotations": null,
 		"moves": [], "routeOrder": [], "nodes": total_nodes, "solutionCount": 0, "solutionCountCapped": false,
 	}
 
@@ -74,11 +77,16 @@ static func moves_between(b: Dictionary, from: Array, to: Array) -> Array:
 	return moves
 
 
-## Hint: {tile, dir, taps, targetRotation} or null.
-static func hint(b: Dictionary, current: Array, max_nodes := 100000) -> Variant:
+## Why a hint is (not) available (mirror of hintOutcome in solver.ts):
+## {kind: "hint", hint} | {kind: "solved"} | {kind: "exhausted"} | {kind: "unsolvable"}.
+static func hint_outcome(b: Dictionary, current: Array, max_nodes := 100000) -> Dictionary:
 	var res := solve(b, current, max_nodes)
-	if res["status"] != "solved" or res["minCost"] == 0:
-		return null
+	if res["status"] == "unsolvable":
+		return {"kind": "unsolvable"}
+	if res["status"] == "budget_exceeded" or res["rotations"] == null:
+		return {"kind": "exhausted"}
+	if res["minCost"] == 0:
+		return {"kind": "solved"}
 	var target: Array = res["rotations"]
 	var ord: Array = res["routeOrder"].duplicate()
 	for i in b["tiles"].size():
@@ -90,8 +98,14 @@ static func hint(b: Dictionary, current: Array, max_nodes := 100000) -> Variant:
 		var plan := LFTiles.rotation_plan(tile, int(current[i]), int(target[i]))
 		if plan[0] == 0:
 			continue
-		return {"tile": i, "dir": plan[1], "taps": plan[0], "targetRotation": target[i]}
-	return null
+		return {"kind": "hint", "hint": {"tile": i, "dir": plan[1], "taps": plan[0], "targetRotation": target[i], "optimal": res["optimal"]}}
+	return {"kind": "solved"}
+
+
+## Hint: {tile, dir, taps, targetRotation, optimal} or null (hint_outcome says why).
+static func hint(b: Dictionary, current: Array, max_nodes := 100000) -> Variant:
+	var o := hint_outcome(b, current, max_nodes)
+	return o["hint"] if o["kind"] == "hint" else null
 
 
 func _orientations_for(tile: Dictionary, st: int) -> Array:

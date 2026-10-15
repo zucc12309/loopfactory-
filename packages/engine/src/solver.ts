@@ -17,7 +17,15 @@ import { PERIOD, inputMask, isRotatable, rotationCost, type Tile } from './tiles
  * (rotationCost counts clockwise and counter-clockwise quarter turns as one action each).
  */
 
-export type SolveStatus = 'solved' | 'unsolvable' | 'budget_exceeded';
+/**
+ * Outcome of a search. Only `solved` certifies optimality.
+ *  - solved           proven optimal: the search finished (or found a 0-cost solution)
+ *  - feasible         a verified solution exists, but the node budget ran out before proving it is
+ *                     the cheapest; minCost is an UPPER bound, never a par
+ *  - budget_exceeded  the budget ran out before any solution was found (solvability unknown)
+ *  - unsolvable       the search finished without a solution (proven unsolvable)
+ */
+export type SolveStatus = 'solved' | 'feasible' | 'unsolvable' | 'budget_exceeded';
 
 export interface SolveOptions {
   /** Maximum search nodes before giving up (default 200 000). */
@@ -28,7 +36,9 @@ export interface SolveOptions {
 
 export interface SolveResult {
   status: SolveStatus;
-  /** Minimum rotations from the given start rotations (only when solved). */
+  /** True only for `solved`. */
+  optimal: boolean;
+  /** Minimum rotations when `solved`; the best cost found (an upper bound) when `feasible`; else -1. */
   minCost: number;
   rotations: number[] | null;
   moves: Move[];
@@ -221,8 +231,11 @@ export function solve(board: Board, start: readonly number[] = board.tiles.map((
     nodes += c.nodes;
   }
   if (s.best) {
+    // A 0-cost solution is optimal even if the budget ran out right after finding it.
+    const optimal = !s.exceeded || s.bestCost === 0;
     return {
-      status: 'solved',
+      status: optimal ? 'solved' : 'feasible',
+      optimal,
       minCost: s.bestCost,
       rotations: s.best,
       moves: movesBetween(board, start, s.best),
@@ -234,6 +247,7 @@ export function solve(board: Board, start: readonly number[] = board.tiles.map((
   }
   return {
     status: s.exceeded ? 'budget_exceeded' : 'unsolvable',
+    optimal: false,
     minCost: -1,
     rotations: null,
     moves: [],
@@ -250,15 +264,25 @@ export interface Hint {
   /** Taps still needed on this tile. */
   taps: number;
   targetRotation: number;
+  /** True when the target comes from a proven-optimal solution; false for a verified but unproven one. */
+  optimal: boolean;
 }
 
 /**
- * Hint: the first tile along an optimal route (from the player's current rotations) that is not yet
- * in its solved orientation. Returns null when already solved or when the search budget is exhausted.
+ * Why a hint is (not) available, so the UI never guesses:
+ *  - hint       `hint` is the next move toward a solution the simulation verified
+ *  - solved     the current rotations already solve the puzzle
+ *  - exhausted  the search budget ran out before any solution was found (try again / reset)
+ *  - unsolvable the search proved no solution exists from these rotations (cannot happen for
+ *               rotation-only puzzles that have a solution, but reported truthfully if it does)
  */
-export function hint(board: Board, current: readonly number[], options: SolveOptions = {}): Hint | null {
+export type HintOutcome = { kind: 'hint'; hint: Hint } | { kind: 'solved' | 'exhausted' | 'unsolvable' };
+
+export function hintOutcome(board: Board, current: readonly number[], options: SolveOptions = {}): HintOutcome {
   const res = solve(board, current, { maxNodes: options.maxNodes ?? 100_000 });
-  if (res.status !== 'solved' || !res.rotations || res.minCost === 0) return null;
+  if (res.status === 'unsolvable') return { kind: 'unsolvable' };
+  if (res.status === 'budget_exceeded' || !res.rotations) return { kind: 'exhausted' };
+  if (res.minCost === 0) return { kind: 'solved' };
   const target = res.rotations;
   const order = [...res.routeOrder, ...board.tiles.map((_, i) => i)];
   for (const i of order) {
@@ -266,7 +290,13 @@ export function hint(board: Board, current: readonly number[], options: SolveOpt
     if (!isRotatable(tile)) continue;
     const [taps, dir] = rotationPlan(tile, current[i] as number, target[i] as number);
     if (taps === 0) continue;
-    return { tile: i, dir, taps, targetRotation: target[i] as number };
+    return { kind: 'hint', hint: { tile: i, dir, taps, targetRotation: target[i] as number, optimal: res.optimal } };
   }
-  return null;
+  return { kind: 'solved' };
+}
+
+/** The next hint move, or null when there is none (see hintOutcome for the reason). */
+export function hint(board: Board, current: readonly number[], options: SolveOptions = {}): Hint | null {
+  const o = hintOutcome(board, current, options);
+  return o.kind === 'hint' ? o.hint : null;
 }
