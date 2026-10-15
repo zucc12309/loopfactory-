@@ -91,5 +91,23 @@ for (const file of outputs) {
     writeFileSync(file, json);
   }
 }
+// Achievements definitions are shared with the client.
+const achSrc = resolve(root, 'packages/contracts/data/achievements.json');
+const achDst = resolve(root, 'apps/game/data/achievements.json');
+const achJson = readFileSync(achSrc, 'utf8');
+if (check) {
+  let current = '';
+  try {
+    current = readFileSync(achDst, 'utf8');
+  } catch {
+    /* missing */
+  }
+  if (current !== achJson) {
+    console.error(`Stale: ${achDst}. Run npm run levels:build`);
+    stale = true;
+  }
+} else {
+  writeFileSync(achDst, achJson);
+}
 if (stale) process.exit(1);
 console.log(`${check ? 'Verified' : 'Wrote'} ${levels.length} curated levels (content v${CONTENT_VERSION}).`);

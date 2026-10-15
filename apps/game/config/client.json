@@ -1,0 +1,7 @@
+{
+ "_comment": "Client configuration. Contains NO secrets — only public endpoints and public analytics keys. Production values are injected by scripts/set-client-config.sh during release builds.",
+ "apiBaseUrl": "http://127.0.0.1:8080",
+ "environment": "development",
+ "analytics": { "provider": "none", "posthogHost": "https://eu.i.posthog.com", "posthogKey": "" },
+ "crashReporting": { "provider": "none", "dsn": "" }
+}

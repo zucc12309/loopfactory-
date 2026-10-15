@@ -19,9 +19,9 @@ run/low_processor_mode=true
 [autoload]
 
 Game="*res://scripts/core/game.gd"
+Net="*res://scripts/core/net.gd"
 Sfx="*res://scripts/core/sfx.gd"
 Analytics="*res://scripts/core/analytics.gd"
-Net="*res://scripts/core/net.gd"
 
 [display]
 
@@ -38,9 +38,7 @@ window/energy_saving/keep_screen_on=false
 
 common/drop_mouse_on_gui_input_disabled=true
 
-[input_devices]
 
-pointing/emulate_touch_from_mouse=true
 
 [physics]
 
@@ -52,4 +50,3 @@ renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
 textures/vram_compression/import_etc2_astc=true
 environment/defaults/default_clear_color=Color(0.968627, 0.960784, 0.941176, 1)
-anti_aliasing/quality/msaa_2d=1

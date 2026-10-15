@@ -1,0 +1,15 @@
+{
+ "version": 1,
+ "achievements": [
+  { "id": "first_delivery", "title": "First Delivery", "description": "Solve your first puzzle.", "metric": "campaign", "threshold": 1 },
+  { "id": "shift_worker", "title": "Shift Worker", "description": "Solve 10 campaign puzzles.", "metric": "campaign", "threshold": 10 },
+  { "id": "floor_manager", "title": "Floor Manager", "description": "Solve 25 campaign puzzles.", "metric": "campaign", "threshold": 25 },
+  { "id": "plant_director", "title": "Plant Director", "description": "Solve every campaign puzzle.", "metric": "campaign", "threshold": 34 },
+  { "id": "efficient", "title": "Efficient", "description": "Solve a puzzle in par rotations.", "metric": "perfect", "threshold": 1 },
+  { "id": "lean_line", "title": "Lean Line", "description": "Solve 15 puzzles in par rotations.", "metric": "perfect", "threshold": 15 },
+  { "id": "daily_debut", "title": "Daily Debut", "description": "Solve a daily puzzle.", "metric": "dailies", "threshold": 1 },
+  { "id": "regular", "title": "Regular", "description": "Solve 7 daily puzzles (any days).", "metric": "dailies", "threshold": 7 },
+  { "id": "endless_10", "title": "Overtime", "description": "Solve 10 endless puzzles.", "metric": "endless", "threshold": 10 },
+  { "id": "endless_50", "title": "Perpetual Motion", "description": "Solve 50 endless puzzles.", "metric": "endless", "threshold": 50 }
+ ]
+}
