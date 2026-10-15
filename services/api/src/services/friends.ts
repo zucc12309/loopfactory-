@@ -178,7 +178,7 @@ export function landingPage(v: { code: string; creatorName: string; creatorRotat
 <p class="code">${esc(v.code)}</p>
 <p>Open Loop Factory, tap <strong>Friend code</strong> and enter the code above.</p>
 <p><a class="btn" href="loopfactory://challenge/${esc(v.code)}">Open in the app</a></p>`
-    : `<p class="eyebrow">Loop Factory</p><h1>This challenge has expired or doesn't exist.</h1>`;
+    : `<p class="eyebrow">Loop Factory</p><h1>This challenge has expired or doesn't exist.</h1><p>Challenges last 30 days. Ask your friend to send a new one.</p>`;
   const storeLinks = [stores.play && `<a href="${esc(stores.play)}">Get it on Google Play</a>`, stores.app && `<a href="${esc(stores.app)}">Download on the App Store</a>`].filter(Boolean).join(' · ');
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Loop Factory challenge</title><meta name="robots" content="noindex">

@@ -132,6 +132,8 @@ func _run() -> void:
 	await _reverse_tests()
 	await _hint_tests()
 	await _presentation_tests()
+	await _consent_tests()
+	await _share_tests()
 	print("\nBeta UI tests: %d checks, %d failed" % [checks, failures])
 	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://beta-ui-test-save.json"))
 	quit(1 if failures > 0 else 0)
@@ -349,3 +351,164 @@ func _presentation_tests() -> void:
 	for v in ["minimal", "full"]:
 		for k in results["hybrid"]:
 			check(results[v][k] == results["hybrid"][k], "%s vs hybrid: same %s (%s vs %s)" % [v, k, results[v][k], results["hybrid"][k]])
+
+
+# ------------------------------------------------------------------------- Consent timing
+
+func _consent_card(main: Control) -> Node:
+	return main.find_child("ConsentCard", true, false)
+
+
+func _consent_tests() -> void:
+	# Fresh install: nothing on Home, nothing before or during the first puzzle and its celebration.
+	Game.state.data = load("res://scripts/core/game_state.gd").defaults()
+	Game.state.data["settings"]["sfx"] = false
+	Game.state.data["settings"]["music"] = false
+	var made: Array = await _make_main(Vector2i(720, 1280))
+	var main: Control = made[1]
+	main.home()
+	await _wait(1.2)
+	check(_consent_card(main) == null, "fresh install: no consent prompt on Home")
+	var play = await _play(main, "c01")
+	await _wait(1.0)
+	check(_consent_card(main) == null, "no consent prompt over the first puzzle")
+	for mv in play.level["solution"]["moves"]:
+		play._on_rotate(int(mv[0]), int(mv[1]))
+	var r := await _run_and_wait(play)
+	check(r.get("success", false), "first delivery")
+	check(_consent_card(main) == null, "no consent prompt over the celebration")
+	await _wait(1.8)
+	check(_consent_card(main) == null, "no consent prompt stacked on the win card")
+	check(not bool(Game.settings()["analytics"]), "still opted out (never silently opted in)")
+	# Transition: Next level -> prompt appears over the new board.
+	play._next(play._win_res)
+	await _wait(1.0)
+	var card := _consent_card(main)
+	check(card != null, "consent asked at the transition after the first delivery")
+	if card != null:
+		var no: Button = card.find_child("ConsentNo", true, false)
+		var yes: Button = card.find_child("ConsentYes", true, false)
+		check(no != null and yes != null and no.size.y >= 88 and yes.size.y >= 88, "both answers are large one-tap buttons")
+		yes.pressed.emit()
+	await _frames(2)
+	check(bool(Game.settings()["analytics"]) and bool(Game.settings()["analyticsAsked"]), "accept recorded")
+	check(_consent_card(main) == null, "prompt closed")
+	main.home()
+	await _wait(1.0)
+	check(_consent_card(main) == null, "asked only once")
+	# Decline path, and a player who reaches Home after a win without seeing the transition.
+	Game.state.data["settings"]["analyticsAsked"] = false
+	Game.state.data["settings"]["analytics"] = false
+	main.goto("settings")
+	await _wait(0.4)
+	main.home()
+	await _wait(1.2)
+	card = _consent_card(main)
+	check(card != null, "Home asks once progress exists")
+	if card != null:
+		(card.find_child("ConsentNo", true, false) as Button).pressed.emit()
+	await _frames(2)
+	check(not bool(Game.settings()["analytics"]) and bool(Game.settings()["analyticsAsked"]), "decline recorded")
+	# Settings keeps an accessible entry to change it later.
+	main.goto("settings")
+	await _wait(0.4)
+	var found := false
+	for cb in main.current.find_children("*", "CheckButton", true, false):
+		if (cb as CheckButton).text == "Share anonymous gameplay stats":
+			found = true
+	check(found, "Settings keeps the analytics toggle")
+	made[0].queue_free()
+	await _frames(2)
+
+
+# ------------------------------------------------------------------- Sharing & challenge links
+
+func _events() -> Array:
+	return root.get_node("Analytics").queued().map(func(e): return e["event"])
+
+
+func _share_tests() -> void:
+	var Share: GDScript = load("res://scripts/core/share.gd")
+	var Card: GDScript = load("res://scripts/ui/share_card.gd")
+	var An: Node = root.get_node("Analytics")
+	# Link parsing / validation happens before any request.
+	check(Share.parse_challenge("https://play.host.app/c/k7mpq2xr") == "K7MPQ2XR", "https link parsed")
+	check(Share.parse_challenge("loopfactory://challenge/K7MPQ2XR?x=1") == "K7MPQ2XR", "scheme link parsed")
+	check(Share.parse_challenge("--challenge=K7MP-Q2XR") == "K7MPQ2XR", "launch argument parsed")
+	for bad in ["", "K7MPQ2X", "K7MPQ2XRR", "K7MPQ2X0", "K7MPQ2XI", "https://host/x/K7MPQ2XR", "<script>", "../../etc"]:
+		check(Share.parse_challenge(bad) == "", "invalid link rejected: '%s'" % bad)
+
+	_fresh_state()
+	Game.state.data["settings"]["analytics"] = true
+	An.clear()
+	var made: Array = await _make_main(Vector2i(720, 1280))
+	var main: Control = made[1]
+	var d := {"kind": "campaign", "date": "2026-10-15", "rotations": 6, "par": 6, "stars": 3, "attempts": 1, "levelName": "Test"}
+	# No plugin (this build): no native button, copy works, honest events, no private path shown.
+	Share.fake_plugin = Callable()
+	check(not Share.native_available(), "no native share plugin in this build")
+	await Card.present(main, d)
+	await _frames(2)
+	check(main.find_child("ShareNative", true, false) == null, "no Share button without the plugin")
+	var copy: Button = main.find_child("ShareCopy", true, false)
+	check(copy != null, "copy-text fallback offered")
+	copy.pressed.emit()
+	check(DisplayServer.clipboard_get().contains("Loop Factory"), "text copied")
+	var ev := _events()
+	check(ev.has("share_card_created") and ev.has("share_text_copied"), "card created + text copied tracked (%s)" % [ev])
+	check(not ev.has("share_sheet_opened"), "never claims a share sheet opened")
+	main.close_overlay()
+	await _frames(2)
+	# With a plugin that opens the chooser: content handed over as a real file, only "opened" tracked.
+	var calls: Array = []
+	Share.fake_plugin = func(method: String, args: Array):
+		calls.append([method, args])
+		return true
+	An.clear()
+	await Card.present(main, d)
+	await _frames(2)
+	var nb: Button = main.find_child("ShareNative", true, false)
+	check(nb != null, "Share button with the plugin")
+	nb.pressed.emit()
+	check(calls.size() == 1 and calls[0][0] == "share", "plugin asked to share")
+	var path: String = calls[0][1][1] if calls.size() == 1 else ""
+	check(path.is_absolute_path() and FileAccess.file_exists(path) and calls[0][1][2] == "image/png", "an existing PNG file is handed to the plugin")
+	ev = _events()
+	check(ev.has("share_sheet_opened") and not ev.has("share_text_copied"), "chooser opened tracked; nothing about recipients")
+	main.close_overlay()
+	# Plugin failure / cancellation: falls back to copying text.
+	Share.fake_plugin = func(_m: String, _a: Array): return false
+	An.clear()
+	DisplayServer.clipboard_set("")
+	var r: String = Card.share_native(main, "hello share", "", "campaign")
+	check(r == Share.FAILED and DisplayServer.clipboard_get() == "hello share", "failed share falls back to copied text")
+	check(_events().has("share_text_copied") and not _events().has("share_sheet_opened"), "failure not counted as a share")
+	Share.fake_plugin = Callable()
+	# Invite text always carries the code (manual entry), and only an https link.
+	var inv: String = Card.invite_text({"code": "K7MPQ2XR", "url": "/c/K7MPQ2XR"}, 6)
+	check(inv.contains("K7MPQ2XR") and not inv.contains("/c/K7MPQ2XR"), "invite has the code; relative links dropped")
+
+	# Challenge screen: invalid / offline (code kept for next launch) / unknown.
+	var Net: Node = root.get_node("Net")
+	var saved_url: String = Net.base_url
+	main.goto("challenge", {"code": "NOPE"})
+	await _wait(0.5)
+	var msg: Label = main.current.find_child("ChallengeMessage", true, false)
+	check(msg != null and msg.text.contains("isn't a challenge code"), "invalid code explained without a request")
+	Net.base_url = ""
+	An.clear()
+	main.goto("challenge", {"code": "k7mp q2xr"})
+	await _wait(0.5)
+	msg = main.current.find_child("ChallengeMessage", true, false)
+	check(msg != null and msg.text.contains("offline"), "offline explained")
+	check(Game.state.data["challenges"].get("pending", "") == "K7MPQ2XR", "code kept for the next launch")
+	check(main.launch_challenge_code() == "K7MPQ2XR", "pending code reopened at launch")
+	Net.base_url = "http://127.0.0.1:9"  # nothing listens: a network failure, not a 404
+	main.goto("challenge", {"code": "K7MPQ2XR"})
+	await _wait(1.5)
+	msg = main.current.find_child("ChallengeMessage", true, false)
+	check(msg != null and msg.text.contains("offline"), "unreachable server treated as offline, not 'expired'")
+	Net.base_url = saved_url
+	Game.state.data["challenges"].erase("pending")
+	made[0].queue_free()
+	await _frames(2)

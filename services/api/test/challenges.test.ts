@@ -1,7 +1,7 @@
 import { generateLevel, GENERATOR_VERSION } from '@loopfactory/engine';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { CODE_ALPHABET, newCode, outcomeOf } from '../src/services/friends';
-import { CURATED, api, db, guest, resetDb } from './helpers';
+import { CURATED, api, db, guest, makeApp, resetDb } from './helpers';
 
 beforeAll(async () => {
   await resetDb();
@@ -103,5 +103,35 @@ describe('friend challenges', () => {
     await api().post('/api/v1/privacy/delete-request').set(alice.auth).send({ confirm: true }).expect(200);
     expect(await db.friendChallenge.count({ where: { code: body.code } })).toBe(0);
     expect(await db.friendChallengeAttempt.count({ where: { playerId: bob.player.id } })).toBe(0);
+  });
+});
+
+describe('challenge links (R6.1)', () => {
+  it('assetlinks.json is not served until a real fingerprint is configured', async () => {
+    await api().get('/.well-known/assetlinks.json').expect(404);
+  });
+
+  it('assetlinks.json names the package and fingerprints when configured', async () => {
+    const fp = Array.from({ length: 32 }, (_, i) => (i * 7).toString(16).padStart(2, '0').toUpperCase()).join(':');
+    const r = await api(makeApp({ androidCertSha256: [fp], androidPackage: 'com.loopfactory.game' })).get('/.well-known/assetlinks.json').expect(200);
+    expect(r.body[0].relation).toEqual(['delegate_permission/common.handle_all_urls']);
+    expect(r.body[0].target).toEqual({ namespace: 'android_app', package_name: 'com.loopfactory.game', sha256_cert_fingerprints: [fp] });
+  });
+
+  it('rejects malformed fingerprints at startup', async () => {
+    const { loadConfig } = await import('../src/config');
+    expect(() => loadConfig({ ...process.env, ANDROID_CERT_SHA256: 'not-a-fingerprint' })).toThrow(/ANDROID_CERT_SHA256/);
+  });
+
+  it('landing page shows the code for manual entry and explains store installs', async () => {
+    const alice = await guest();
+    const { body } = await api().post('/api/v1/challenges/friend').set(alice.auth).send({ level: { type: 'campaign', levelId: 'c06' }, moves: CURATED.find((l) => l.id === 'c06')!.solution.moves }).expect(201);
+    const page = await api().get(`/c/${body.code}`).expect(200);
+    expect(page.text).toContain(body.code);
+    expect(page.text).toContain('enter the code');
+    expect(page.text).not.toContain('<script');
+    const gone = await api().get('/c/ZZZZZZZZ').expect(404);
+    expect(gone.text).toContain('expired');
+    await api().get('/c/bad').expect(404);
   });
 });

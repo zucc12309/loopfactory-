@@ -28,6 +28,10 @@ const Env = z.object({
   /** Optional store links shown on the challenge landing page. */
   PLAY_STORE_URL: z.string().url().or(z.literal('')).default(''),
   APP_STORE_URL: z.string().url().or(z.literal('')).default(''),
+  /** Android App Links: package name and SHA-256 signing-cert fingerprints (Play App Signing key, plus
+   * the upload/debug key for internal builds), comma-separated "AA:BB:..". Empty = not served. */
+  ANDROID_PACKAGE_NAME: z.string().regex(/^[a-zA-Z][\w.]*$/).default('com.loopfactory.game'),
+  ANDROID_CERT_SHA256: z.string().default(''),
 });
 
 export type Config = ReturnType<typeof loadConfig>;
@@ -49,6 +53,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
     }
   }
   const list = (s: string) => s.split(',').map((x) => x.trim()).filter(Boolean);
+  for (const f of list(c.ANDROID_CERT_SHA256)) {
+    if (!/^([0-9A-Fa-f]{2}:){31}[0-9A-Fa-f]{2}$/.test(f)) throw new Error('ANDROID_CERT_SHA256 must be colon-separated SHA-256 fingerprints');
+  }
   return {
     env: c.NODE_ENV,
     port: c.PORT,
@@ -71,5 +78,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
     publicBaseUrl: c.PUBLIC_BASE_URL.replace(/\/$/, ''),
     playStoreUrl: c.PLAY_STORE_URL,
     appStoreUrl: c.APP_STORE_URL,
+    androidPackage: c.ANDROID_PACKAGE_NAME,
+    androidCertSha256: list(c.ANDROID_CERT_SHA256).map((f) => f.toUpperCase()),
   };
 }

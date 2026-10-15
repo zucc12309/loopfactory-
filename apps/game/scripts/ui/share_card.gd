@@ -5,7 +5,7 @@ class_name LFShareCard
 ##
 ## Platform notes (docs/sharing.md): Godot has no built-in native share sheet. The card is saved
 ## to the app's data folder (and to Pictures on desktop) and the text is copied to the clipboard.
-## A native share intent needs a small Android/iOS plugin — integration boundary: `native_share()`.
+## Native sharing goes through LFShare (Android plugin when built in; copy/save fallback otherwise).
 
 const W := 1080
 const H := 1350
@@ -124,8 +124,10 @@ static func _draw_crew(ci: Control, d: Dictionary, cx: float) -> void:
 		_text(ci, line, Vector2(cx, 1180), size, LFStyle.TEXT_MUTED, 700)
 
 
-## Save the PNG where the player can find it. Returns the path written (desktop: Pictures folder).
-static func save_png(img: Image, d: Dictionary) -> String:
+## Write the PNG. Returns [path, public]: on desktop it also goes to the Pictures folder (public =
+## true, the path can be shown); on phones it stays in app storage and is only ever handed to the
+## share sheet (public = false, never shown).
+static func save_png(img: Image, d: Dictionary) -> Array:
 	var name := "loop-factory-%s-%s.png" % [str(d.get("kind", "result")), str(d.get("date", "")).replace("-", "")]
 	DirAccess.make_dir_recursive_absolute("user://share")
 	var path := "user://share/" + name
@@ -135,22 +137,16 @@ static func save_png(img: Image, d: Dictionary) -> String:
 		if pics != "" and DirAccess.dir_exists_absolute(pics):
 			var out := pics.path_join(name)
 			if img.save_png(out) == OK:
-				return out
-	return ProjectSettings.globalize_path(path)
+				return [out, true]
+	return [path, false]
 
 
-## Integration boundary for a native share sheet plugin (Android intent / iOS
-## UIActivityViewController). Returns false when no plugin is installed (the default).
-static func native_share(text: String, png_path: String) -> bool:
-	if Engine.has_singleton("LoopFactoryShare"):
-		Engine.get_singleton("LoopFactoryShare").call("share", text, png_path)
-		return true
-	return false
-
-
-## Overlay with the rendered card, Copy text and Save image actions.
+## Overlay with the rendered card. "Share" opens the native chooser when available; otherwise the
+## player gets the honest fallbacks: copy the text, and (desktop) save the image to Pictures.
 static func present(main: Node, d: Dictionary, on_close := Callable()) -> void:
 	var img: Image = await render(main, d)
+	var kind := str(d.get("kind", ""))
+	Analytics.track("share_card_created", {"kind": kind})
 	var card := LFStyle.card()
 	var v := LFStyle.vbox(16)
 	card.add_child(LFStyle.margin(v, 16, 16, 16, 16))
@@ -163,29 +159,51 @@ static func present(main: Node, d: Dictionary, on_close := Callable()) -> void:
 	v.add_child(tex)
 	var text := share_text(d)
 	var row := LFStyle.hbox(14)
+	if LFShare.native_available():
+		var share := LFStyle.button("Share", "", 92)
+		share.name = "ShareNative"
+		share.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		share.pressed.connect(func(): share_native(main, text, save_png(img, d)[0], kind))
+		row.add_child(share)
 	var copy := LFStyle.button("Copy text", "SecondaryButton", 92)
+	copy.name = "ShareCopy"
 	copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	copy.pressed.connect(func():
 		DisplayServer.clipboard_set(text)
-		Analytics.track("share_completed", {"kind": str(d.get("kind", "")), "method": "clipboard"})
+		Analytics.track("share_text_copied", {"kind": kind})
 		main.toast("Result copied — paste it anywhere.", LFStyle.PRIMARY))
 	row.add_child(copy)
-	var save := LFStyle.button("Save image", "", 92)
-	save.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	save.pressed.connect(func():
-		var path := save_png(img, d)
-		if native_share(text, path):
-			Analytics.track("share_completed", {"kind": str(d.get("kind", "")), "method": "native"})
-			return
-		DisplayServer.clipboard_set(text)
-		Analytics.track("share_completed", {"kind": str(d.get("kind", "")), "method": "image"})
-		main.toast("Image saved to %s · text copied" % path, LFStyle.PRIMARY, 3.5))
-	row.add_child(save)
+	if not OS.has_feature("mobile"):
+		var save := LFStyle.button("Save image", "SecondaryButton" if LFShare.native_available() else "", 92)
+		save.name = "ShareSave"
+		save.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		save.pressed.connect(func():
+			var out: Array = save_png(img, d)
+			if out[1]:
+				Analytics.track("share_image_saved", {"kind": kind})
+				main.toast("Image saved to %s" % out[0], LFStyle.PRIMARY, 3.5)
+			else:
+				main.toast("Couldn't save the image here. Copy the text instead.", LFStyle.ERROR, 3.0))
+		row.add_child(save)
 	v.add_child(row)
 	var close := LFStyle.button("Close", "SecondaryButton", 80)
 	close.pressed.connect(func(): main.close_overlay(); if on_close.is_valid(): on_close.call())
 	v.add_child(close)
 	main.overlay(card, not on_close.is_valid())
+
+
+## Open the native chooser; on failure fall back to copying the text. Only "opened" is reported.
+static func share_native(main: Node, text: String, file_path: String, kind: String) -> String:
+	var r := LFShare.share(text, file_path, "image/png" if file_path != "" else "text/plain", "Share Loop Factory")
+	match r:
+		LFShare.OPENED:
+			Analytics.track("share_sheet_opened", {"kind": kind, "with_image": file_path != ""})
+		_:
+			DisplayServer.clipboard_set(text)
+			Analytics.track("share_text_copied", {"kind": kind, "fallback": true})
+			LFDiagnostics.record("share", false, {"result": r})
+			main.toast("Sharing isn't available here — text copied instead.", LFStyle.PRIMARY, 3.0)
+	return r
 
 
 ## Overlay shown after creating a friend challenge.
@@ -194,22 +212,34 @@ static func present_challenge(main: Node, out: Dictionary, rotations: int, on_cl
 	var v := LFStyle.vbox(16)
 	card.add_child(LFStyle.margin(v, 16, 16, 16, 16))
 	v.add_child(LFStyle.label("Challenge ready!", 40, LFStyle.TEXT, 800, HORIZONTAL_ALIGNMENT_CENTER))
-	var body := LFStyle.label("Your friend plays the same puzzle and tries to beat %d rotations. They can open the link, or enter the code on the Home screen — no account needed." % rotations, 24, LFStyle.TEXT_MUTED, 400, HORIZONTAL_ALIGNMENT_CENTER)
+	var body := LFStyle.label("Your friend plays the same puzzle and tries to beat %d rotations. They can open the link, or enter the code in the app under Friends — no account needed." % rotations, 24, LFStyle.TEXT_MUTED, 400, HORIZONTAL_ALIGNMENT_CENTER)
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(body)
 	var code_card := LFStyle.card(LFStyle.SURFACE_2, 20)
 	code_card.add_child(LFStyle.label(str(out["code"]), 64, LFStyle.PRIMARY, 800, HORIZONTAL_ALIGNMENT_CENTER))
 	v.add_child(code_card)
-	var url := str(out.get("url", ""))
-	var text := "Can you beat my %d rotations in Loop Factory? Challenge code %s%s" % [rotations, out["code"], ("\n" + url) if url != "" else ""]
-	var copy := LFStyle.button("Copy invite", "", 96)
+	var text := invite_text(out, rotations)
+	if LFShare.native_available():
+		var share := LFStyle.button("Send invite", "", 96)
+		share.name = "InviteNative"
+		share.pressed.connect(func(): share_native(main, text, "", "challenge"))
+		v.add_child(share)
+	var copy := LFStyle.button("Copy invite", "SecondaryButton" if LFShare.native_available() else "", 96)
+	copy.name = "InviteCopy"
 	copy.pressed.connect(func():
-		if not native_share(text, ""):
-			DisplayServer.clipboard_set(text)
-			main.toast("Invite copied — send it to a friend.", LFStyle.PRIMARY)
-		Analytics.track("share_completed", {"kind": "challenge", "method": "clipboard"}))
+		DisplayServer.clipboard_set(text)
+		Analytics.track("share_text_copied", {"kind": "challenge"})
+		main.toast("Invite copied — send it to a friend.", LFStyle.PRIMARY))
 	v.add_child(copy)
 	var close := LFStyle.button("Done", "SecondaryButton", 84)
 	close.pressed.connect(func(): main.close_overlay(); if on_close.is_valid(): on_close.call())
 	v.add_child(close)
 	main.overlay(card, not on_close.is_valid())
+
+
+## Invite text: the code always (manual entry works without links), the link when a host is set.
+static func invite_text(out: Dictionary, rotations: int) -> String:
+	var url := str(out.get("url", ""))
+	if not url.begins_with("https://"):
+		url = LFShare.challenge_url(str(out["code"]), LFReleaseConfig.load_client())
+	return "Can you beat my %d rotations in Loop Factory? Open Friends in the app and enter code %s%s" % [rotations, out["code"], ("\n" + url) if url != "" else ""]

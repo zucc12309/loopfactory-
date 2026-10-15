@@ -72,6 +72,22 @@ export function createApp(opts: { config: Config; db: Db; logger: Logger; report
   const doc = buildOpenApi(routes, API_VERSION);
   app.get('/openapi.json', (_req, res) => res.json(doc));
 
+  // Digital Asset Links: lets Android verify https://<PUBLIC_BASE_URL host>/c/* links for the app
+  // (autoVerify intent filter in android/share-plugin). Served only when a real fingerprint is set.
+  app.get('/.well-known/assetlinks.json', (_req, res) => {
+    if (config.androidCertSha256.length === 0) {
+      res.status(404).json({ error: { code: 'not_configured', message: 'App Links are not configured' } });
+      return;
+    }
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.json([
+      {
+        relation: ['delegate_permission/common.handle_all_urls'],
+        target: { namespace: 'android_app', package_name: config.androidPackage, sha256_cert_fingerprints: config.androidCertSha256 },
+      },
+    ]);
+  });
+
   // Challenge link landing page for people who don't have the app yet.
   const friends = new FriendChallengeService(db, new LevelService(db), new DailyService(db, config.dailySeedSecret), config.publicBaseUrl);
   app.get('/c/:code', async (req, res, next) => {

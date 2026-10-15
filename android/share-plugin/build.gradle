@@ -1,0 +1,28 @@
+// Loop Factory share + App Links plugin (Godot Android plugin v2, AAR).
+// STATUS: source only. It has NOT been compiled in this repository's build environment (no Android SDK
+// platform available there). Build on a machine with the Android SDK:
+//   cd android/share-plugin && gradle assembleRelease -PappLinkHost=play.YOUR-DOMAIN
+// then copy build/outputs/aar/share-plugin-release.aar to apps/game/addons/loopfactory_share/bin/.
+plugins {
+    id 'com.android.library' version '8.5.2'
+}
+
+android {
+    namespace 'com.loopfactory.share'
+    compileSdk 36
+    defaultConfig {
+        minSdk 24
+        // https://<host>/c/<code> links open the app once the host serves /.well-known/assetlinks.json.
+        manifestPlaceholders = [appLinkHost: project.findProperty('appLinkHost') ?: 'invalid.invalid']
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    // Must match the engine version of the export templates.
+    compileOnly 'org.godotengine:godot:4.3.0.stable'
+    implementation 'androidx.core:core:1.13.1'
+}

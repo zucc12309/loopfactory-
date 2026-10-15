@@ -67,25 +67,45 @@ func _line(a: String, b: String) -> Control:
 	return card
 
 
+## Copy for each lookup failure (never blames the player).
+const ERRORS := {
+	"invalid": "That isn't a challenge code. Codes have 8 letters and numbers, like K7MPQ2XR.",
+	"not_found": "This challenge has expired or doesn't exist. Ask your friend for a new code.",
+	"offline": "You're offline. We saved the code and will open it next time you start the game online. Your other puzzles still work offline.",
+	"error": "Something went wrong looking up that code. Please try again in a moment.",
+}
+
+
 func _open() -> void:
-	var code := _input.text.strip_edges().to_upper()
-	if code.is_empty():
+	var raw := _input.text
+	if raw.strip_edges().is_empty():
 		return
+	var code := LFShare.parse_challenge(raw)
 	for c in _result.get_children():
 		c.queue_free()
+	if code == "":
+		_show_error(ERRORS["invalid"])
+		return
 	_result.add_child(LFStyle.label("Looking up %s…" % code, 26, LFStyle.TEXT_MUTED, 400))
 	Analytics.track("challenge_link_opened", {"source": "code_entry"})
-	if not Net.enabled():
-		_show_error("Challenges need an online connection. Your other puzzles still work offline.")
-		return
-	var ch = await Net.get_challenge(code)
+	var res: Dictionary = await Net.get_challenge_result(code) if Net.enabled() else {"status": "offline", "body": null}
 	if not is_inside_tree():
 		return
 	for c in _result.get_children():
 		c.queue_free()
-	if ch == null:
-		_show_error("We couldn't find that challenge. Check the code, or try again when you're online.")
+	var chs: Dictionary = Game.state.data["challenges"]
+	if res["status"] != "ok":
+		if res["status"] == "offline":
+			chs["pending"] = code  # opened again at the next launch
+		elif str(chs.get("pending", "")) == code:
+			chs.erase("pending")
+		Game.request_save()
+		_show_error(ERRORS.get(res["status"], ERRORS["error"]))
 		return
+	chs.erase("pending")
+	Game.request_save()
+	var ch: Dictionary = res["body"]
+	Analytics.track("challenge_loaded", {"attempts": int(ch.get("attempts", 0))})
 	var card := LFStyle.card()
 	var v := LFStyle.vbox(12)
 	card.add_child(LFStyle.margin(v, 8, 8, 8, 8))
@@ -96,6 +116,7 @@ func _open() -> void:
 	goal.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(goal)
 	var play := LFStyle.button("Play challenge", "", 104)
+	play.name = "PlayChallenge"
 	play.pressed.connect(func():
 		var info := {"code": str(ch["code"]), "creatorName": str(ch["creatorName"]), "creatorRotations": int(ch["creatorRotations"])}
 		main.goto("play", {"kind": "challenge", "level": lvl, "challenge": info}))
@@ -107,5 +128,6 @@ func _show_error(text: String) -> void:
 	for c in _result.get_children():
 		c.queue_free()
 	var l := LFStyle.label(text, 24, LFStyle.ERROR.darkened(0.25), 700)
+	l.name = "ChallengeMessage"
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_result.add_child(l)
