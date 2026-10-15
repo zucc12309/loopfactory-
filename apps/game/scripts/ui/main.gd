@@ -92,6 +92,9 @@ func home() -> void:
 
 
 func _show(name: String, args: Dictionary, direction: int) -> void:
+	# Toasts belong to the screen that raised them.
+	for c in _toast_layer.get_children():
+		c.queue_free()
 	var old := current
 	var scr: LFScreen = load(SCREENS[name]).new()
 	scr.main = self
