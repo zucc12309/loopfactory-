@@ -2,6 +2,40 @@
 
 All notable changes to this project are documented here (format: Keep a Changelog, versions: SemVer).
 
+## [Unreleased] — Android beta readiness
+
+See [docs/BETA_READINESS_IMPLEMENTATION.md](docs/BETA_READINESS_IMPLEMENTATION.md).
+
+### Fixed
+- Concurrent best-score writes (progress, daily, weekly/global aggregates, friend attempts) can no
+  longer regress or be lost as false duplicates; daily duplicates answer from committed state;
+  submission ids reused across dates are refused.
+- Concurrent token refreshes and temporary failures (offline, 429, 5xx) no longer replace the guest
+  identity; a refresh response lost after rotation is recoverable within 120 s.
+- A budget-limited solver result is reported as `feasible`, never as optimal; hint copy says
+  whether the board is solved, the search ran out, or there is no route.
+- Rate limits no longer throttle players who share a carrier-NAT IP.
+- Complete local deletion removes backups, quarantined saves, analytics queue, diagnostics,
+  exports and share images; data export no longer shows a private file path.
+- The Profile "Link account" button that led nowhere is removed.
+- `scripts/e2e.sh` no longer passes when the test script fails to compile.
+
+### Added
+- Reverse rotation taught on c08 (hold cue) and a "Turn ↺" toggle as a long-press alternative.
+- Consent asked after the first delivery; consent-anchored cohort events with schema version,
+  per-event uuid, consented-only persistent queue and session continuity.
+- Diagnostics boundary (scrubbed, local + consented); staging config/monitoring warning.
+- Validated client config per environment and a release pipeline that refuses unsafe configs and
+  inspects the config and native-library alignment inside the artifact.
+- Native share / App Link Android plugin (source; not compiled here), `assetlinks.json`, challenge
+  code validation and offline handling; precise share events replace `share_completed`.
+- Keyboard/D-pad focus navigation, accessible names, 88 px Captain Naps dismiss target.
+
+### Changed
+- Android build target Godot 4.5.1 (Play: 16 KB pages, target API 36). The project still runs
+  on 4.3 for development.
+- vitest 4 (dev-only advisories).
+
 ## [0.3.0] — 2026-10-15 — the Interdimensional Delivery Crew
 
 See [docs/CHARACTER_SYSTEM.md](docs/CHARACTER_SYSTEM.md) for the audit, architecture and risks.

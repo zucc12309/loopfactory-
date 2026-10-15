@@ -1,63 +1,109 @@
 # Android release guide
 
-## What has been verified in this repository's build environment
+The status of each artifact (as of 2026-10-15) is tracked in
+[BETA_READINESS_IMPLEMENTATION.md](BETA_READINESS_IMPLEMENTATION.md#d-verification-evidence):
+debug APK **built**; release AAB **not built**; nothing installed on a device; Play Console
+acceptance **not tested**.
 
-* `scripts/build-android.sh debug` → `apps/game/build/loopfactory-debug.apk` (≈48 MB, arm64-v8a +
-  armeabi-v7a), signed with v1+v2+v3 schemes, zipalign verified.
-* `scripts/build-android.sh release` with a throwaway upload key → `loopfactory-release.apk`
-  (≈46 MB), signature and alignment verified.
-* The exported project (exactly what the APK contains) was run on desktop Godot through the full
-  UI tour without script errors; tests are excluded and level/config JSON is included.
-* **Not verified:** installation and play on a physical device or emulator (no Android device or
-  emulator was available). Do this first — see the release checklist below.
+## Google Play requirements this build targets
 
-The sandbox could not download Google's Android SDK (`dl.google.com` is blocked there), so it used
-`scripts/android/setup-sandbox-signer.sh`: a small `apksigner`-compatible CLI on top of Google's
-`apksig` library plus an `adb` stub. **On a normal machine install the real SDK instead.**
+Checked against developer.android.com on 2026-10-15. Re-check before every release.
+
+* **Target API.** New apps and app updates must target **API 36** (from 2026-08-31; an
+  extension to 2026-11-01 can be requested). The "Android AAB" preset sets `target_sdk=36`,
+  `min_sdk=24`.
+* **16 KB memory pages.** Apps targeting API 35+ must support them on 64-bit devices. Updates
+  without it are blocked from 2027-02-01. `scripts/android/check-artifact.py` checks that every
+  arm64/x86_64 `.so` has 2^14-aligned ELF LOAD segments. CI also runs
+  `zipalign -c -P 16 -v 4` (build-tools 35+).
+* **AAB.** New apps must be uploaded as Android App Bundles, which needs Godot's Gradle build.
+
+## Engine: Godot 4.5.1 (not 4.3)
+
+Measured on this project:
+
+* Godot 4.3's Android templates ship 4 KB-aligned native libraries and target API 34. They
+  can't meet the 16 KB rule.
+* Godot 4.5.1's arm64 libraries are 16 KB-aligned.
+* Every test suite and the E2E test pass on both versions, and the project still opens in 4.3.
+* `build-android.sh` refuses to produce a release or AAB with Godot 4.3.
+
+Migration notes (edge-to-edge on API 35+, orientation on large screens at API 36, `.uid` files)
+are in the beta-readiness report.
 
 ## Toolchain
 
 | Component | Version |
 |---|---|
-| Godot | 4.3-stable + matching export templates |
-| JDK | 17 (21 also works for non-Gradle export) |
-| Android SDK | platform-tools, build-tools 34.x (apksigner), platforms;android-34 |
-| Renderer | GL Compatibility (broadest support on mid-range devices) |
+| Godot | **4.5.1-stable** + matching export templates |
+| JDK | 17 |
+| Android SDK | `platforms;android-36`, `build-tools;35.0.0`+, `platform-tools` |
+| Gradle build template | Project → Install Android Build Template (Godot 4.5.1) → `apps/game/android/build` |
+| Renderer | GL Compatibility |
 
-Editor Settings → Export → Android: SDK path, Java SDK path, debug keystore (Godot can create
-one). Headless equivalent: `~/.config/godot/editor_settings-4.3.tres` (see the CI `android` job).
+**Editor Settings → Export → Android:** SDK path, Java SDK path and a debug keystore. The
+headless equivalent is `~/.config/godot/editor_settings-4.5.tres`; see the CI `android` job.
+
+## Build commands
+
+```
+scripts/build-android.sh debug                    # development config (loopback API), debug key
+scripts/build-android.sh release staging|production   # sideloadable signed APK
+scripts/build-android.sh aab staging|production       # Play upload (Gradle)
+```
+
+Each build:
+
+1. Writes `apps/game/config/client.json` from `config/client/<env>.json` plus `LF_*` overrides,
+   using `scripts/client-config.ts`. The build **fails before exporting** if the config has:
+   * a loopback, private, `.example`/`.test` or placeholder host;
+   * a non-HTTPS URL;
+   * a missing privacy or support URL;
+   * a missing `LF_BUILD`;
+   * a test switch or a secret-looking field.
+2. Sets `version/code` from `LF_BUILD` and, optionally, `version/name` from `LF_VERSION_NAME`.
+3. Exports, then reads `assets/config/client.json` back **out of the artifact** and requires it
+   to match the validated file byte for byte.
+4. Runs `check-artifact.py`: ABIs, 16 KB alignment, and no test or editor files.
+5. Prints the size and SHA-256.
+
+The committed config and presets are restored afterwards.
+
+To inspect any artifact by hand:
+`npx tsx scripts/client-config.ts inspect <apk|aab> [expected.json]` and
+`python3 scripts/android/check-artifact.py <apk|aab>`.
+
+A debug APK talks to `http://127.0.0.1:8080`, which is the phone itself, so online features are
+off on a device. For device testing against a real server, build `release staging` with an HTTPS
+staging API.
 
 ## Versioning
 
-* `version/name` (e.g. `0.1.0`) mirrors `application/config/version` in `project.godot`.
-* `version/code` must increase for every Play upload. Use `MAJOR*10000 + MINOR*100 + PATCH`
-  (0.1.0 → 100) or the CI run number.
+* `version/name` follows the project version (`0.3.0`, betas `0.3.0-beta.N`).
+* `version/code` must increase with every Play upload. Use the CI run number via `LF_BUILD`.
 
 ## Signing
 
-* Generate the **upload key** once and store it in a password manager / CI secret store:
+* Generate the **upload key** once and store it in a password manager or CI secret store:
   `keytool -genkeypair -v -keystore upload.keystore -alias upload -keyalg RSA -keysize 4096 -validity 10000`
-* Enrol in **Play App Signing** (Google holds the app signing key; you keep the upload key).
-* Provide to builds via environment, never files in git:
+* Enrol in **Play App Signing**: Google holds the app signing key; you keep the upload key.
+* Builds read it from the environment, never from files in Git:
   `GODOT_ANDROID_KEYSTORE_RELEASE_PATH`, `GODOT_ANDROID_KEYSTORE_RELEASE_USER`,
-  `GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD`. (`*.keystore`/`*.jks` are git-ignored.)
+  `GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD`. (`*.keystore` and `*.jks` are git-ignored.)
+* App Links need the SHA-256 of the **Play App Signing** certificate (Play Console → App
+  integrity) in the API's `ANDROID_CERT_SHA256`. Add the upload key's fingerprint as well for
+  internal builds.
 
-## Play Store package format (AAB)
+## Upload, inspection and rollback
 
-Google Play requires an Android App Bundle for new apps. Godot produces AABs only with the
-**Gradle build**: Project → Install Android Build Template, then set
-`gradle_build/use_gradle_build=true`, `gradle_build/export_format=1` (AAB) and
-`gradle_build/target_sdk=35` (Play's target-API requirement for new apps/updates in 2025–26 —
-check the current requirement), `min_sdk=24`. Gradle needs network access to Google's Maven, so
-build AABs on a developer machine or in CI (the `android` CI job is the starting point).
-
-## Before production
-
-1. Set `apps/game/config/client.json` → `apiBaseUrl` to the HTTPS production API,
-   `environment: production`, analytics provider/key if used (public key only).
-2. Bump `version/code` and `version/name`.
-3. `scripts/build-android.sh release` (or the Gradle AAB export).
-4. Upload to an **internal testing** track first.
+1. **Inspect** with `bundletool build-apks --bundle <aab> --output out.apks`, then
+   `bundletool get-size total`. Also run `check-artifact.py <aab>`.
+2. **Upload** to the **Internal testing** track first. Fill in the Data safety form to match
+   [privacy-policy.md](privacy-policy.md): optional anonymous analytics, no advertising ID, no
+   location.
+3. **Roll out** to closed testing with a staged percentage.
+4. **Roll back** by halting the rollout, or by promoting the previous release on that track. The
+   API changes in this branch are additive (one nullable column), so old clients keep working.
 
 ## Test release checklist
 
@@ -75,7 +121,7 @@ build AABs on a developer machine or in CI (the `android` CI job is the starting
       docs/performance.md.
 - [ ] Incoming call / home button mid-run: `app_background` then `app_resume`; board resumes editable.
 - [ ] Friend challenge: create on device A, enter the code on device B (fresh install, no sign-up).
-- [ ] Share: result card saves; text reaches the clipboard (no native share sheet yet).
+- [ ] Share: Copy text works; native share sheet only in a build with the share plugin.
 - [ ] Notch / gesture-bar devices: nothing clipped (safe-area margins).
 - [ ] Delete account works online; offline it explains that the server copy needs a connection.
 - [ ] Data safety form in Play Console matches docs/privacy-policy.md.

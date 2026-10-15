@@ -6,15 +6,13 @@
 It shows branding, the date, difficulty, rotations vs par, stars, attempts, and the challenge code
 when there is one. **It never shows the solution.** The share sheet previews the card and offers:
 
+* **Share** (only when the native share plugin is in the build): opens the system chooser with
+  the image and text — see "Native share sheet" below.
 * **Copy text:** a short text result with emoji stars, copied to the clipboard.
-* **Save image:** writes the PNG to `user://share/` (and to the Pictures folder on desktop),
-  then copies the text.
+* **Save image** (desktop only): writes the PNG to the Pictures folder and shows that path.
 
-`LFShareCard.native_share(text, png)` is the integration boundary for a native share sheet. It
-calls an Engine singleton `LoopFactoryShare` when one is present. **No such plugin ships today**,
-so on Android and iOS the image stays in app storage and only the text reaches the clipboard. A
-native share sheet needs a small Android plugin (`ACTION_SEND` with a FileProvider URI) and an iOS
-plugin (`UIActivityViewController`).
+On phones without the plugin there is no "Save image": the PNG would only land in private app
+storage, which the player can't open. iOS would need its own `UIActivityViewController` plugin.
 
 ## Friend challenges
 
@@ -46,10 +44,22 @@ GET /challenges/friend/:code/results ─▶ head-to-head table for everyone who 
 
 | Path | Status |
 |---|---|
-| Typing the code in the app | **Works everywhere** (covered by the E2E test). |
-| `https://<domain>/c/CODE` landing page | **Works** once `PUBLIC_BASE_URL` points at the deployed API. Shows the challenge, the code, an app link and store links (`PLAY_STORE_URL`, `APP_STORE_URL`). |
-| `loopfactory://challenge/CODE` and `--challenge=CODE` | Parsed by `main.launch_challenge_code()`. Works on desktop as a command-line argument. |
-| Android App Links / iOS Universal Links opening the app directly | **Not configured.** These need an intent filter in a Gradle-based Android export, `assetlinks.json` and `apple-app-site-association` on the production domain, plus a plugin to read the launch URL. That URL never reaches `OS.get_cmdline_args()` on mobile. Until then the landing page tells players to type the code. |
+| Typing the code in the app (Friends) | **Works everywhere** (E2E). Codes are validated (8 characters, unambiguous alphabet) before any request; invalid, expired and offline cases each get their own message; a code entered offline is kept and reopened at the next launch. |
+| `https://<domain>/c/CODE` landing page | **Works** once `PUBLIC_BASE_URL` points at the deployed API. Shows the challenge, the code for manual entry, an "Open in the app" link and store links. It says plainly that installing from the store does not carry the link along. |
+| `/.well-known/assetlinks.json` | Served by the API once `ANDROID_CERT_SHA256` (and `ANDROID_PACKAGE_NAME`) are set; 404 otherwise. Tested. |
+| Android App Links + `loopfactory://challenge/CODE` opening the installed app | **Implemented in source, not built or device-tested.** The intent filters (with `autoVerify`) and `consumeLaunchUri()` live in `android/share-plugin`, which needs the Android SDK + Gradle export. Until that plugin ships, phones type the code. |
+| Deferred deep link (install, then open the same puzzle) | **Not possible with App Links alone.** The landing page shows the code; manual entry is the supported path. |
+| `--challenge=CODE` launch argument | Works on desktop. |
+
+### Native share sheet
+
+`LFShare` (scripts/core/share.gd) uses the `LoopFactoryShare` Android plugin when present: the image
+is copied to the app cache, exposed through a FileProvider `content://` URI with a temporary
+read-permission grant, and handed to the system chooser with the text. Behaviour per target app
+(WhatsApp, Instagram, …) depends on what each accepts and has **not** been verified on a device.
+Without the plugin (this build): phones offer **Copy text** only — the image is never "saved" into
+private app storage and presented as if the player could open it; desktop saves to Pictures.
+Analytics record only what is observable (see [analytics.md](analytics.md)).
 
 ## Replays
 

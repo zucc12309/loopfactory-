@@ -2,12 +2,19 @@
 
 ## Principles
 
-* **Opt-in.** Consent is asked once and can be changed in Settings. Nothing is queued or sent
-  without it.
+* **Opt-in.** Consent is asked once, **after the player's first delivery** (at the transition to
+  the next puzzle, or on Home once progress exists — never on a fresh Home, over the first puzzle
+  or over a celebration). It can be changed in Settings. Nothing is queued, stored or sent without
+  it, and nothing that happened before consent is ever backfilled.
 * **Random identity.** The analytics id is random: not a device id, not the account id. It resets
   when data is deleted.
 * **No personal data.** No names, emails, locations or advertising ids.
-* **Batched sends.** Events are sent every 30 s and on backgrounding.
+* **Batched sends.** Events are sent every 30 s and on backgrounding. While consent is on, the queue
+  is also kept on disk (`user://analytics-queue.json`, at most one write per frame) so offline
+  events survive a restart; withdrawing consent deletes it and abandons any batch in flight.
+* **Deduplication.** Every event has a random `uuid`; a batch retried after a lost response
+  carries the same ids so the provider can drop duplicates. One-time events (`first_*`,
+  `consent_granted`, `tutorial_start`) are recorded at most once per install.
 
 Provider adapter: `apps/game/scripts/core/analytics.gd`, set in `config/client.json`. Options are
 `none` (default), `debug` (prints events) and `posthog` (HTTP batch API, EU host by default).
@@ -16,9 +23,16 @@ data.
 
 ## Common properties (every event)
 
-`session_id` (random; a new one after 30 min in the background), `app_version`, `platform`,
-`timestamp` (UTC), `distinct_id` (the random analytics id), and `exp_<key>` for every running
-experiment ([experiments.md](experiments.md)).
+`schema` (2), `session_id` (random; continues across a relaunch within 30 min, new after 30 min
+away), `app_version`, `build`, `environment`, `platform`, `os_major`, `device_class`
+(phone/tablet/desktop — never a model or device id), `uuid`, `timestamp` (UTC), `distinct_id` (the
+random analytics id), and `exp_<key>` for every running experiment ([experiments.md](experiments.md)).
+
+**Schema 2 changes (2026-10-15):** `share_clicked` and `share_completed` are retired —
+`share_completed` counted a clipboard copy or an unconfirmed plugin call as a completed share. They
+are replaced by the precise events below. New: `consent_granted`, `first_rotation`, `first_run`,
+`first_delivery`, `challenge_loaded`, `challenge_started`, `network_error`, `app_error`,
+`guest_identity_created`.
 
 ## Events
 
@@ -27,15 +41,18 @@ test scans the code to check that each `Analytics.track` call uses a declared na
 
 | Event | When | Properties |
 |---|---|---|
-| `app_open` | autoload ready | — |
+| `app_open` | autoload ready | `cold_start` |
 | `first_launch` | first ever session on this install | — |
-| `session_start` | launch, or return after more than 30 min in the background | `resumed` |
+| `session_start` | launch (unless continuing a session < 30 min old), return after more than 30 min away, or consent granted | `trigger` (`launch` / `return` / `consent`) |
+| `consent_granted` | player opts in (once per install) — **the cohort anchor** | `levels_completed`, `sessions`, `surface` |
+| `guest_identity_created` | a server guest account was created (first time, or after the old one was revoked) | `replaced` |
 | `session_end` | close, or a background timeout | `session_seconds`, `reason` (`close` / `background_timeout`) |
 | `app_background` | app paused / focus lost (calls, home button) | `session_seconds`, `screen` |
-| `app_resume` | back within 30 min | `away_seconds` |
+| `app_resume` | back within 30 min, or relaunched within 30 min of the last activity | `away_seconds` / `cold_start` |
 | `previous_session_unclean` | the previous session ended while in the foreground (crash or kill) | `previous_session_id` |
 | `tutorial_start` | level 1 opened for the first time | `flow` |
 | `tutorial_complete` | first clear of level 5 | `flow` |
+| `first_rotation` / `first_run` / `first_delivery` | first belt turn / first Run / first successful delivery on this install (only if consent was on at that moment) | `level_id`, `kind` (`attempts` on delivery) |
 | `level_start` | play screen opened | `level_id`, `level_number`, `kind`, `difficulty`, `par` |
 | `level_complete` | successful run | `level_id`, `level_number`, `kind`, `moves`, `par`, `stars`, `hints`, `attempts` |
 | `level_fail` | failed run | `level_id`, `kind`, `reason` |
@@ -45,11 +62,15 @@ test scans the code to check that each `Analytics.track` call uses a declared na
 | `daily_challenge_entry` | daily opened from Home | `surface` (`card` / `banner`) |
 | `daily_challenge_started` | official daily started | `date` |
 | `daily_challenge_completed` | official daily solved | `moves`, `attempts` |
-| `share_clicked` | share sheet opened | `kind`, `surface` |
-| `share_completed` | text copied, image saved or native share | `kind`, `method` |
+| `share_card_created` | result card rendered and shown | `kind` |
+| `share_text_copied` | Copy text / Copy invite pressed, or the fallback after a failed native share | `kind`, `fallback` |
+| `share_image_saved` | image written to a folder the player can open (desktop Pictures) | `kind` |
+| `share_sheet_opened` | the native chooser OPENED (plugin builds only). Which app was picked, or whether anything was sent, is not observable | `kind`, `with_image` |
 | `challenge_create_clicked` | "Challenge" tapped | `kind`, `level_id` |
 | `challenge_created` | server issued a code | `kind`, `level_id` |
-| `challenge_link_opened` | a code looked up | `source` |
+| `challenge_link_opened` | a code looked up / an App Link or launch argument received | `source` (`code_entry` / `app_link` / `launch_argument`) |
+| `challenge_loaded` | the challenge puzzle was fetched and validated | `attempts` |
+| `challenge_started` | the recipient started playing it | `source` |
 | `challenge_completed` | recipient solved, verified comparison | `outcome` (`win` / `tie` / `lose`) |
 | `character_exposed` | characters shown on a surface (once per session per surface) | `surface` (`board` / `home` / `daily`), `variant`, `detail`, `level_id` / `character` |
 | `character_animation_played` | notable crew animations only: first source poke per level, success celebration, Home tap, Crew preview | `character`, `animation`, `surface`, `moment` |
@@ -59,6 +80,26 @@ test scans the code to check that each `Analytics.track` call uses a declared na
 | `character_dialogue_shown` | a crew line displayed | `character`, `event`, `line_id` |
 | `character_dialogue_dismissed` | Home bubble closed with × | `character`, `line_id`, `surface` |
 | `purchase_started` / `purchase_completed` | reserved; no store is integrated | `product_id` |
+| `network_error` | sync failed (recoverable; once per session) | `category`, `fatal`, scrubbed `detail` |
+| `app_error` | save failure/recovery, unclean previous exit (fatal), config problem, share failure, diagnostic test | `category`, `fatal`, scrubbed `detail` |
+
+## Consented cohorts
+
+Only players who opt in are observable, and consent is asked after the first delivery, so:
+
+* **Install counts and the pre-consent funnel are NOT measured.** Store installs come from Play
+  Console; drop-off before the first delivery is unobservable for players who never consent.
+  `first_rotation` / `first_run` / `first_delivery` appear only for the minority who turned
+  analytics on in Settings before playing.
+* **Cohort anchor:** `consent_granted` (once per install). `levels_completed` on it says where in
+  the game the player consented.
+* **Funnel (per consented cohort, by consent day):** `consent_granted` → `level_complete` with
+  `level_number` ≥ 5 (tutorial done) → ≥ 12 (end of world 1) → `session_start` on day 1 / 7 after
+  consent → `daily_challenge_completed` → `challenge_completed`.
+* **Retention** is measured from the consent day, not the install day, and must be reported as
+  "D1 after consent among consenting players". Never extrapolate it to all installs.
+* Consent rate itself = `consent_granted` / Play Console first-opens is the only cross-source
+  ratio (approximate: different identities).
 
 ## Dashboards and queries
 

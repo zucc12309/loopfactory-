@@ -160,18 +160,23 @@ npm run dev -w @loopfactory/api
 |---|---|
 | Core game loop, 36 levels in 5 worlds, endless, offline play, resume | ✅ Done & tested |
 | Game feel, onboarding, hints, failure feedback, celebration, audio | ✅ Done & tested on desktop · ⚠️ feel not yet play-tested on a phone |
-| Friend challenges, share card, replays, experiments, analytics taxonomy | ✅ Done & tested · ⏳ native share sheet, app links, video export not built |
+| Friend challenges, share card, replays, experiments, analytics taxonomy | ✅ Done & tested · consent asked after the first delivery, consent-anchored cohorts · ⚠️ native share / App Link plugin written but not compiled or device-tested · ⏳ video export not built |
 | Interdimensional Delivery Crew: characters, Captain Naps, Dr. Rix, dialogue, The Crew, looks, flags | ✅ Done & tested on desktop · ⚠️ v1 procedural art (no illustrator pass), not tested on a phone, effect on retention unmeasured |
-| Backend: auth, sync, daily, challenges, leaderboards, achievements, privacy | ✅ Done & tested |
+| Backend: auth, sync, daily, challenges, leaderboards, achievements, privacy | ✅ Done & tested · concurrency-safe score writes, lost-response token recovery, NAT-safe rate limits (real-Postgres tests) |
 | CI, Docker image, Render blueprint, load test | ✅ Done (not deployed) |
-| Android APK (debug + release signing) | ✅ Builds & verifies · ⚠️ not yet tested on a device |
-| Play Store AAB, iOS build | ⏳ Needs Gradle template / macOS + Xcode |
-| Google/Apple sign-in, store billing, ads, client crash reporting | ⏳ Interfaces ready, credentials pending |
+| Android debug APK (Godot 4.5.1: 16 KB-aligned arm64 libs) | ✅ Built; packaged config and alignment verified · ⚠️ not installed on a device |
+| Play Store AAB (target API 36), release signing | ⏳ Pipeline and validation ready; needs Android SDK platform 36, an HTTPS host and the upload key · not uploaded |
+| iOS build | ⏳ Needs macOS + Xcode |
+| Google/Apple sign-in, store billing, ads, native crash capture | ⏳ Interfaces ready, credentials/plugins pending (local diagnostics boundary active) |
 
-**Verification (latest run):** engine 41/41 (incl. 1,000 generated puzzles) · Godot 56 tests /
-7,481 assertions · UI 281 checks on 5 aspect ratios · crew scene tests 121 checks (incl. pixel
-checks that no look covers a symbol) · API 41/41 · end-to-end 21/21 · typecheck, lint and
-`npm audit` clean. Details in
+**Beta readiness:** [docs/BETA_READINESS_IMPLEMENTATION.md](docs/BETA_READINESS_IMPLEMENTATION.md)
+— audit resolution matrix, evidence, device QA checklist, blockers. Verdict: **ready for internal
+device testing** (not yet a closed beta).
+
+**Verification (latest run, Godot 4.3 and 4.5.1):** engine 46/46 (incl. 1,000 generated puzzles) ·
+Godot 59 tests / 7,771 assertions · auth 32 · analytics 74 · UI 301 checks on 5 aspect ratios · crew
+scene tests 201 · beta flows 173 · API 70/70 (real Postgres, incl. concurrency and rate limits) ·
+end-to-end 28/28 · typecheck, lint, config rules and production `npm audit` clean. Details in
 [docs/testing.md](docs/testing.md) and [docs/load-testing.md](docs/load-testing.md).
 Everything not finished is listed honestly in [docs/known-limitations.md](docs/known-limitations.md).
 
@@ -202,7 +207,7 @@ Each package has its own README: [game](apps/game/README.md) ·
 | **Backend** | [API overview](docs/api.md) · [OpenAPI spec](docs/api/openapi.json) · [Security review](docs/security.md) |
 | **Operations** | [Deployment, backups, rollback](docs/deployment.md) · [Load testing](docs/load-testing.md) · [Performance](docs/performance.md) · [Testing](docs/testing.md) |
 | **Product** | [Analytics & queries](docs/analytics.md) · [Experiments](docs/experiments.md) · [Sharing & challenges](docs/sharing.md) · [Monetisation](docs/monetization.md) · [Store listing](docs/store-listing.md) · [Privacy policy](docs/privacy-policy.md) |
-| **Upgrade** | [Upgrade audit](docs/UPGRADE_AUDIT.md) — what was found and what changed |
+| **Upgrade** | [Upgrade audit](docs/UPGRADE_AUDIT.md) — what was found and what changed · [Beta readiness](docs/BETA_READINESS_IMPLEMENTATION.md) — production fixes and Android beta status |
 | **Release** | [Android](docs/release-android.md) · [iOS](docs/release-ios.md) · [Known limitations](docs/known-limitations.md) · [Changelog](CHANGELOG.md) |
 
 ## Contributing

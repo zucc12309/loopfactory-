@@ -48,8 +48,32 @@ implemented (✔) or explicitly tracked as pending (◻).
 * ✔ Errors return a uniform envelope without stack traces.
 
 ## Rate limiting
-* ✔ Global 600/min/IP; guest creation 30/h/IP; auth 30/min; sync 60/min/player; submissions
-  20/min/player; privacy 10/h/player. ◻ In-memory per instance — use a shared store when scaling out.
+
+`services/api/src/middleware/rateLimit.ts`:
+
+| Limiter | Key | Limit |
+|---|---|---|
+| global | player (valid access token), else client IP | 600 / min |
+| guest creation | client IP | 20 / min burst, 200 / hour (sized for carrier NAT) |
+| refresh | refresh token (one session) | 10 / min |
+| link / sync / submit / privacy | player | 30 / 60 / 20 / 10 per window |
+
+* **Carrier NAT.** Authenticated players behind one IP never share a bucket (tested: 40 players ×
+  20 requests from one IP). A forged token falls back to the IP key.
+* **Client IP.** Taken from `TRUST_PROXY` hops. Set it to the real number of proxies in front of
+  the API (Render: 1). A wrong value either merges every client into the proxy's IP or lets
+  clients spoof `X-Forwarded-For`.
+* **Storage is per process (memory).** Limits reset on restart. With `WEB_CONCURRENCY` workers
+  or several instances, the effective limits multiply; the startup log says so. This is correct
+  for the single-instance beta. Plug a shared store into `store` before scaling out.
+
+## Authentication: lost refresh responses
+
+A refresh token presented again within `REFRESH_REUSE_GRACE_SECONDS` (default 120) of its
+rotation, while its successor is still unused, revokes that unused successor and issues a new one
+(row-locked; at most one live successor). This recovers a response lost to a dropped connection
+or a killed app. Reuse after the successor has been used still revokes the whole family. Set it
+to 0 for strict single use.
 
 ## Data protection & privacy
 * ✔ Data minimisation: no email required, no device identifiers, analytics id is random and

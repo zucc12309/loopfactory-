@@ -6,25 +6,27 @@ is represented elsewhere as complete.
 ## Requires external accounts / credentials (interfaces done, integration pending)
 | Item | State |
 |---|---|
-| Google sign-in / Sign in with Apple | Server verification implemented (JWKS); needs OAuth client ids / bundle ids. **Client** needs native sign-in plugins — the Link button currently explains this. |
+| Google sign-in / Sign in with Apple | Server verification implemented (JWKS); needs OAuth client ids / bundle ids. **Client** needs native sign-in plugins; `Net.link_identity` (link / confirmed switch) is ready and E2E-tested with the dev provider, but **no button is shown** until a plugin exists. Guests cannot restore progress after uninstalling — Settings and Profile say so. |
 | Google Play Billing / StoreKit | Server entitlement model, idempotent verify endpoint, restore and dev verifier done; real store verifiers, refund webhooks and client billing plugins + store UI pending. |
 | Rewarded ads | Remote-config flag only (off). No ad SDK integrated. |
 | Analytics provider | Consent-gated client adapter with PostHog HTTP batching; needs a project key. Not exercised against a live PostHog project. |
-| Crash/error monitoring | Server Sentry adapter (needs DSN + `@sentry/node`). **Client crash reporting is not integrated** (would need the sentry-godot plugin). |
+| Crash/error monitoring | Server Sentry adapter (needs DSN + `@sentry/node`). Client: `LFDiagnostics` records game-detected errors (save, network, config, unclean exit) locally and, with consent, as analytics events. **Native crash capture is not integrated** (needs a native SDK/plugin); no crash-free-session rate is reported. |
 | Production deployment | `render.yaml`, Dockerfile, migration/rollback/backup docs ready. Nothing was deployed (no authorisation to create billable resources). |
-| Play Store upload | AAB requires the Gradle build template and Google's Maven access; only APKs were built here. |
+| Play Store upload | Godot 4.5.1 is the Android build target (4.3 templates are not Play-compliant). The AAB needs the Gradle template and Android SDK platform 36, which were unavailable here; only a debug APK was built. Nothing has been uploaded. |
 | iOS | Export preset and docs only; no macOS/Xcode was available, so no iOS build exists. |
 
 ## Product / feature gaps
 * **Unlockable themes and premium packs:** product ids exist server-side. The five campaign
   worlds each have their own board palette and are reached through progress, but there is no
   theme picker, no store screen and no purchasable theme.
-* **Native share sheet:** the result card PNG and challenge invite are generated. On Android and
-  iOS the text goes to the clipboard and the image stays in app storage. `LFShareCard.native_share()`
-  is the boundary for a share plugin, and no plugin ships. See [sharing.md](sharing.md).
-* **Deep links into the app:** challenge links open a landing page that shows the code. App Links
-  and Universal Links (intent filter in a Gradle Android export, `assetlinks.json`,
-  `apple-app-site-association`, a launch-URL plugin) are not configured, so players type the code.
+* **Native share sheet and App Links:** implemented as an Android plugin in `android/share-plugin`
+  (FileProvider + chooser; verified-link intent filters) with the API serving `assetlinks.json`, but
+  the plugin is **not compiled or device-tested** (no Android SDK here). Builds without it offer
+  Copy text on phones; players type challenge codes. Deferred deep links after a store install are
+  not possible — the landing page shows the code. See [sharing.md](sharing.md).
+* **Accessibility:** keyboard/D-pad focus and accessible names exist; **TalkBack is untested**, the
+  board itself is not exposed to screen readers, and the game does not follow Android font scale.
+* **Rate limits are per API process** (memory); fine for one instance, multiply with more.
 * **Video export of replays:** not implemented. The replay screen has a clean view meant for the
   OS screen recorder. There is no automatic zoom.
 * **Friends leaderboard:** comparisons are per challenge code (everyone who played it). There is
