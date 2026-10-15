@@ -134,6 +134,7 @@ func _run() -> void:
 	await _presentation_tests()
 	await _consent_tests()
 	await _share_tests()
+	await _a11y_tests()
 	print("\nBeta UI tests: %d checks, %d failed" % [checks, failures])
 	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://beta-ui-test-save.json"))
 	quit(1 if failures > 0 else 0)
@@ -510,5 +511,47 @@ func _share_tests() -> void:
 	check(msg != null and msg.text.contains("offline"), "unreachable server treated as offline, not 'expired'")
 	Net.base_url = saved_url
 	Game.state.data["challenges"].erase("pending")
+	made[0].queue_free()
+	await _frames(2)
+
+
+# ----------------------------------------------------------------------------- Accessibility
+
+func _a11y_tests() -> void:
+	_fresh_state()
+	var made: Array = await _make_main(Vector2i(720, 1280))
+	var main: Control = made[1]
+	main.home()
+	await _wait(0.5)
+	var close: Control = main.current.find_child("BubbleClose", true, false)
+	if close != null:
+		check(close.custom_minimum_size.x >= 88 and close.custom_minimum_size.y >= 88, "Captain Naps dismiss target is at least 88×88")
+		check(close.tooltip_text != "", "dismiss button has an accessible name")
+	var named := true
+	for b in main.current.find_children("*", "LFIconButton", true, false):
+		if (b as Control).tooltip_text == "":
+			named = false
+	check(named, "every icon button on Home has an accessible name")
+	# Touch-only: no focus rings.
+	check(main.get_viewport().gui_get_focus_owner() == null, "touch play leaves nothing focused")
+	var play = await _play(main, "c08")
+	check(play.reverse_btn.tooltip_text != "" and play.undo_btn.tooltip_text == "Undo", "play controls are named")
+	# First key press: everything becomes focusable and something has focus.
+	var ev := InputEventKey.new()
+	ev.keycode = KEY_DOWN
+	ev.pressed = true
+	main._input(ev)
+	await _frames(2)
+	var owner: Control = main.get_viewport().gui_get_focus_owner()
+	check(owner != null, "keyboard / D-pad input focuses a control")
+	check(play.run_btn.focus_mode == Control.FOCUS_ALL and play.undo_btn.focus_mode == Control.FOCUS_ALL, "controls become focusable")
+	main.goto("settings")
+	await _wait(0.4)
+	var all_focusable := true
+	for b in main.current.find_children("*", "BaseButton", true, false):
+		if (b as Control).focus_mode != Control.FOCUS_ALL:
+			all_focusable = false
+	check(all_focusable, "screens opened later are focusable too")
+	load("res://scripts/ui/style.gd").set_keyboard_nav(false)
 	made[0].queue_free()
 	await _frames(2)

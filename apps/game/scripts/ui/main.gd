@@ -74,6 +74,26 @@ func launch_challenge_code() -> String:
 	return str(Game.state.data["challenges"].get("pending", ""))
 
 
+## First keyboard / D-pad input: make every control focusable and focus the first one.
+func _input(event: InputEvent) -> void:
+	if LFStyle.keyboard_nav:
+		return
+	if (event is InputEventKey and event.pressed) or (event is InputEventJoypadButton and event.pressed):
+		enable_keyboard_nav()
+
+
+func enable_keyboard_nav() -> void:
+	LFStyle.set_keyboard_nav(true)
+	var first: Control = null
+	for c in find_children("*", "BaseButton", true, false) + find_children("*", "LineEdit", true, false):
+		var ctl := c as Control
+		ctl.focus_mode = Control.FOCUS_ALL
+		if first == null and ctl.is_visible_in_tree() and not (ctl is BaseButton and (ctl as BaseButton).disabled):
+			first = ctl
+	if first != null:
+		first.grab_focus()
+
+
 ## A staging build with a broken config or no error monitoring says so on screen, so testers never
 ## assume problems are being collected. (Release builds can't be produced with an invalid config:
 ## scripts/client-config.ts fails the build.) Problems are also recorded as diagnostics.
@@ -187,6 +207,9 @@ func _show(name: String, args: Dictionary, direction: int) -> void:
 	scr.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_layer.add_child(scr)
 	scr.setup(args)
+	if LFStyle.keyboard_nav:
+		for c in scr.find_children("*", "BaseButton", true, false):
+			(c as Control).focus_mode = Control.FOCUS_ALL
 	current = scr
 	current_name = name
 	if old:

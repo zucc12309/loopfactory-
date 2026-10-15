@@ -5,6 +5,8 @@ extends Button
 var icon_name := ""
 var icon_color := LFStyle.TEXT
 var caption := ""
+## Spoken / tooltip names for icon-only buttons.
+const NAMES := {"back": "Back", "gear": "Settings", "user": "Profile", "trophy": "Leaderboards", "share": "Share", "pause": "Pause", "fast": "Speed", "play": "Play", "rotate_ccw": "Turn counter-clockwise"}
 
 
 static func make(p_icon: String, p_caption := "", variation := "SecondaryButton", size := 104) -> LFIconButton:
@@ -13,7 +15,8 @@ static func make(p_icon: String, p_caption := "", variation := "SecondaryButton"
 	b.caption = p_caption
 	b.theme_type_variation = variation
 	b.custom_minimum_size = Vector2(size, size)
-	b.focus_mode = Control.FOCUS_NONE
+	b.focus_mode = LFStyle.focus_mode()
+	LFStyle.a11y(b, p_caption if p_caption != "" else NAMES.get(p_icon, p_icon.capitalize()))
 	b.icon_color = Color.WHITE if variation == "" else LFStyle.TEXT
 	b.pressed.connect(func(): Sfx.play("ui"); Sfx.haptic(8))
 	return b

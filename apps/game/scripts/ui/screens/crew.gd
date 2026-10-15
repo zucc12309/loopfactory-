@@ -117,7 +117,7 @@ func _celebration_card() -> Control:
 	if unlocked:
 		var cb := CheckButton.new()
 		cb.button_pressed = str(data["crew"].get("celebration", "")) == str(d["id"])
-		cb.focus_mode = Control.FOCUS_NONE
+		cb.focus_mode = LFStyle.focus_mode()
 		cb.toggled.connect(func(on):
 			LFCrew.set_celebration(data, str(d["id"]) if on else "")
 			data["crew"]["seen"][str(d["id"])] = true

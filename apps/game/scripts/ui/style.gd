@@ -75,7 +75,7 @@ static func theme() -> Theme:
 	t.set_stylebox("hover", "Button", box(PRIMARY.lightened(0.06)))
 	t.set_stylebox("pressed", "Button", box(PRIMARY_DARK, RADIUS, false))
 	t.set_stylebox("disabled", "Button", box(SURFACE_2, RADIUS, false))
-	t.set_stylebox("focus", "Button", StyleBoxEmpty.new())
+	t.set_stylebox("focus", "Button", focus_ring())
 	for c in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_hover_pressed_color"]:
 		t.set_color(c, "Button", Color.WHITE)
 	t.set_color("font_disabled_color", "Button", TEXT_MUTED)
@@ -114,8 +114,9 @@ static func theme() -> Theme:
 	t.set_color("font_hover_pressed_color", "CheckButton", TEXT)
 	t.set_color("font_focus_color", "CheckButton", TEXT)
 	t.set_font_size("font_size", "CheckButton", 28)
-	for st in ["normal", "hover", "pressed", "hover_pressed", "disabled", "focus"]:
+	for st in ["normal", "hover", "pressed", "hover_pressed", "disabled"]:
 		t.set_stylebox(st, "CheckButton", StyleBoxEmpty.new())
+	t.set_stylebox("focus", "CheckButton", focus_ring())
 	t.set_icon("checked", "CheckButton", _switch_icon(true))
 	t.set_icon("unchecked", "CheckButton", _switch_icon(false))
 	# Scroll bars: slim
@@ -164,13 +165,46 @@ static func label(text: String, size := 28, color := TEXT, weight := 700, align 
 	return l
 
 
+## Keyboard / D-pad navigation (audit U2). Touch-only play keeps focus rings hidden (a tap must not
+## leave a ring behind); the first key or D-pad press switches every control to focusable, shows a
+## visible ring and focuses the first control (main.gd).
+static var keyboard_nav := false
+
+
+static func set_keyboard_nav(on: bool) -> void:
+	keyboard_nav = on
+
+
+static func focus_mode() -> int:
+	return Control.FOCUS_ALL if keyboard_nav else Control.FOCUS_NONE
+
+
+static func focus_ring() -> StyleBoxFlat:
+	var f := StyleBoxFlat.new()
+	f.draw_center = false
+	f.set_border_width_all(5)
+	f.border_color = ACCENT
+	f.set_corner_radius_all(RADIUS + 4)
+	f.set_expand_margin_all(5)
+	return f
+
+
+## Accessible name for a control: tooltip (desktop) and, on engines with screen-reader support
+## (Godot 4.5+ AccessKit), the accessibility name. Screen-reader behaviour is NOT verified on a phone.
+static func a11y(c: Control, name: String) -> Control:
+	c.tooltip_text = name
+	if "accessibility_name" in c:
+		c.set("accessibility_name", name)
+	return c
+
+
 static func button(text: String, variation := "", height := 96) -> Button:
 	var b := Button.new()
 	b.text = text
 	b.custom_minimum_size = Vector2(0, height)
 	if variation != "":
 		b.theme_type_variation = variation
-	b.focus_mode = Control.FOCUS_NONE
+	b.focus_mode = focus_mode()
 	b.pressed.connect(func(): Sfx.play("ui"); Sfx.haptic(8))
 	return b
 

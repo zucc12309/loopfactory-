@@ -16,7 +16,10 @@ export class PrivacyService {
     const player = await this.db.player.findUnique({
       where: { id: playerId },
       include: {
-        identities: { select: { provider: true, createdAt: true } },
+        identities: { select: { provider: true, email: true, createdAt: true } },
+        // Sessions: metadata only (never token hashes).
+        refreshTokens: { select: { createdAt: true, expiresAt: true, rotatedAt: true, revokedAt: true } },
+        syncOps: { select: { type: true, status: true, clientTs: true, receivedAt: true }, orderBy: { receivedAt: 'asc' } },
         progress: true,
         activePuzzle: true,
         submissions: { select: { createdAt: true, rotations: true, valid: true, challenge: { select: { date: true } } } },

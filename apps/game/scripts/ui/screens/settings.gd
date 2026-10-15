@@ -85,7 +85,8 @@ func _toggle(text: String, key: String) -> Control:
 	var cb := CheckButton.new()
 	cb.text = text
 	cb.button_pressed = bool(Game.settings().get(key, false))
-	cb.focus_mode = Control.FOCUS_NONE
+	cb.focus_mode = LFStyle.focus_mode()
+	LFStyle.a11y(cb, text)
 	cb.custom_minimum_size = Vector2(0, 64)
 	cb.toggled.connect(func(on):
 		Sfx.play("ui")

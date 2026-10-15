@@ -35,6 +35,50 @@ describe('privacy', () => {
   });
 });
 
+describe('privacy coverage (L1)', () => {
+  it('export covers every documented category and never credentials', async () => {
+    const g = await guest();
+    await api().post('/api/v1/auth/link').set(g.auth).send({ provider: 'dev', idToken: 'dev:privacy_cov_1' }).expect(200);
+    await api().post('/api/v1/progress/sync').set(g.auth).send({ operations: [completeOp(CURATED[0]!, CURATED[0]!.solution.moves)] }).expect(200);
+    await api().post('/api/v1/challenges/friend').set(g.auth).send({ level: { type: 'campaign', levelId: CURATED[5]!.id }, moves: CURATED[5]!.solution.moves }).expect(201);
+    const r = await api().get('/api/v1/privacy/export').set(g.auth).expect(200);
+    const p = r.body.player;
+    for (const k of ['displayName', 'settings', 'identities', 'refreshTokens', 'progress', 'submissions', 'leaderboard', 'achievements', 'syncOps', 'entitlements', 'friendChallenges', 'friendAttempts']) {
+      expect(p, k).toHaveProperty(k);
+    }
+    expect(p.syncOps.length).toBeGreaterThan(0);
+    expect(p.refreshTokens.length).toBeGreaterThan(0);
+    const text = JSON.stringify(r.body);
+    expect(text).not.toContain('tokenHash');
+    expect(text).not.toContain(g.refreshToken);
+    expect(text).not.toContain('creatorMoves');
+  });
+
+  it('erasure removes every linked row in one transaction', async () => {
+    const g = await guest();
+    await api().post('/api/v1/auth/link').set(g.auth).send({ provider: 'dev', idToken: 'dev:privacy_cov_2' }).expect(200);
+    await api().post('/api/v1/progress/sync').set(g.auth).send({ operations: [completeOp(CURATED[0]!, CURATED[0]!.solution.moves)] }).expect(200);
+    await api().post('/api/v1/challenges/friend').set(g.auth).send({ level: { type: 'campaign', levelId: CURATED[5]!.id }, moves: CURATED[5]!.solution.moves }).expect(201);
+    await api().post('/api/v1/privacy/delete-request').set(g.auth).send({ confirm: true }).expect(200);
+    const id = g.player.id;
+    const counts = await Promise.all([
+      db.playerAuthIdentity.count({ where: { playerId: id } }),
+      db.refreshToken.count({ where: { playerId: id } }),
+      db.syncOperation.count({ where: { playerId: id } }),
+      db.playerLevelProgress.count({ where: { playerId: id } }),
+      db.friendChallenge.count({ where: { creatorId: id } }),
+      db.friendChallengeAttempt.count({ where: { playerId: id } }),
+      db.challengeSubmission.count({ where: { playerId: id } }),
+      db.playerAchievement.count({ where: { playerId: id } }),
+      db.purchaseEntitlement.count({ where: { playerId: id } }),
+    ]);
+    expect(counts).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    // The identity can be linked again by a new account (nothing left behind).
+    const h = await guest();
+    await api().post('/api/v1/auth/link').set(h.auth).send({ provider: 'dev', idToken: 'dev:privacy_cov_2' }).expect(200);
+  });
+});
+
 describe('purchases', () => {
   it('verifies purchases server-side and restores entitlements', async () => {
     const g = await guest();

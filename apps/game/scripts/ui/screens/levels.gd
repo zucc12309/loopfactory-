@@ -69,7 +69,7 @@ func _cell(i: int) -> Control:
 	var unlocked := st.is_unlocked(i)
 	var prog = st.data["progress"].get(lvl["id"])
 	var b := Button.new()
-	b.focus_mode = Control.FOCUS_NONE
+	b.focus_mode = LFStyle.focus_mode()
 	b.custom_minimum_size = Vector2(0, 150)
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	b.theme_type_variation = "SecondaryButton"
@@ -78,6 +78,7 @@ func _cell(i: int) -> Control:
 		b.add_theme_stylebox_override("normal", LFStyle.box(diff_col.lightened(0.55)))
 	b.disabled = not unlocked
 	var stars: int = int(prog["stars"]) if prog != null else 0
+	LFStyle.a11y(b, "Level %d, %s" % [i + 1, ("%d of 3 stars" % stars) if prog != null else ("not played" if unlocked else "locked")])
 	b.draw.connect(func():
 		var f := LFStyle.font(800)
 		var txt := str(i + 1)

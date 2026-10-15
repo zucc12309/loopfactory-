@@ -143,8 +143,11 @@ func _mascot(pres: Dictionary) -> Control:
 	var close := Button.new()
 	close.text = "×"
 	close.flat = true
-	close.focus_mode = Control.FOCUS_NONE
-	close.custom_minimum_size = Vector2(44, 44)
+	close.name = "BubbleClose"
+	close.focus_mode = LFStyle.focus_mode()
+	# 88×88 touch target (was 44): the glyph and the mascot are unchanged; only the hit area grows.
+	close.custom_minimum_size = Vector2(88, 88)
+	LFStyle.a11y(close, "Dismiss Captain Naps' message")
 	close.add_theme_color_override("font_color", LFStyle.TEXT_MUTED)
 	close.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	close.pressed.connect(_dismiss_bubble)
