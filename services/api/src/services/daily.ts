@@ -17,7 +17,12 @@ export const HISTORY_DAYS = 7;
 export const todayUtc = (now = new Date()) => now.toISOString().slice(0, 10);
 export const dateToUtc = (d: string) => new Date(`${d}T00:00:00.000Z`);
 
+type ChallengeRow = Awaited<ReturnType<Db['dailyChallenge']['findUnique']>> & object;
+
 export class DailyService {
+  /** Published dailies are immutable, so they are cached in memory after the first read. */
+  private static cache = new Map<string, ChallengeRow>();
+
   constructor(
     private db: Db,
     private seedSecret: string,
@@ -39,7 +44,17 @@ export class DailyService {
   }
 
   /** Get or create (race-safe via the unique date constraint). */
-  async getOrCreate(date: string) {
+  async getOrCreate(date: string): Promise<ChallengeRow> {
+    const key = `${this.seedFor(date)}:${date}`;
+    const hit = DailyService.cache.get(key);
+    if (hit) return hit;
+    const row = await this.fetchOrCreate(date);
+    if (DailyService.cache.size > 64) DailyService.cache.clear();
+    DailyService.cache.set(key, row);
+    return row;
+  }
+
+  private async fetchOrCreate(date: string): Promise<ChallengeRow> {
     const existing = await this.db.dailyChallenge.findUnique({ where: { date: dateToUtc(date) } });
     if (existing) return existing;
     const level = this.buildLevel(date);

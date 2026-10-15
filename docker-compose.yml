@@ -1,0 +1,42 @@
+# Local development stack:  docker compose up --build
+# API on http://localhost:8080 (OpenAPI at /openapi.json), Postgres on localhost:5432.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: loop
+      POSTGRES_PASSWORD: loop
+      POSTGRES_DB: loopfactory
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U loop -d loopfactory"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  migrate:
+    build: { context: ., dockerfile: infrastructure/docker/api.Dockerfile }
+    environment: &apienv
+      NODE_ENV: development
+      DATABASE_URL: postgresql://loop:loop@db:5432/loopfactory
+      JWT_SECRET: local-dev-secret-local-dev-secret-0123456789
+      DAILY_SEED_SECRET: local-dev-daily-seed
+      PRIVACY_HASH_SALT: local-dev-privacy-salt
+      ENABLE_DEV_AUTH: "true"
+      ENABLE_DEV_PURCHASES: "true"
+      LOG_LEVEL: info
+    command: ["sh", "-c", "node_modules/.bin/prisma migrate deploy --schema database/schema.prisma && node services/api/dist/scripts/seed.js"]
+    depends_on:
+      db: { condition: service_healthy }
+
+  api:
+    build: { context: ., dockerfile: infrastructure/docker/api.Dockerfile }
+    environment: *apienv
+    ports: ["8080:8080"]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    restart: unless-stopped
+
+volumes:
+  pgdata:

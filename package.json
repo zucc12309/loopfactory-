@@ -2,7 +2,7 @@
   "name": "loop-factory",
   "private": true,
   "version": "0.1.0",
-  "description": "Loop Factory — minimalist conveyor-belt puzzle game (Godot client + TypeScript backend)",
+  "description": "Loop Factory \u2014 minimalist conveyor-belt puzzle game (Godot client + TypeScript backend)",
   "workspaces": [
     "packages/*",
     "services/*"
@@ -33,5 +33,9 @@
   },
   "dependencies": {
     "@prisma/client": "^6.19.3"
+  },
+  "type": "module",
+  "overrides": {
+    "deepmerge-ts": "^8.0.0"
   }
 }

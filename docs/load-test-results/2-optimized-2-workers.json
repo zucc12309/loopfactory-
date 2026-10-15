@@ -1,0 +1,135 @@
+{
+  "base": "http://127.0.0.1:8095",
+  "duration": 20,
+  "workers": 2,
+  "results": [
+    {
+      "scenario": "daily_read_spike",
+      "connections": 100,
+      "durationS": 20,
+      "requests": 89233,
+      "rps": 4462,
+      "latencyMs": {
+        "p50": 19,
+        "p90": 29,
+        "p97_5": 54,
+        "p99": 102,
+        "max": 1070
+      },
+      "errors": 0,
+      "non2xx": 0,
+      "errorRate": 0,
+      "cpuPctAvg": 197.7,
+      "cpuPctMax": 217.3,
+      "rssMbMax": 453.6,
+      "dbConnectionsMax": 12
+    },
+    {
+      "scenario": "authenticated_mix",
+      "connections": 100,
+      "durationS": 20,
+      "requests": 10965,
+      "rps": 548,
+      "latencyMs": {
+        "p50": 151,
+        "p90": 321,
+        "p97_5": 400,
+        "p99": 431,
+        "max": 582
+      },
+      "errors": 0,
+      "non2xx": 0,
+      "errorRate": 0,
+      "cpuPctAvg": 259.5,
+      "cpuPctMax": 271.5,
+      "rssMbMax": 478.6,
+      "dbConnectionsMax": 21
+    },
+    {
+      "scenario": "daily_submit_spike",
+      "connections": 100,
+      "durationS": 20,
+      "requests": 6112,
+      "rps": 306,
+      "latencyMs": {
+        "p50": 319,
+        "p90": 422,
+        "p97_5": 539,
+        "p99": 614,
+        "max": 789
+      },
+      "errors": 0,
+      "non2xx": 0,
+      "errorRate": 0,
+      "cpuPctAvg": 246.7,
+      "cpuPctMax": 252.4,
+      "rssMbMax": 483.2,
+      "dbConnectionsMax": 21
+    },
+    {
+      "scenario": "daily_read_spike",
+      "connections": 1000,
+      "durationS": 20,
+      "requests": 103480,
+      "rps": 5175,
+      "latencyMs": {
+        "p50": 130,
+        "p90": 202,
+        "p97_5": 249,
+        "p99": 288,
+        "max": 19982
+      },
+      "errors": 230,
+      "non2xx": 0,
+      "errorRate": 0.222,
+      "cpuPctAvg": 208.4,
+      "cpuPctMax": 215.6,
+      "rssMbMax": 501.1,
+      "dbConnectionsMax": 21
+    },
+    {
+      "scenario": "authenticated_mix",
+      "connections": 1000,
+      "durationS": 20,
+      "requests": 9289,
+      "rps": 464,
+      "latencyMs": {
+        "p50": 1987,
+        "p90": 3155,
+        "p97_5": 4221,
+        "p99": 4341,
+        "max": 4755
+      },
+      "errors": 0,
+      "non2xx": 0,
+      "errorRate": 0,
+      "cpuPctAvg": 259.5,
+      "cpuPctMax": 276.2,
+      "rssMbMax": 703.3,
+      "dbConnectionsMax": 21
+    },
+    {
+      "scenario": "daily_submit_spike",
+      "connections": 1000,
+      "durationS": 20,
+      "requests": 4710,
+      "rps": 236,
+      "latencyMs": {
+        "p50": 3621,
+        "p90": 5695,
+        "p97_5": 6466,
+        "p99": 6640,
+        "max": 7034
+      },
+      "errors": 0,
+      "non2xx": 0,
+      "errorRate": 0,
+      "cpuPctAvg": 241.6,
+      "cpuPctMax": 273.6,
+      "rssMbMax": 708,
+      "dbConnectionsMax": 21
+    }
+  ],
+  "node": "v22.22.0",
+  "cpus": 4
+}

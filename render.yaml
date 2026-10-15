@@ -1,0 +1,62 @@
+# Render Blueprint (https://render.com/docs/blueprint-spec). Review plans/regions before applying —
+# applying this creates billable resources. Secrets marked sync:false must be set in the dashboard.
+databases:
+  - name: loopfactory-db
+    plan: basic-256mb
+    region: singapore          # closest Render region to India
+    postgresMajorVersion: "16"
+    ipAllowList: []            # private network only
+
+services:
+  - type: web
+    name: loopfactory-api
+    runtime: docker
+    plan: starter
+    region: singapore
+    dockerfilePath: infrastructure/docker/api.Dockerfile
+    dockerContext: .
+    healthCheckPath: /ready
+    preDeployCommand: node_modules/.bin/prisma migrate deploy --schema database/schema.prisma && node services/api/dist/scripts/seed.js
+    autoDeploy: false
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase: { name: loopfactory-db, property: connectionString }
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DAILY_SEED_SECRET
+        generateValue: true
+      - key: PRIVACY_HASH_SALT
+        generateValue: true
+      - key: DB_POOL_SIZE
+        value: "10"
+      - key: LOG_LEVEL
+        value: info
+      - key: GOOGLE_CLIENT_IDS
+        sync: false
+      - key: APPLE_BUNDLE_IDS
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+
+  - type: cron
+    name: loopfactory-maintenance
+    runtime: docker
+    plan: starter
+    region: singapore
+    dockerfilePath: infrastructure/docker/api.Dockerfile
+    dockerContext: .
+    schedule: "15 0 * * *"     # 00:15 UTC daily: retention cleanup + pre-generate dailies
+    dockerCommand: sh -c "node services/api/dist/scripts/maintenance.js && node services/api/dist/scripts/pregenerate-daily.js 3"
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase: { name: loopfactory-db, property: connectionString }
+      - key: JWT_SECRET
+        fromService: { type: web, name: loopfactory-api, envVarKey: JWT_SECRET }
+      - key: DAILY_SEED_SECRET
+        fromService: { type: web, name: loopfactory-api, envVarKey: DAILY_SEED_SECRET }
+      - key: PRIVACY_HASH_SALT
+        fromService: { type: web, name: loopfactory-api, envVarKey: PRIVACY_HASH_SALT }
