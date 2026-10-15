@@ -553,5 +553,12 @@ func _a11y_tests() -> void:
 			all_focusable = false
 	check(all_focusable, "screens opened later are focusable too")
 	load("res://scripts/ui/style.gd").set_keyboard_nav(false)
+	# R5: no account-link button that leads nowhere; honest guest copy instead.
+	main.goto("profile")
+	await _wait(0.5)
+	var link_buttons: Array = main.current.find_children("*", "Button", true, false).filter(func(b): return (b as Button).text.to_lower().contains("link"))
+	check(link_buttons.is_empty(), "no account-link button without a working sign-in flow")
+	var st_label: Label = main.current.find_child("AccountStatus", true, false)
+	check(st_label != null and st_label.text.contains("Uninstalling") and not st_label.text.contains("safe"), "profile states guest limits plainly")
 	made[0].queue_free()
 	await _frames(2)

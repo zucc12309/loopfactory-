@@ -40,9 +40,12 @@ func setup(_args: Dictionary) -> void:
 		main.toast("Name saved." if ok else "Couldn't save the name — are you online?", LFStyle.PRIMARY if ok else LFStyle.ERROR))
 	name_row.add_child(save)
 	iv.add_child(name_row)
-	var link := LFStyle.button("Link Google / Apple account", "SecondaryButton", 90)
-	link.pressed.connect(_link)
-	iv.add_child(link)
+	# No sign-in plugin ships in this beta, so there is no "Link account" button that would lead
+	# nowhere (audit R5). The status says plainly what survives an uninstall.
+	var acct := LFStyle.label(load("res://scripts/ui/screens/settings.gd").account_status(st.data), 22, LFStyle.TEXT_MUTED, 400)
+	acct.name = "AccountStatus"
+	acct.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	iv.add_child(acct)
 	v.add_child(id_card)
 
 	# Stats
@@ -107,12 +110,3 @@ func _load_lb(lb: VBoxContainer) -> void:
 		row.add_child(n)
 		row.add_child(LFStyle.label("%d solved" % int(e["score"]), 24, LFStyle.TEXT_MUTED, 700))
 		lb.add_child(row)
-
-
-func _link() -> void:
-	# Native sign-in requires the Google Sign-In / Sign in with Apple plugins, which need store
-	# credentials. When a plugin singleton is present we obtain an ID token and call /auth/link.
-	if Engine.has_singleton("GodotGoogleSignIn") or Engine.has_singleton("SignInWithApple"):
-		main.toast("Opening sign-in…")
-		return
-	main.toast("Account linking needs the sign-in plugin (pending store setup). Your progress is safe on this device.", LFStyle.TEXT, 3.5)
