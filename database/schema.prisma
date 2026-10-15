@@ -13,23 +13,25 @@ datasource db {
 }
 
 model Player {
-  id                String    @id @default(uuid()) @db.Uuid
-  displayName       String    @map("display_name") @db.VarChar(24)
-  settings          Json      @default("{}")
-  settingsUpdatedAt BigInt    @default(0) @map("settings_client_updated_at")
-  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
-  lastSeenAt        DateTime  @default(now()) @map("last_seen_at") @db.Timestamptz(3)
+  id                String   @id @default(uuid()) @db.Uuid
+  displayName       String   @map("display_name") @db.VarChar(24)
+  settings          Json     @default("{}")
+  settingsUpdatedAt BigInt   @default(0) @map("settings_client_updated_at")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  lastSeenAt        DateTime @default(now()) @map("last_seen_at") @db.Timestamptz(3)
 
-  identities    PlayerAuthIdentity[]
-  refreshTokens RefreshToken[]
-  progress      PlayerLevelProgress[]
-  activePuzzle  ActivePuzzleState?
-  submissions   ChallengeSubmission[]
-  leaderboard   LeaderboardEntry[]
-  achievements  PlayerAchievement[]
-  syncOps       SyncOperation[]
-  entitlements  PurchaseEntitlement[]
+  identities       PlayerAuthIdentity[]
+  refreshTokens    RefreshToken[]
+  progress         PlayerLevelProgress[]
+  activePuzzle     ActivePuzzleState?
+  submissions      ChallengeSubmission[]
+  leaderboard      LeaderboardEntry[]
+  achievements     PlayerAchievement[]
+  syncOps          SyncOperation[]
+  entitlements     PurchaseEntitlement[]
+  friendChallenges FriendChallenge[]
+  friendAttempts   FriendChallengeAttempt[]
 
   @@map("players")
 }
@@ -49,15 +51,15 @@ model PlayerAuthIdentity {
 }
 
 model RefreshToken {
-  id         String    @id @default(uuid()) @db.Uuid
-  playerId   String    @map("player_id") @db.Uuid
-  familyId   String    @map("family_id") @db.Uuid
-  tokenHash  String    @unique @map("token_hash") @db.Char(64)
-  expiresAt  DateTime  @map("expires_at") @db.Timestamptz(3)
-  revokedAt  DateTime? @map("revoked_at") @db.Timestamptz(3)
-  rotatedAt  DateTime? @map("rotated_at") @db.Timestamptz(3)
-  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
-  player     Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  id        String    @id @default(uuid()) @db.Uuid
+  playerId  String    @map("player_id") @db.Uuid
+  familyId  String    @map("family_id") @db.Uuid
+  tokenHash String    @unique @map("token_hash") @db.Char(64)
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(3)
+  revokedAt DateTime? @map("revoked_at") @db.Timestamptz(3)
+  rotatedAt DateTime? @map("rotated_at") @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  player    Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
 
   @@index([playerId])
   @@index([familyId])
@@ -165,13 +167,13 @@ model ChallengeSubmission {
 }
 
 model LeaderboardEntry {
-  id        String   @id @default(uuid()) @db.Uuid
-  board     String   @db.VarChar(32) // daily:YYYY-MM-DD | weekly:YYYY-Www | global
-  playerId  String   @map("player_id") @db.Uuid
-  score     Int // lower is better on every board (see services/api/src/services/leaderboards.ts)
+  id         String   @id @default(uuid()) @db.Uuid
+  board      String   @db.VarChar(32) // daily:YYYY-MM-DD | weekly:YYYY-Www | global
+  playerId   String   @map("player_id") @db.Uuid
+  score      Int // lower is better on every board (see services/api/src/services/leaderboards.ts)
   achievedAt DateTime @default(now()) @map("achieved_at") @db.Timestamptz(3) // tie-breaker: earlier wins
-  display   Json     @default("{}")
-  player    Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  display    Json     @default("{}")
+  player     Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
 
   @@unique([board, playerId])
   @@index([board, score, achievedAt])
@@ -245,14 +247,50 @@ model PurchaseEntitlement {
 }
 
 model PrivacyRequest {
-  id           String    @id @default(uuid()) @db.Uuid
+  id          String    @id @default(uuid()) @db.Uuid
   // Salted hash of the player id: lets support confirm a deletion happened without retaining the id.
-  subjectHash  String    @map("subject_hash") @db.Char(64)
-  type         String    @db.VarChar(16) // export | delete
-  status       String    @db.VarChar(16) // completed | failed
-  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
-  completedAt  DateTime? @map("completed_at") @db.Timestamptz(3)
+  subjectHash String    @map("subject_hash") @db.Char(64)
+  type        String    @db.VarChar(16) // export | delete
+  status      String    @db.VarChar(16) // completed | failed
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  completedAt DateTime? @map("completed_at") @db.Timestamptz(3)
 
   @@index([subjectHash])
   @@map("privacy_requests")
+}
+
+/// Asynchronous friend challenge: a verified solve that others try to beat on the same puzzle.
+model FriendChallenge {
+  id               String                   @id @default(uuid()) @db.Uuid
+  code             String                   @unique @db.VarChar(8)
+  creatorId        String                   @map("creator_id") @db.Uuid
+  levelRef         Json                     @map("level_ref")
+  level            Json
+  creatorMoves     Json                     @map("creator_moves")
+  creatorRotations Int                      @map("creator_rotations")
+  createdAt        DateTime                 @default(now()) @map("created_at") @db.Timestamptz(3)
+  expiresAt        DateTime                 @map("expires_at") @db.Timestamptz(3)
+  creator          Player                   @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  attempts         FriendChallengeAttempt[]
+
+  @@index([creatorId, createdAt])
+  @@map("friend_challenges")
+}
+
+/// Best verified attempt per player per challenge (lower rotations is better).
+model FriendChallengeAttempt {
+  id          String          @id @default(uuid()) @db.Uuid
+  challengeId String          @map("challenge_id") @db.Uuid
+  playerId    String          @map("player_id") @db.Uuid
+  rotations   Int
+  moves       Json
+  tries       Int             @default(1)
+  createdAt   DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
+  challenge   FriendChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  player      Player          @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([challengeId, playerId])
+  @@index([challengeId, rotations, updatedAt])
+  @@map("friend_challenge_attempts")
 }

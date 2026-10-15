@@ -18,6 +18,11 @@ const Env = z.object({
   ACCESS_TOKEN_TTL_SECONDS: z.coerce.number().int().default(900),
   REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().default(90),
   RATE_LIMIT_DISABLED: z.enum(['true', 'false']).default('false'),
+  /** Public origin used in friend-challenge links, e.g. https://play.loopfactory.example (no trailing slash). */
+  PUBLIC_BASE_URL: z.string().url().or(z.literal('')).default(''),
+  /** Optional store links shown on the challenge landing page. */
+  PLAY_STORE_URL: z.string().url().or(z.literal('')).default(''),
+  APP_STORE_URL: z.string().url().or(z.literal('')).default(''),
 });
 
 export type Config = ReturnType<typeof loadConfig>;
@@ -57,5 +62,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
     accessTtl: c.ACCESS_TOKEN_TTL_SECONDS,
     refreshTtlDays: c.REFRESH_TOKEN_TTL_DAYS,
     rateLimitDisabled: c.RATE_LIMIT_DISABLED === 'true',
+    publicBaseUrl: c.PUBLIC_BASE_URL.replace(/\/$/, ''),
+    playStoreUrl: c.PLAY_STORE_URL,
+    appStoreUrl: c.APP_STORE_URL,
   };
 }

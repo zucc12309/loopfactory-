@@ -188,6 +188,42 @@ export const LeaderboardQuery = z.object({ date: IsoDate.optional(), week: z.str
 export const LeaderboardEntry = z.object({ rank: z.number().int(), displayName: z.string(), score: z.number().int(), rotations: z.number().int(), solved: z.number().int().optional(), isMe: z.boolean() });
 export const LeaderboardResponse = z.object({ board: z.string(), entries: z.array(LeaderboardEntry), me: LeaderboardEntry.nullable() });
 
+// ---------------------------------------------------------------- friend challenges
+
+/** How the server rebuilds the exact puzzle: a campaign level, an official daily, or generator parameters. */
+export const ChallengeLevelRef = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('campaign'), levelId: z.string().max(64) }).strict(),
+  z.object({ type: z.literal('daily'), date: IsoDate }).strict(),
+  z.object({ type: z.literal('generated'), seed: z.number().int().min(0).max(0xffffffff), tier: Difficulty, version: z.string().max(16) }).strict(),
+]);
+export const ChallengeCode = z.string().regex(/^[A-HJ-NP-Z2-9]{8}$/, 'Invalid challenge code');
+export const FriendChallengeCreateRequest = z.object({ level: ChallengeLevelRef, moves: MovesSchema }).strict();
+export const FriendChallengeCreateResponse = z.object({ code: ChallengeCode, url: z.string(), rotations: z.number().int(), expiresAt: z.string() });
+export const FriendChallengeView = z.object({
+  code: ChallengeCode,
+  level: LevelSchema,
+  creatorName: z.string(),
+  creatorRotations: z.number().int(),
+  attempts: z.number().int(),
+  createdAt: z.string(),
+  expiresAt: z.string(),
+});
+export const FriendAttemptRequest = z.object({ moves: MovesSchema }).strict();
+export const FriendAttemptResponse = z.object({
+  valid: z.boolean(),
+  rotations: z.number().int(),
+  best: z.number().int().nullable(),
+  creatorRotations: z.number().int(),
+  outcome: z.enum(['win', 'tie', 'lose']).nullable(),
+  error: z.string().nullable(),
+});
+export const FriendResultsResponse = z.object({
+  code: ChallengeCode,
+  creatorName: z.string(),
+  creatorRotations: z.number().int(),
+  entries: z.array(z.object({ rank: z.number().int(), displayName: z.string(), rotations: z.number().int(), isMe: z.boolean(), isCreator: z.boolean() })),
+});
+
 // ---------------------------------------------------------------- achievements, config, privacy, purchases
 
 export const AchievementDef = z.object({ id: z.string(), title: z.string(), description: z.string(), metric: z.string(), threshold: z.number().int() });

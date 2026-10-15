@@ -23,6 +23,8 @@ export class PrivacyService {
         leaderboard: { select: { board: true, score: true, achievedAt: true } },
         achievements: true,
         entitlements: { select: { store: true, productId: true, status: true, verifiedAt: true } },
+        friendChallenges: { select: { code: true, levelRef: true, creatorRotations: true, createdAt: true, expiresAt: true } },
+        friendAttempts: { select: { rotations: true, tries: true, updatedAt: true, challenge: { select: { code: true } } } },
       },
     });
     await this.db.privacyRequest.create({ data: { subjectHash: this.subjectHash(playerId), type: 'export', status: 'completed', completedAt: new Date() } });

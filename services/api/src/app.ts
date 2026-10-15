@@ -13,7 +13,10 @@ import { authMiddleware } from './middleware/auth';
 import { makeLimiter } from './middleware/rateLimit';
 import { buildOpenApi } from './openapi';
 import { buildRoutes } from './routes';
+import { DailyService } from './services/daily';
+import { FriendChallengeService, landingPage } from './services/friends';
 import { createIdentityVerifier, type IdentityVerifier } from './services/identity';
+import { LevelService } from './services/levels';
 import { noopReporter, type ErrorReporter } from './services/monitoring';
 import { createPurchaseVerifier, type PurchaseVerifier } from './services/purchases';
 import { TokenService } from './services/tokens';
@@ -68,6 +71,27 @@ export function createApp(opts: { config: Config; db: Db; logger: Logger; report
   app.use(API_PREFIX, router);
   const doc = buildOpenApi(routes, API_VERSION);
   app.get('/openapi.json', (_req, res) => res.json(doc));
+
+  // Challenge link landing page for people who don't have the app yet.
+  const friends = new FriendChallengeService(db, new LevelService(db), new DailyService(db, config.dailySeedSecret), config.publicBaseUrl);
+  app.get('/c/:code', async (req, res, next) => {
+    try {
+      const code = String(req.params.code).toUpperCase();
+      let view = null;
+      if (/^[A-HJ-NP-Z2-9]{8}$/.test(code)) {
+        try {
+          const v = await friends.view(code);
+          view = { code: v.code, creatorName: v.creatorName, creatorRotations: v.creatorRotations, levelName: v.level.name, difficulty: v.level.difficulty, par: v.level.par };
+        } catch {
+          view = null;
+        }
+      }
+      res.status(view ? 200 : 404).type('html').setHeader('Cache-Control', 'public, max-age=300');
+      res.send(landingPage(view, { play: config.playStoreUrl, app: config.appStoreUrl }));
+    } catch (e) {
+      next(e);
+    }
+  });
 
   app.use(notFound);
   app.use(errorHandler(logger, opts.reporter ?? noopReporter));

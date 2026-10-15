@@ -10,6 +10,7 @@ import { defineRoute, requirePlayer, type AnyRoute } from '../http';
 import { makeLimiter } from '../middleware/rateLimit';
 import { ACHIEVEMENTS, playerStats } from '../services/achievements';
 import { DailyService, dateToUtc, todayUtc } from '../services/daily';
+import { FriendChallengeService } from '../services/friends';
 import type { IdentityVerifier } from '../services/identity';
 import { isoWeek, readBoard } from '../services/leaderboards';
 import { CAMPAIGN_PACK, LevelService, publicLevel } from '../services/levels';
@@ -34,6 +35,8 @@ export const DEFAULT_REMOTE_CONFIG = {
   endlessEnabled: true,
   dailyEnabled: true,
   motd: '',
+  /** A/B experiments; see docs/experiments.md. Empty = everyone gets the control experience. */
+  experiments: {},
 };
 
 export function buildRoutes(d: Deps): AnyRoute[] {
@@ -42,6 +45,7 @@ export function buildRoutes(d: Deps): AnyRoute[] {
   const progress = new ProgressService(db, levels);
   const daily = new DailyService(db, config.dailySeedSecret);
   const privacy = new PrivacyService(db, config.privacySalt);
+  const friends = new FriendChallengeService(db, levels, daily, config.publicBaseUrl);
   const off = config.rateLimitDisabled;
   const guestLimit = makeLimiter({ name: 'guest', windowMs: 3600_000, limit: 30, disabled: off });
   const authLimit = makeLimiter({ name: 'auth', windowMs: 60_000, limit: 30, disabled: off });
@@ -274,6 +278,29 @@ export function buildRoutes(d: Deps): AnyRoute[] {
         }
         return body;
       },
+    }),
+
+    // ------------------------------------------------------------ friend challenges
+    defineRoute({
+      method: 'post', path: '/challenges/friend', tag: 'challenges', auth: 'required', rateLimit: submitLimit, status: 201,
+      summary: 'Create a friend challenge from a solve; the server re-simulates the moves first',
+      body: C.FriendChallengeCreateRequest, response: C.FriendChallengeCreateResponse,
+      handler: async ({ body, playerId }) => friends.create(requirePlayer(playerId), body.level, body.moves),
+    }),
+    defineRoute({
+      method: 'get', path: '/challenges/friend/:code', tag: 'challenges', auth: 'none', params: { code: 'Challenge code' },
+      summary: "A challenge's puzzle (no solution, no creator moves) and the score to beat", response: C.FriendChallengeView,
+      handler: async ({ req }) => friends.view(C.ChallengeCode.parse(String(req.params.code).toUpperCase())),
+    }),
+    defineRoute({
+      method: 'post', path: '/challenges/friend/:code/attempts', tag: 'challenges', auth: 'required', rateLimit: submitLimit, params: { code: 'Challenge code' },
+      summary: 'Submit an attempt (re-simulated server-side); returns the verified comparison', body: C.FriendAttemptRequest, response: C.FriendAttemptResponse,
+      handler: async ({ req, body, playerId }) => friends.attempt(requirePlayer(playerId), C.ChallengeCode.parse(String(req.params.code).toUpperCase()), body.moves),
+    }),
+    defineRoute({
+      method: 'get', path: '/challenges/friend/:code/results', tag: 'challenges', auth: 'optional', params: { code: 'Challenge code' },
+      summary: 'Head-to-head results for everyone who played this challenge', response: C.FriendResultsResponse,
+      handler: async ({ req, playerId }) => friends.results(C.ChallengeCode.parse(String(req.params.code).toUpperCase()), playerId),
     }),
 
     // ------------------------------------------------------------ privacy
