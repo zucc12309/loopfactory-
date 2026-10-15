@@ -32,6 +32,9 @@ const Env = z.object({
    * the upload/debug key for internal builds), comma-separated "AA:BB:..". Empty = not served. */
   ANDROID_PACKAGE_NAME: z.string().regex(/^[a-zA-Z][\w.]*$/).default('com.loopfactory.game'),
   ANDROID_CERT_SHA256: z.string().default(''),
+  // Universal Links: comma-separated "<TEAM_ID>.<bundle id>" app IDs (e.g. from Apple Developer →
+  // Membership). Empty = apple-app-site-association is not served.
+  IOS_APP_IDS: z.string().default(''),
 });
 
 export type Config = ReturnType<typeof loadConfig>;
@@ -55,6 +58,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
   const list = (s: string) => s.split(',').map((x) => x.trim()).filter(Boolean);
   for (const f of list(c.ANDROID_CERT_SHA256)) {
     if (!/^([0-9A-Fa-f]{2}:){31}[0-9A-Fa-f]{2}$/.test(f)) throw new Error('ANDROID_CERT_SHA256 must be colon-separated SHA-256 fingerprints');
+  }
+  for (const id of list(c.IOS_APP_IDS)) {
+    if (!/^[A-Z0-9]{10}\.[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+$/.test(id)) throw new Error('IOS_APP_IDS must be <TEAM_ID>.<bundle id> values (10-character team ID)');
+    if (/^(0{10}|X{10}|ABCDE12345)\./.test(id)) throw new Error('IOS_APP_IDS contains a placeholder team ID');
   }
   return {
     env: c.NODE_ENV,
@@ -80,5 +87,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
     appStoreUrl: c.APP_STORE_URL,
     androidPackage: c.ANDROID_PACKAGE_NAME,
     androidCertSha256: list(c.ANDROID_CERT_SHA256).map((f) => f.toUpperCase()),
+    iosAppIds: list(c.IOS_APP_IDS),
   };
 }

@@ -90,6 +90,26 @@ export function createApp(opts: { config: Config; db: Db; logger: Logger; report
     ]);
   });
 
+  // Universal Links (iOS equivalent of assetlinks.json): lets iOS open https://<host>/c/* in the app.
+  // Apple fetches it through its CDN over HTTPS without redirects; it must be JSON with
+  // Content-Type application/json and no file extension. Served only when real app IDs are set.
+  const aasa = (_req: express.Request, res: express.Response) => {
+    if (config.iosAppIds.length === 0) {
+      res.status(404).json({ error: { code: 'not_configured', message: 'Universal Links are not configured' } });
+      return;
+    }
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.type('application/json').send(
+      JSON.stringify({
+        applinks: {
+          details: [{ appIDs: config.iosAppIds, components: [{ '/': '/c/*', comment: 'Friend challenge links' }] }],
+        },
+      }),
+    );
+  };
+  app.get('/.well-known/apple-app-site-association', aasa);
+  app.get('/apple-app-site-association', aasa);
+
   // Challenge link landing page for people who don't have the app yet.
   const friends = new FriendChallengeService(db, new LevelService(db), new DailyService(db, config.dailySeedSecret), config.publicBaseUrl);
   app.get('/c/:code', async (req, res, next) => {

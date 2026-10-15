@@ -123,6 +123,30 @@ describe('challenge links (R6.1)', () => {
     expect(() => loadConfig({ ...process.env, ANDROID_CERT_SHA256: 'not-a-fingerprint' })).toThrow(/ANDROID_CERT_SHA256/);
   });
 
+  it('apple-app-site-association is not served until real app IDs are configured', async () => {
+    await api().get('/.well-known/apple-app-site-association').expect(404);
+    await api().get('/apple-app-site-association').expect(404);
+  });
+
+  it('apple-app-site-association lists the app IDs for /c/* as application/json', async () => {
+    const app = makeApp({ iosAppIds: ['A1B2C3D4E5.com.loopfactory.game'] });
+    for (const path of ['/.well-known/apple-app-site-association', '/apple-app-site-association']) {
+      const r = await api(app).get(path).expect(200);
+      expect(r.headers['content-type']).toMatch(/^application\/json/);
+      expect(r.redirect).toBe(false);
+      expect(JSON.parse(r.text)).toEqual({
+        applinks: { details: [{ appIDs: ['A1B2C3D4E5.com.loopfactory.game'], components: [{ '/': '/c/*', comment: 'Friend challenge links' }] }] },
+      });
+    }
+  });
+
+  it('rejects malformed or placeholder iOS app IDs at startup', async () => {
+    const { loadConfig } = await import('../src/config');
+    expect(() => loadConfig({ ...process.env, IOS_APP_IDS: 'com.loopfactory.game' })).toThrow(/IOS_APP_IDS/);
+    expect(() => loadConfig({ ...process.env, IOS_APP_IDS: 'ABCDE12345.com.loopfactory.game' })).toThrow(/placeholder/);
+    expect(loadConfig({ ...process.env, IOS_APP_IDS: 'A1B2C3D4E5.com.loopfactory.game' }).iosAppIds).toEqual(['A1B2C3D4E5.com.loopfactory.game']);
+  });
+
   it('landing page shows the code for manual entry and explains store installs', async () => {
     const alice = await guest();
     const { body } = await api().post('/api/v1/challenges/friend').set(alice.auth).send({ level: { type: 'campaign', levelId: 'c06' }, moves: CURATED.find((l) => l.id === 'c06')!.solution.moves }).expect(201);
