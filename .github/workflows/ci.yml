@@ -13,7 +13,11 @@ permissions:
   contents: read
 
 env:
-  GODOT_VERSION: 4.3-stable
+  # 4.5.1: 16 KB-aligned 64-bit native libs and target API 35+/36 (Google Play). The project is also
+  # verified on 4.3 (docs/BETA_READINESS_IMPLEMENTATION.md), but 4.3 templates are not Play-compliant.
+  GODOT_VERSION: 4.5.1-stable
+  GODOT_TEMPLATES_DIR: 4.5.1.stable
+  GODOT_SETTINGS: editor_settings-4.5.tres
 
 jobs:
   typescript:
@@ -33,6 +37,8 @@ jobs:
         run: npm run levels:check
       - name: Cross-language parity fixtures are up to date
         run: npm run fixtures:check
+      - name: Client config rules (shared cases) and release templates refuse placeholders
+        run: npm run config:check
       - name: OpenAPI document is up to date
         run: npm run openapi -w @loopfactory/api -- --check
       - name: Build API bundle
@@ -82,7 +88,7 @@ jobs:
       - run: npm ci && npx prisma generate --schema database/schema.prisma
       - name: Install Godot (headless)
         run: |
-          curl -sSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_linux.x86_64.zip"
+          curl -sSL -o godot.zip "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_linux.x86_64.zip"
           unzip -q godot.zip && sudo mv "Godot_v${GODOT_VERSION}_linux.x86_64" /usr/local/bin/godot
       - name: Virtual display + Mesa for the UI layout tests
         run: sudo apt-get update && sudo apt-get install -y xvfb libgl1-mesa-dri
@@ -127,6 +133,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: 17 }
       - name: Install Godot + export templates (cached)
@@ -138,15 +147,15 @@ jobs:
       - if: steps.godot-cache.outputs.cache-hit != 'true'
         run: |
           mkdir -p ~/godot-cache && cd ~/godot-cache
-          curl -sSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_linux.x86_64.zip"
-          curl -sSL -o templates.tpz "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_export_templates.tpz"
+          curl -sSL -o godot.zip "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_linux.x86_64.zip"
+          curl -sSL -o templates.tpz "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_export_templates.tpz"
       - name: Configure Godot for Android export
         run: |
           cd ~/godot-cache && unzip -oq godot.zip && sudo cp "Godot_v${GODOT_VERSION}_linux.x86_64" /usr/local/bin/godot
-          mkdir -p ~/.local/share/godot/export_templates/4.3.stable && unzip -oq templates.tpz -d /tmp/tpl && cp -r /tmp/tpl/templates/* ~/.local/share/godot/export_templates/4.3.stable/
+          mkdir -p ~/.local/share/godot/export_templates/$GODOT_TEMPLATES_DIR && unzip -oq templates.tpz -d /tmp/tpl && cp -r /tmp/tpl/templates/* ~/.local/share/godot/export_templates/$GODOT_TEMPLATES_DIR/
           keytool -genkeypair -keystore ~/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
           mkdir -p ~/.config/godot
-          cat > ~/.config/godot/editor_settings-4.3.tres <<EOS
+          cat > ~/.config/godot/$GODOT_SETTINGS <<EOS
           [gd_resource type="EditorSettings" format=3]
           [resource]
           export/android/android_sdk_path = "$ANDROID_HOME"
@@ -155,10 +164,13 @@ jobs:
           export/android/debug_keystore_user = "androiddebugkey"
           export/android/debug_keystore_pass = "android"
           EOS
-          sed -i 's/^ *//' ~/.config/godot/editor_settings-4.3.tres
+          sed -i 's/^ *//' ~/.config/godot/$GODOT_SETTINGS
       - run: ./scripts/build-android.sh debug
-      - name: Verify APK signature
-        run: $(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -1)/apksigner verify --verbose apps/game/build/loopfactory-debug.apk
+      - name: Verify APK signature and 16 KB zip alignment (build-tools 35+)
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;35.0.0" >/dev/null
+          $ANDROID_HOME/build-tools/35.0.0/apksigner verify --verbose apps/game/build/loopfactory-debug.apk
+          $ANDROID_HOME/build-tools/35.0.0/zipalign -c -P 16 -v 4 apps/game/build/loopfactory-debug.apk | tail -1
       - uses: actions/upload-artifact@v4
         with:
           name: loopfactory-debug-apk
