@@ -91,13 +91,37 @@ static func _draw_card(ci: Control, d: Dictionary) -> void:
 	var bw := 420.0
 	ci.draw_style_box(LFStyle.box(LFStyle.SUCCESS.lerp(Color.WHITE, 0.75), 36, false), Rect2(cx - bw / 2, 880, bw, 84))
 	_text(ci, badge, Vector2(cx, 937), 38, LFStyle.TEXT)
-	# Package symbols row — branding without revealing anything about the solution.
-	for k in 4:
-		var c := Vector2(cx - 180 + k * 120, 1070)
-		ci.draw_style_box(LFStyle.box(LFStyle.PACKAGE[k], 18, false), Rect2(c - Vector2(40, 40), Vector2(80, 80)))
-		LFStyle.draw_symbol(ci, LFStyle.SYMBOLS[k], c, 16, Color.WHITE)
+	if bool(d.get("crew", false)):
+		_draw_crew(ci, d, cx)
+	else:
+		# Package symbols row — branding without revealing anything about the solution.
+		for k in 4:
+			var c := Vector2(cx - 180 + k * 120, 1070)
+			ci.draw_style_box(LFStyle.box(LFStyle.PACKAGE[k], 18, false), Rect2(c - Vector2(40, 40), Vector2(80, 80)))
+			LFStyle.draw_symbol(ci, LFStyle.SYMBOLS[k], c, 16, Color.WHITE)
 	var code := str(d.get("code", ""))
 	_text(ci, ("Code " + code) if code != "" else "Can you beat it?", Vector2(cx, H - 70), 44, Color.WHITE)
+
+
+## The crew lineup with the featured character celebrating in the middle, plus one short reaction
+## line. Only characters and a quip: no names, ids or anything about the solution.
+static func _draw_crew(ci: Control, d: Dictionary, cx: float) -> void:
+	var featured := clampi(int(d.get("featured", 0)), 0, 3)
+	var order: Array = []
+	for k in 4:
+		if k != featured:
+			order.append(k)
+	var slots := [Vector2(cx - 330, 1078), Vector2(cx - 180, 1078), Vector2(cx + 180, 1078)]
+	for k in 3:
+		LFCrewPainter.draw_character(ci, LFCrew.for_color(order[k]), slots[k], 88, LFCrewAnim.IDLE, 0.0, 0.0, {"motion": false, "expression": "happy"})
+	LFCrewPainter.draw_naps(ci, Vector2(cx + 330, 1068), 118, "happy", 0.0, {"motion": false})
+	LFCrewPainter.draw_character(ci, LFCrew.for_color(featured), Vector2(cx, 1062), 120, LFCrewAnim.CELEBRATING, 0.0, 0.0, {"motion": false, "starry": bool(d.get("starry", false))})
+	var line := str(d.get("reaction", ""))
+	if line != "":
+		var size := 30
+		while size > 20 and LFStyle.font(700).get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x > W - 200:
+			size -= 2
+		_text(ci, line, Vector2(cx, 1180), size, LFStyle.TEXT_MUTED, 700)
 
 
 ## Save the PNG where the player can find it. Returns the path written (desktop: Pictures folder).

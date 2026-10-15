@@ -11,6 +11,7 @@ const SCREENS := {
 	"settings": "res://scripts/ui/screens/settings.gd",
 	"replay": "res://scripts/ui/screens/replay.gd",
 	"challenge": "res://scripts/ui/screens/challenge.gd",
+	"crew": "res://scripts/ui/screens/crew.gd",
 }
 
 var current: LFScreen
@@ -43,6 +44,7 @@ func _ready() -> void:
 	_toast_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_toast_layer)
 	Game.achievements_unlocked.connect(_on_achievements)
+	Game.cosmetics_unlocked.connect(_on_cosmetics)
 	goto("splash", {}, false)
 	if Array(OS.get_cmdline_user_args()).any(func(a): return a.begins_with("--tour=")):
 		add_child(load("res://scripts/core/dev_tour.gd").new())
@@ -239,6 +241,22 @@ func confirm(title: String, body: String, ok_text: String, on_ok: Callable, dang
 	row.add_child(ok)
 	v.add_child(row)
 	overlay(card)
+
+
+## New crew looks: one short toast, no popup. Details wait in The Crew (a dot marks them).
+func _on_cosmetics(list: Array) -> void:
+	for d in list:
+		Analytics.track("cosmetic_unlocked", {"cosmetic_id": str(d["id"]), "character": str(d.get("character", ""))})
+	if not LFCrew.current()["collection"]:
+		return
+	var d: Dictionary = list[0]
+	var who := str(LFCrew.get_def(str(d.get("character", ""))).get("name", "")) if str(d.get("character", "")) != "" else "the crew"
+	var more := "" if list.size() == 1 else " (+%d more)" % (list.size() - 1)
+	# Let an achievement toast raised in the same frame finish first.
+	var delay := 3.0 if _toast_layer.get_child_count() > 0 else 0.4
+	get_tree().create_timer(delay).timeout.connect(func():
+		Sfx.play("unlock")
+		toast("New look for %s · %s%s" % [who, d["name"], more], LFStyle.PRIMARY, 2.6))
 
 
 func _on_achievements(list: Array) -> void:

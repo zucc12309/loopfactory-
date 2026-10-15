@@ -55,6 +55,11 @@ var _banner_kind := ""
 var _fail_color := -1
 var _win_res: Dictionary = {}
 var _date := ""
+var _banner_speaker := ""      # crew member shown in the banner icon ("" = none)
+var _last_fail_reason := ""
+var _poked := false
+var _moments: Array = []
+var _win_line: Dictionary = {}
 
 
 func setup(args: Dictionary) -> void:
@@ -111,6 +116,11 @@ func _build() -> void:
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bg)
+	if LFCrew.current()["scifi"]:
+		var space := LFSpaceBackdrop.new()
+		space.tint = pal["rail"]
+		space.set_anchors_preset(Control.PRESET_FULL_RECT)
+		add_child(space)
 	var sm: Vector2 = main.safe_margins()
 	var root := LFStyle.vbox(16)
 	var m := LFStyle.margin(root, 28, 24 + int(sm.x), 28, 28 + int(sm.y))
@@ -146,10 +156,12 @@ func _build() -> void:
 	board.reduced_motion = main.reduced_motion()
 	board.colorblind = bool(Game.settings().get("colorblind", false))
 	board.palette = pal
+	LFCrew.configure_board(board, Game.state.data, pal)
 	root.add_child(board)
 	board.set_level(level, Game.state.active()["rotations"])
 	board.rotate_requested.connect(_on_rotate)
 	board.locked_tapped.connect(_on_locked)
+	board.source_tapped.connect(_on_source)
 	board.playback_finished.connect(_on_finished)
 	board.package_delivered.connect(func(_c): Sfx.play("deliver", 1.0 + randf() * 0.1); Sfx.haptic_pattern("medium"))
 
@@ -186,7 +198,36 @@ func _build() -> void:
 	root.add_child(run_bar)
 
 	_update_coach()
+	if _coach.is_empty():
+		_crew_intro()
 	_refresh()
+	if board.crew_on:
+		_expose.call_deferred()
+
+
+func _expose() -> void:
+	if is_instance_valid(board):
+		LFCrew.expose("board", {"detail": ["classic", "compact", "full"][board.crew_detail()], "level_id": level["id"]})
+
+
+## Optional, non-blocking introductions in the banner: Dr. Rix presents a new mechanic, Captain
+## Naps a new world. The level's tip stays underneath, so nothing is lost.
+func _crew_intro() -> void:
+	if kind != "campaign" or not board.crew_on:
+		return
+	var mech := LFCrew.mechanic_intro(Game.state.campaign, campaign_index)
+	var line := {}
+	if mech != "":
+		line = LFCrew.say("NEW_MECHANIC", {"mechanic": mech})
+	else:
+		var world := LFCrew.world_intro(Game.state.campaign, campaign_index)
+		if world != "":
+			line = LFCrew.say("NEW_WORLD", {"world": world})
+	if line.is_empty():
+		return
+	_banner_speaker = str(line["character"])
+	var tip := str(level.get("tip", ""))
+	_set_banner("crew", "“%s”" % line["text"], tip if tip != "" else "Deliver every package to its matching dock.")
 
 
 func _subtitle() -> String:
@@ -255,8 +296,14 @@ func _make_banner() -> PanelContainer:
 func _draw_banner_icon() -> void:
 	var r := Rect2(Vector2.ZERO, banner_icon.size)
 	match _banner_kind:
+		"crew":
+			banner_icon.draw_circle(r.get_center(), 26, LFStyle.SECONDARY.lerp(Color.WHITE, 0.4))
+			LFCrewPainter.draw_character(banner_icon, LFCrew.get_def(_banner_speaker), r.get_center() + Vector2(0, 2), 50, LFCrewAnim.IDLE, 0.0, 0.0, {"motion": false, "expression": "happy"})
 		"fail":
-			if _fail_color >= 0:
+			if _fail_color >= 0 and board != null and board.crew_on:
+				# The package that failed, looking suitably confused.
+				LFCrewPainter.draw_character(banner_icon, LFCrew.for_color(_fail_color), r.get_center() + Vector2(0, 2), 64, LFCrewAnim.FAILED, 1.0, 0.0, {"motion": false, "expression": "confused"})
+			elif _fail_color >= 0:
 				var col: Color = LFStyle.PACKAGE[_fail_color]
 				banner_icon.draw_style_box(LFStyle.box(col, 12, false), r.grow(-4))
 				LFStyle.draw_symbol(banner_icon, LFStyle.SYMBOLS[_fail_color], r.get_center(), 9, Color.WHITE)
@@ -285,6 +332,8 @@ func _set_banner(k: String, title: String, text: String) -> void:
 			bgc = LFStyle.ACCENT.lerp(Color.WHITE, 0.75)
 		"ready":
 			bgc = LFStyle.SUCCESS.lerp(Color.WHITE, 0.78)
+		"crew":
+			bgc = LFStyle.SECONDARY.lerp(Color.WHITE, 0.78)
 	banner.add_theme_stylebox_override("panel", LFStyle.box(bgc, 18, k == ""))
 	banner_title.text = title
 	banner_title.visible = title != ""
@@ -346,7 +395,7 @@ func on_back() -> bool:
 
 func _after_edit() -> void:
 	board.clear_failure()
-	if _banner_kind == "fail" or _banner_kind == "hint":
+	if _banner_kind == "fail" or _banner_kind == "hint" or _banner_kind == "crew":
 		_show_tip()
 	if not _coach.is_empty():
 		_update_coach()
@@ -361,6 +410,19 @@ func _on_rotate(i: int, dir: int) -> void:
 	Sfx.play("rotate" if dir == 1 else "ccw", 0.97 + randf() * 0.06)
 	Sfx.haptic_pattern("tick")
 	_after_edit()
+
+
+## Tapping a source pokes the character waiting in it.
+func _on_source(i: int) -> void:
+	if not board.crew_on:
+		Sfx.play("locked")
+		return
+	var cidx := int(level["tiles"][i].get("c", 0))
+	Sfx.play("boop", [1.0, 1.25, 0.85, 0.75][cidx])
+	Sfx.haptic_pattern("light")
+	if not _poked:
+		_poked = true
+		Analytics.track("character_animation_played", {"character": str(LFCrew.for_color(cidx)["id"]), "animation": "selected", "surface": "board"})
 
 
 func _on_locked(_i: int) -> void:
@@ -382,6 +444,8 @@ func _undo() -> void:
 
 func _reset() -> void:
 	if Game.state.moves_count() == 0:
+		# Nothing to undo, but Reset should still clear the last failure's marks and reactions.
+		_after_edit()
 		return
 	Game.state.reset()
 	board.sync_rotations(Game.state.active()["rotations"])
@@ -476,6 +540,10 @@ func _on_finished(result: Dictionary) -> void:
 			Analytics.track("tutorial_complete", {"flow": str(LFFlags.get_variant("tutorial_flow"))})
 		run_bar.visible = false
 		_set_banner("ready", "Perfect!" if perfect else "Delivered!", "Tap the board to skip.")
+		_moments = LFCrewMoments.detect(result, level, int(res["moves"]))
+		board.crew_ctx["perfect"] = perfect
+		if board.crew_on:
+			Analytics.track("character_animation_played", {"character": "crew", "animation": "celebrating", "surface": "board", "moment": LFCrewMoments.headline(_moments)})
 		board.celebration_finished.connect(func(): _show_win(res), CONNECT_ONE_SHOT)
 		board.celebrate(float(LFFlags.get_variant("celebration_ms")) / 1000.0)
 	else:
@@ -489,7 +557,17 @@ func _on_finished(result: Dictionary) -> void:
 		var who := "A package"
 		if _fail_color >= 0:
 			who = "The %s package" % LFStyle.PACKAGE_NAMES[_fail_color]
-		_set_banner("fail", "%s %s" % [who, FAIL_TEXT.get(reason, "didn't make it.")], FAIL_TIP.get(reason, "Adjust the route and try again."))
+		var tip: String = FAIL_TIP.get(reason, "Adjust the route and try again.")
+		if board.crew_on:
+			if _fail_color >= 0:
+				who = LFCrew.for_color(_fail_color)["name"]
+			# The tip comes first; a repeat of the same failure may get a character quip instead.
+			if reason == _last_fail_reason:
+				var line := LFCrew.say("FAILED_ATTEMPT", {"character": LFCrew.body_of(LFCrew.for_color(maxi(_fail_color, 0)))})
+				if not line.is_empty():
+					tip = "%s: “%s” %s" % [line["speaker"], line["text"], tip]
+		_last_fail_reason = reason
+		_set_banner("fail", "%s %s" % [who, FAIL_TEXT.get(reason, "didn't make it.")], tip)
 		var keep_cell := board._fail_cell
 		var keep_path := board._fail_path
 		board.stop_playback()
@@ -520,6 +598,9 @@ func _show_win(res: Dictionary, first_show := true) -> void:
 	else:
 		note = "Par is %d — can you find it?" % res["par"]
 	v.add_child(LFStyle.label(note, 24, LFStyle.TEXT_MUTED, 400, HORIZONTAL_ALIGNMENT_CENTER))
+	var naps := _naps_reaction(res, first_show)
+	if naps != null:
+		v.add_child(naps)
 	if kind == "challenge" and first_show:
 		var cmp := LFStyle.label("Checking result…", 26, LFStyle.PRIMARY, 800, HORIZONTAL_ALIGNMENT_CENTER)
 		cmp.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -559,6 +640,38 @@ func _show_win(res: Dictionary, first_show := true) -> void:
 	row.add_child(home)
 	v.add_child(row)
 	main.overlay(card, false, func(): main.back())
+
+
+## Captain Naps reacts to what actually happened (first win, perfect, all-together arrival…). One
+## short line on the card: never a separate popup, never blocks "Next".
+func _naps_reaction(res: Dictionary, first_show: bool) -> Control:
+	if not board.crew_on:
+		return null
+	if first_show:
+		var ev := "SUCCESS"
+		var head := LFCrewMoments.headline(_moments)
+		if kind == "campaign" and res["first"] and int(Game.state.data["stats"]["campaign"]) == 1:
+			ev = "FIRST_SUCCESS"
+		elif head != "":
+			ev = LFCrewMoments.EVENT[head]
+		_win_line = LFCrew.say(ev)
+		if _win_line.is_empty() and ev != "SUCCESS":
+			_win_line = LFCrew.say("SUCCESS")
+	if _win_line.is_empty():
+		return null
+	var row := LFStyle.hbox(12)
+	var p := LFCrewPortrait.make("naps", 104, board.crew_motion)
+	p.expression = str(_win_line.get("anim", "happy"))
+	p.cosmetic = LFCrew.art_for(Game.state.data, "naps")
+	row.add_child(p)
+	var bubble := LFStyle.card(LFStyle.SECONDARY.lerp(Color.WHITE, 0.8), 18)
+	bubble.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bubble.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var l := LFStyle.label("“%s”" % _win_line["text"], 23, LFStyle.TEXT, 700)
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	bubble.add_child(l)
+	row.add_child(bubble)
+	return row
 
 
 func _stars_view(n: int, animate := true) -> Control:
@@ -622,8 +735,29 @@ func _share(res: Dictionary) -> void:
 		"par": int(res["par"]), "stars": int(res["stars"]), "attempts": int(res.get("runs", 1)), "levelName": str(level["name"]),
 		"code": str(challenge.get("code", "")),
 	}
+	if board.crew_on:
+		var featured := _featured_color()
+		var def := LFCrew.for_color(featured)
+		card_data["crew"] = true
+		card_data["featured"] = featured
+		card_data["starry"] = bool(board.crew_ctx.get("starry", false))
+		card_data["reaction"] = ("%s: “%s”" % [_win_line["speaker"], _win_line["text"]]) if not _win_line.is_empty() else ("%s: “%s”" % [def["name"], def.get("line", "")])
 	LFShareCard.present(main, card_data, func(): _show_win(res, false))
 	Analytics.track("share_clicked", {"kind": kind, "surface": "result_card"})
+
+
+## Featured character for the share card: the colour that made the last delivery in this run
+## (a real gameplay fact), else the first source colour.
+func _featured_color() -> int:
+	var frames: Array = board._frames
+	for fi in range(frames.size() - 1, -1, -1):
+		for p in frames[fi]["packages"]:
+			if p["state"] == "delivered":
+				return int(p["color"])
+	for t in level["tiles"]:
+		if t["t"] == "source":
+			return int(t.get("c", 0))
+	return 0
 
 
 func _challenge(res: Dictionary) -> void:

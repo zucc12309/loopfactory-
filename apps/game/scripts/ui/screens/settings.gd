@@ -24,6 +24,12 @@ func setup(_args: Dictionary) -> void:
 	v.add_child(_section("Accessibility"))
 	v.add_child(_toggle("Reduce motion", "reducedMotion"))
 	v.add_child(_toggle("Larger shape symbols", "colorblind"))
+	var data: Dictionary = Game.state.data
+	if LFFlags.flag(data, "characters_enabled") and str(LFFlags.resolve(data, "presentation")) != "minimal":
+		v.add_child(_section("The Crew"))
+		v.add_child(_toggle("Character packages", "crewCharacters"))
+		v.add_child(_toggle("Character animations", "crewAnimations"))
+		v.add_child(_toggle("Captain Naps chatter", "mascotDialogue"))
 	var tip := LFStyle.label("Tip: long-press a belt to rotate it counter-clockwise.", 22, LFStyle.TEXT_MUTED, 400)
 	tip.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(tip)

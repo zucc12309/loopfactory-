@@ -119,6 +119,51 @@ func _run() -> void:
 	main.goto("play", {"kind": "campaign", "index": 1})
 	await _wait(0.8)
 	await _shot("15_coach_connect")
+	# --- The Interdimensional Delivery Crew
+	main.goto("play", {"kind": "campaign", "index": Game.state.campaign_index["c07"]})
+	await _wait(0.8)
+	await _shot("16_rix_intro")
+	Game.state.data["remoteConfig"] = {"experiments": {"presentation": {"force": "full"}}}
+	main.goto("play", {"kind": "campaign", "index": Game.state.campaign_index["x31"]})
+	await _wait(0.8)
+	await _shot("17_scifi_variant")
+	Game.state.data["remoteConfig"] = {}
+	# Simulate a player who has finished the first world and a bit more, to show unlocked looks.
+	for i in 12:
+		var lvl: Dictionary = Game.state.campaign[i]
+		if not Game.state.data["progress"].has(lvl["id"]):
+			Game.state.data["progress"][lvl["id"]] = {"completed": true, "best": lvl["par"], "par": lvl["par"], "stars": 3, "completedAt": 1, "kind": "campaign"}
+	Game.state.data["stats"]["perfect"] = 12
+	LFCrew.evaluate_unlocks(Game.state.data, Game.state.campaign, LFGameState.now_ms())
+	LFCrew.equip(Game.state.data, "bloop", "bloop_crown")
+	LFCrew.equip(Game.state.data, "glitch", "glitch_shades")
+	LFCrew.equip(Game.state.data, "naps", "naps_detective")
+	main.home()
+	await _wait(0.8)
+	await _shot("18_home_crew")
+	main.goto("crew")
+	await _wait(0.8)
+	await _shot("19_crew")
+	main.goto("crew", {"id": "bloop"})
+	await _wait(1.0)
+	await _shot("20_crew_bloop")
+	main.goto("play", {"kind": "campaign", "index": Game.state.campaign_index["c20"]})
+	await _wait(0.6)
+	var p = main.current
+	for mv in p.level["solution"]["moves"]:
+		p._on_rotate(int(mv[0]), int(mv[1]))
+	await _wait(0.4)
+	p._run()
+	await _wait(1.5)
+	await _shot("21_crew_running")
+	while not p.board.celebrating and not main.has_overlay():
+		await get_tree().process_frame
+	await _wait(0.35)
+	await _shot("22_crew_celebration")
+	await _wait(1.6)
+	await _shot("23_crew_win")
+	var img2: Image = await LFShareCard.render(main, {"kind": "daily", "date": "2026-10-15", "difficulty": "medium", "rotations": 8, "par": 8, "stars": 3, "attempts": 2, "crew": true, "featured": 2, "reaction": "Glitch: “That was probably supposed to happen.”"})
+	img2.save_png(out.path_join("24_crew_share_card.png"))
 	print("[tour] done")
 	get_tree().quit()
 

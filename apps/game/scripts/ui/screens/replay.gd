@@ -48,6 +48,7 @@ func setup(args: Dictionary) -> void:
 	board.reduced_motion = main.reduced_motion()
 	board.colorblind = bool(Game.settings().get("colorblind", false))
 	board.palette = LFWorlds.palette(LFWorlds.index_for(Game.state.campaign, Game.state.campaign_index[level["id"]])) if Game.state.campaign_index.has(level["id"]) else LFWorlds.palette_for_level(level)
+	LFCrew.configure_board(board, Game.state.data, board.palette)
 	root.add_child(board)
 	board.gui_input.connect(func(e): if _clean and e is InputEventMouseButton and e.pressed: _set_clean(false))
 	var row := LFStyle.hbox(14)
@@ -104,6 +105,7 @@ func _play() -> void:
 	if res["success"]:
 		Sfx.play("perfect" if moves.size() <= int(level["par"]) else "win")
 		_caption.text = "Solved in %d · par %d" % [moves.size(), level["par"]]
+		board.crew_ctx["perfect"] = moves.size() <= int(level["par"])
 		board.celebrate(1.0)
 	else:
 		_caption.text = "This replay no longer solves the puzzle (content changed)."

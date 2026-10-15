@@ -1,10 +1,20 @@
 extends LFScreen
 ## Home: one big Continue action, daily + endless cards, level grid, profile and settings.
+## With the crew enabled, Captain Naps idles where the logo was: optional one-line bubble, tap the mascot
+## for another line, never in the way of Continue.
 
 var _status: Label
+var _naps: LFCrewPortrait
+var _bubble: PanelContainer
+var _bubble_text: Label
+var _line: Dictionary = {}
 
 
 func setup(_args: Dictionary) -> void:
+	if LFCrew.current()["scifi"]:
+		var space := LFSpaceBackdrop.new()
+		space.set_anchors_preset(Control.PRESET_FULL_RECT)
+		add_child(space)
 	var sm: Vector2 = main.safe_margins()
 	var root := LFStyle.vbox(28)
 	var m := LFStyle.margin(root, 40, 40 + int(sm.x), 40, 40 + int(sm.y))
@@ -24,11 +34,15 @@ func setup(_args: Dictionary) -> void:
 	top.add_child(gear)
 	root.add_child(top)
 
+	var pres := LFCrew.current()
 	var logo_wrap := CenterContainer.new()
-	var logo := LFLogo.new()
-	logo.custom_minimum_size = Vector2(300, 300)
-	logo.animate = not main.reduced_motion()
-	logo_wrap.add_child(logo)
+	if pres["characters"]:
+		logo_wrap.add_child(_mascot(pres))
+	else:
+		var logo := LFLogo.new()
+		logo.custom_minimum_size = Vector2(300, 300)
+		logo.animate = not main.reduced_motion()
+		logo_wrap.add_child(logo)
 	logo_wrap.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	root.add_child(logo_wrap)
 
@@ -84,12 +98,19 @@ func setup(_args: Dictionary) -> void:
 	root.add_child(row)
 
 	var bottom := LFStyle.hbox(16)
-	var levels := LFStyle.button("All levels", "SecondaryButton", 96)
+	var levels := LFStyle.button("Worlds" if pres["collection"] else "All levels", "SecondaryButton", 96)
 	levels.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	levels.pressed.connect(func(): main.goto("levels"))
 	bottom.add_child(levels)
+	if pres["collection"]:
+		var unseen := LFCrew.unseen_count(st.data)
+		# Accent colour marks new looks waiting in the collection.
+		var crew := LFStyle.button("The Crew", "AccentButton" if unseen > 0 else "SecondaryButton", 96)
+		crew.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		crew.pressed.connect(func(): main.goto("crew"))
+		bottom.add_child(crew)
 	if LFFlags.get_variant("daily_entry") != "banner":
-		var code := LFStyle.button("Friend code", "SecondaryButton", 96)
+		var code := LFStyle.button("Friend code" if not pres["collection"] else "Friends", "SecondaryButton", 96)
 		code.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		code.pressed.connect(func(): main.goto("challenge"))
 		bottom.add_child(code)
@@ -100,6 +121,87 @@ func setup(_args: Dictionary) -> void:
 	_update_status()
 	Net.online_changed.connect(func(_o): _update_status())
 	Net.synced.connect(_update_status)
+
+
+func _mascot(pres: Dictionary) -> Control:
+	var row := LFStyle.hbox(8)
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	_naps = LFCrewPortrait.make("naps", 230, pres["animations"])
+	_naps.cosmetic = LFCrew.art_for(Game.state.data, "naps")
+	_naps.mouse_filter = Control.MOUSE_FILTER_STOP
+	_naps.tapped.connect(_poke_naps)
+	row.add_child(_naps)
+	_bubble = LFStyle.card(LFStyle.SURFACE, 22)
+	_bubble.custom_minimum_size = Vector2(300, 0)
+	_bubble.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var bh := LFStyle.hbox(6)
+	_bubble.add_child(bh)
+	_bubble_text = LFStyle.label("", 24, LFStyle.TEXT, 700)
+	_bubble_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_bubble_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bh.add_child(_bubble_text)
+	var close := Button.new()
+	close.text = "×"
+	close.flat = true
+	close.focus_mode = Control.FOCUS_NONE
+	close.custom_minimum_size = Vector2(44, 44)
+	close.add_theme_color_override("font_color", LFStyle.TEXT_MUTED)
+	close.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	close.pressed.connect(_dismiss_bubble)
+	bh.add_child(close)
+	row.add_child(_bubble)
+	_show_line(_home_line())
+	LFCrew.expose("home", {"character": "naps"})
+	return row
+
+
+## First launch, a world about to open, otherwise an occasional progress remark. Cooldowns stop
+## lines repeating; on most visits Captain Naps is simply asleep.
+func _home_line() -> Dictionary:
+	var st: LFGameState = Game.state
+	var vars := {"done": st.completed_count(), "total": st.campaign.size(), "stars": LFCrew.total_stars(st.data, st.campaign)}
+	var line := LFCrew.say("FIRST_LAUNCH", {}, vars) if st.completed_count() == 0 else {}
+	if line.is_empty() and st.active() == null:
+		var world := LFCrew.world_intro(st.campaign, st.next_campaign_index())
+		if world != "":
+			line = LFCrew.say("NEW_WORLD", {"world": world}, vars)
+	if line.is_empty() and st.completed_count() > 0:
+		line = LFCrew.say("HOME_IDLE", {}, vars)
+	return line
+
+
+func _show_line(line: Dictionary) -> void:
+	_line = line
+	_bubble.visible = not line.is_empty()
+	if line.is_empty():
+		_naps.expression = "sleeping"
+	else:
+		_bubble_text.text = str(line["text"])
+		_naps.expression = str(line.get("anim", "neutral"))
+	_naps.queue_redraw()
+
+
+func _poke_naps() -> void:
+	var st: LFGameState = Game.state
+	var line := LFCrew.say("HOME_TAP", {}, {"done": st.completed_count()}, true)
+	Sfx.play("mrrp", 0.95 + randf() * 0.1)
+	Sfx.haptic_pattern("light")
+	Analytics.track("character_animation_played", {"character": "naps", "animation": "tap", "surface": "home"})
+	if line.is_empty():
+		_naps.expression = "surprised"
+		_naps.queue_redraw()
+		return
+	_show_line(line)
+
+
+func _dismiss_bubble() -> void:
+	Sfx.play("ui")
+	if not _line.is_empty():
+		Analytics.track("character_dialogue_dismissed", {"character": str(_line.get("character", "")), "line_id": str(_line.get("id", "")), "surface": "home"})
+	_line = {}
+	_bubble.visible = false
+	_naps.expression = "sleeping"
+	_naps.queue_redraw()
 
 
 func on_shown() -> void:

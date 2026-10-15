@@ -41,6 +41,7 @@ func _load() -> void:
 
 func _render_official(entry: Dictionary) -> void:
 	var lvl: Dictionary = entry["level"]
+	_presenter(Game.state.data["daily"]["results"].has(_date))
 	var card := LFStyle.card()
 	var v := LFStyle.vbox(12)
 	card.add_child(LFStyle.margin(v, 8, 8, 8, 8))
@@ -93,7 +94,30 @@ func _row(rank: int, name: String, rotations: int, me: bool) -> Control:
 	return card
 
 
+## Captain Naps presents today's puzzle (optional line; the puzzle and ranking are unchanged).
+func _presenter(solved: bool) -> void:
+	if not LFCrew.current()["characters"]:
+		return
+	var row := LFStyle.hbox(12)
+	var p := LFCrewPortrait.make("naps", 120, LFCrew.current()["animations"])
+	p.cosmetic = LFCrew.art_for(Game.state.data, "naps")
+	row.add_child(p)
+	var line := LFCrew.say("DAILY_CHALLENGE", {"solved": solved})
+	if not line.is_empty():
+		p.expression = str(line.get("anim", "neutral"))
+		var bubble := LFStyle.card(LFStyle.SURFACE, 20)
+		bubble.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		bubble.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		var l := LFStyle.label("“%s”" % line["text"], 24, LFStyle.TEXT, 700)
+		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		bubble.add_child(l)
+		row.add_child(bubble)
+	_content.add_child(row)
+	LFCrew.expose("daily", {"character": "naps"})
+
+
 func _render_offline() -> void:
+	_presenter(Game.state.data["daily"]["results"].has(_date))
 	var card := LFStyle.card(LFStyle.ACCENT.lightened(0.6))
 	var v := LFStyle.vbox(12)
 	card.add_child(LFStyle.margin(v, 8, 8, 8, 8))
