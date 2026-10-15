@@ -1,0 +1,6257 @@
+{
+ "contentVersion": 1,
+ "levels": [
+  {
+   "id": "c01",
+   "name": "First Tap",
+   "version": 1,
+   "difficulty": "beginner",
+   "difficultyScore": 35,
+   "width": 4,
+   "height": 3,
+   "tiles": [
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "source",
+     "r": 1,
+     "c": 0
+    },
+    {
+     "t": "straight",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 0
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    }
+   ],
+   "generator": null,
+   "par": 1,
+   "solution": {
+    "rotations": [
+     0,
+     0,
+     0,
+     0,
+     1,
+     1,
+     1,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "moves": [
+     [
+      5,
+      1
+     ]
+    ]
+   },
+   "solutionCount": 1,
+   "solutionCountCapped": false,
+   "tip": "Tap a belt to turn it. Press Run when the path is ready."
+  },
+  {
+   "id": "c02",
+   "name": "Bend",
+   "version": 1,
+   "difficulty": "beginner",
+   "difficultyScore": 48,
+   "width": 3,
+   "height": 3,
+   "tiles": [
+    {
+     "t": "source",
+     "r": 2,
+     "c": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 0
+    }
+   ],
+   "generator": null,
+   "par": 2,
+   "solution": {
+    "rotations": [
+     2,
+     0,
+     0,
+     0,
+     1,
+     2,
+     0,
+     0,
+     0
+    ],
+    "moves": [
+     [
+      3,
+      1
+     ],
+     [
+      5,
+      1
+     ]
+    ]
+   },
+   "solutionCount": 1,
+   "solutionCountCapped": false,
+   "tip": "Corners turn packages. Aim them toward the matching dock."
+  },
+  {
+   "id": "c03",
+   "name": "Detour",
+   "version": 1,
+   "difficulty": "beginner",
+   "difficultyScore": 77,
+   "width": 4,
+   "height": 4,
+   "tiles": [
+    {
+     "t": "source",
+     "r": 1,
+     "c": 0
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 0
+    },
+    {
+     "t": "straight",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    }
+   ],
+   "generator": null,
+   "par": 4,
+   "solution": {
+    "rotations": [
+     1,
+     1,
+     2,
+     0,
+     0,
+     0,
+     2,
+     0,
+     0,
+     1,
+     3,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "moves": [
+     [
+      2,
+      1
+     ],
+     [
+      2,
+      1
+     ],
+     [
+      6,
+      1
+     ],
+     [
+      9,
+      1
+     ]
+    ]
+   },
+   "solutionCount": 1,
+   "solutionCountCapped": false,
+   "tip": "Not every belt is part of the route."
+  },
+  {
+   "id": "c04",
+   "name": "Pinned",
+   "version": 1,
+   "difficulty": "beginner",
+   "difficultyScore": 74,
+   "width": 4,
+   "height": 4,
+   "tiles": [
+    {
+     "t": "source",
+     "r": 2,
+     "c": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "straight",
+     "r": 1,
+     "l": true
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "straight",
+     "r": 0,
+     "l": true
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 0
+    }
+   ],
+   "generator": null,
+   "par": 4,
+   "solution": {
+    "rotations": [
+     2,
+     0,
+     0,
+     0,
+     0,
+     1,
+     2,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "moves": [
+     [
+      4,
+      1
+     ],
+     [
+      4,
+      1
+     ],
+     [
+      6,
+      1
+     ],
+     [
+      14,
+      1
+     ]
+    ]
+   },
+   "solutionCount": 1,
+   "solutionCountCapped": false,
+   "tip": "Belts with a pin are locked in place. Build around them."
+  },
+  {
+   "id": "c05",
+   "name": "Convoy",
+   "version": 1,
+   "difficulty": "easy",
+   "difficultyScore": 105,
+   "width": 4,
+   "height": 4,
+   "tiles": [
+    {
+     "t": "source",
+     "r": 1,
+     "c": 0,
+     "n": 3
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "straight",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 0
+    }
+   ],
+   "generator": null,
+   "par": 6,
+   "solution": {
+    "rotations": [
+     1,
+     2,
+     0,
+     0,
+     0,
+     0,
+     1,
+     2,
+     0,
+     0,
+     0,
+     2,
+     0,
+     0,
+     2,
+     0
+    ],
+    "moves": [
+     [
+      1,
+      1
+     ],
+     [
+      5,
+      1
+     ],
+     [
+      6,
+      1
+     ],
+     [
+      7,
+      1
+     ],
+     [
+      7,
+      1
+     ],
+     [
+      11,
+      1
+     ]
+    ]
+   },
+   "solutionCount": 1,
+   "solutionCountCapped": false,
+   "tip": "Some sources send several packages. Every one must arrive."
+  },
+  {
+   "id": "c06",
+   "name": "Two Colors",
+   "version": 1,
+   "difficulty": "easy",
+   "difficultyScore": 142,
+   "width": 4,
+   "height": 4,
+   "tiles": [
+    {
+     "t": "source",
+     "r": 2,
+     "c": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "source",
+     "r": 2,
+     "c": 1
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 0
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 1
+    },
+    {
+     "t": "empty",
+     "r": 0
+    }
+   ],
+   "generator": null,
+   "par": 8,
+   "solution": {
+    "rotations": [
+     2,
+     0,
+     0,
+     2,
+     2,
+     0,
+     2,
+     2,
+     0,
+     2,
+     1,
+     3,
+     0,
+     0,
+     0,
+     0
+    ],
+    "moves": [
+     [
+      4,
+      1
+     ],
+     [
+      7,
+      1
+     ],
+     [
+      8,
+      1
+     ],
+     [
+      8,
+      1
+     ],
+     [
+      9,
+      1
+     ],
+     [
+      10,
+      1
+     ],
+     [
+      11,
+      1
+     ],
+     [
+      11,
+      1
+     ]
+    ]
+   },
+   "solutionCount": 1,
+   "solutionCountCapped": false,
+   "tip": "Packages only accept a dock of their own color."
+  },
+  {
+   "id": "c07",
+   "name": "Crossroads",
+   "version": 1,
+   "difficulty": "easy",
+   "difficultyScore": 81,
+   "width": 4,
+   "height": 4,
+   "tiles": [
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "source",
+     "r": 2,
+     "c": 0
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "source",
+     "r": 1,
+     "c": 1
+    },
+    {
+     "t": "cross",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 0
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 1
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 0
+    }
+   ],
+   "generator": null,
+   "par": 2,
+   "solution": {
+    "rotations": [
+     1,
+     2,
+     0,
+     0,
+     1,
+     0,
+     1,
+     0,
+     0,
+     2,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "moves": [
+     [
+      6,
+      1
+     ],
+     [
+      9,
+      1
+     ]
+    ]
+   },
+   "solutionCount": 1,
+   "solutionCountCapped": false,
+   "tip": "Crossings let routes pass through each other."
+  },
+  {
+   "id": "c08",
+   "name": "Junction",
+   "version": 1,
+   "difficulty": "easy",
+   "difficultyScore": 72,
+   "width": 3,
+   "height": 3,
+   "tiles": [
+    {
+     "t": "source",
+     "r": 1,
+     "c": 0
+    },
+    {
+     "t": "tee",
+     "r": 0
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 0
+    }
+   ],
+   "generator": null,
+   "par": 4,
+   "solution": {
+    "rotations": [
+     1,
+     2,
+     0,
+     0,
+     2,
+     0,
+     0,
+     0,
+     0
+    ],
+    "moves": [
+     [
+      1,
+      1
+     ],
+     [
+      1,
+      1
+     ],
+     [
+      4,
+      1
+     ],
+     [
+      7,
+      -1
+     ]
+    ]
+   },
+   "solutionCount": 1,
+   "solutionCountCapped": false,
+   "tip": "Junctions send packages straight when they can — otherwise to the right."
+  },
+  {
+   "id": "c09",
+   "name": "Counter-turn",
+   "version": 1,
+   "difficulty": "easy",
+   "difficultyScore": 58,
+   "width": 3,
+   "height": 3,
+   "tiles": [
+    {
+     "t": "source",
+     "r": 1,
+     "c": 0
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 0
+    }
+   ],
+   "generator": null,
+   "par": 3,
+   "solution": {
+    "rotations": [
+     1,
+     2,
+     0,
+     0,
+     0,
+     2,
+     0,
+     0,
+     0
+    ],
+    "moves": [
+     [
+      1,
+      -1
+     ],
+     [
+      4,
+      -1
+     ],
+     [
+      5,
+      -1
+     ]
+    ]
+   },
+   "solutionCount": 1,
+   "solutionCountCapped": false,
+   "tip": "Long-press a belt to turn it the other way. It still counts as one move."
+  },
+  {
+   "id": "c10",
+   "name": "Warm Up",
+   "version": 1,
+   "difficulty": "beginner",
+   "difficultyScore": 58,
+   "width": 4,
+   "height": 4,
+   "tiles": [
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 2
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "source",
+     "r": 0,
+     "c": 0
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    }
+   ],
+   "generator": {
+    "version": "gen-1",
+    "seed": 1008,
+    "tier": "beginner"
+   },
+   "par": 3,
+   "solution": {
+    "rotations": [
+     0,
+     0,
+     0,
+     0,
+     1,
+     3,
+     0,
+     0,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "moves": [
+     [
+      4,
+      1
+     ],
+     [
+      5,
+      1
+     ],
+     [
+      5,
+      1
+     ]
+    ]
+   },
+   "solutionCount": 1,
+   "solutionCountCapped": false
+  },
+  {
+   "id": "c11",
+   "name": "Side Step",
+   "version": 1,
+   "difficulty": "beginner",
+   "difficultyScore": 64,
+   "width": 4,
+   "height": 4,
+   "tiles": [
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "source",
+     "r": 1,
+     "c": 0
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 0
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "empty",
+     "r": 0
+    }
+   ],
+   "generator": {
+    "version": "gen-1",
+    "seed": 1023,
+    "tier": "beginner"
+   },
+   "par": 3,
+   "solution": {
+    "rotations": [
+     0,
+     1,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     3,
+     0,
+     0,
+     3,
+     0
+    ],
+    "moves": [
+     [
+      2,
+      1
+     ],
+     [
+      10,
+      1
+     ],
+     [
+      10,
+      1
+     ]
+    ]
+   },
+   "solutionCount": 1,
+   "solutionCountCapped": false
+  },
+  {
+   "id": "c12",
+   "name": "Long Way Round",
+   "version": 1,
+   "difficulty": "beginner",
+   "difficultyScore": 80,
+   "width": 4,
+   "height": 4,
+   "tiles": [
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "source",
+     "r": 2,
+     "c": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 0
+    },
+    {
+     "t": "straight",
+     "r": 3
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "straight",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "empty",
+     "r": 0
+    }
+   ],
+   "generator": {
+    "version": "gen-1",
+    "seed": 1013,
+    "tier": "beginner"
+   },
+   "par": 4,
+   "solution": {
+    "rotations": [
+     0,
+     2,
+     0,
+     0,
+     0,
+     0,
+     2,
+     0,
+     1,
+     0,
+     0,
+     0,
+     0,
+     3,
+     3,
+     0
+    ],
+    "moves": [
+     [
+      8,
+      1
+     ],
+     [
+      8,
+      1
+     ],
+     [
+      10,
+      1
+     ],
+     [
+      12,
+      1
+     ]
+    ]
+   },
+   "solutionCount": 1,
+   "solutionCountCapped": false
+  },
+  {
+   "id": "c13",
+   "name": "Switchback",
+   "version": 1,
+   "difficulty": "beginner",
+   "difficultyScore": 90,
+   "width": 4,
+   "height": 4,
+   "tiles": [
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "straight",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "source",
+     "r": 0,
+     "c": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 1
+    }
+   ],
+   "generator": {
+    "version": "gen-1",
+    "seed": 1001,
+    "tier": "beginner"
+   },
+   "par": 5,
+   "solution": {
+    "rotations": [
+     1,
+     1,
+     3,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1
+    ],
+    "moves": [
+     [
+      0,
+      1
+     ],
+     [
+      0,
+      1
+     ],
+     [
+      2,
+      1
+     ],
+     [
+      3,
+      -1
+     ],
+     [
+      7,
+      1
+     ]
+    ]
+   },
+   "solutionCount": 1,
+   "solutionCountCapped": false
+  },
+  {
+   "id": "c14",
+   "name": "Loading Bay",
+   "version": 1,
+   "difficulty": "easy",
+   "difficultyScore": 95,
+   "width": 5,
+   "height": 5,
+   "tiles": [
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 1,
+     "l": true
+    },
+    {
+     "t": "corner",
+     "r": 3,
+     "l": true
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "source",
+     "r": 3,
+     "c": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 2
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 2
+    }
+   ],
+   "generator": {
+    "version": "gen-1",
+    "seed": 1009,
+    "tier": "easy"
+   },
+   "par": 4,
+   "solution": {
+    "rotations": [
+     2,
+     1,
+     2,
+     3,
+     0,
+     1,
+     3,
+     0,
+     0,
+     0,
+     0,
+     1,
+     3,
+     0,
+     0,
+     0,
+     3,
+     2,
+     0,
+     0,
+     2,
+     0,
+     0,
+     0,
+     2
+    ],
+    "moves": [
+     [
+      7,
+      1
+     ],
+     [
+      7,
+      1
+     ],
+     [
+      15,
+      1
+     ],
+     [
+      15,
+      1
+     ]
+    ]
+   },
+   "solutionCount": 1,
+   "solutionCountCapped": false
+  },
+  {
+   "id": "c15",
+   "name": "Zig Zag",
+   "version": 1,
+   "difficulty": "easy",
+   "difficultyScore": 102,
+   "width": 5,
+   "height": 5,
+   "tiles": [
+    {
+     "t": "straight",
+     "r": 3
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 0
+    },
+    {
+     "t": "source",
+     "r": 0,
+     "c": 0
+    },
+    {
+     "t": "straight",
+     "r": 2
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 1
+    }
+   ],
+   "generator": {
+    "version": "gen-1",
+    "seed": 1017,
+    "tier": "easy"
+   },
+   "par": 5,
+   "solution": {
+    "rotations": [
+     3,
+     0,
+     1,
+     0,
+     2,
+     0,
+     0,
+     0,
+     0,
+     2,
+     0,
+     0,
+     0,
+     1,
+     2,
+     0,
+     0,
+     0,
+     0,
+     2,
+     0,
+     0,
+     0,
+     1,
+     3
+    ],
+    "moves": [
+     [
+      13,
+      1
+     ],
+     [
+      13,
+      1
+     ],
+     [
+      14,
+      -1
+     ],
+     [
+      24,
+      1
+     ],
+     [
+      24,
+      1
+     ]
+    ]
+   },
+   "solutionCount": 1,
+   "solutionCountCapped": false
+  },
+  {
+   "id": "c16",
+   "name": "Night Shift",
+   "version": 1,
+   "difficulty": "easy",
+   "difficultyScore": 127,
+   "width": 5,
+   "height": 5,
+   "tiles": [
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "straight",
+     "r": 3
+    },
+    {
+     "t": "source",
+     "r": 0,
+     "c": 0
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 0,
+     "l": true
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 0
+    },
+    {
+     "t": "straight",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 2
+    }
+   ],
+   "generator": {
+    "version": "gen-1",
+    "seed": 1006,
+    "tier": "easy"
+   },
+   "par": 6,
+   "solution": {
+    "rotations": [
+     3,
+     1,
+     1,
+     2,
+     0,
+     0,
+     0,
+     0,
+     1,
+     2,
+     2,
+     0,
+     3,
+     0,
+     0,
+     2,
+     0,
+     0,
+     0,
+     2,
+     0,
+     1,
+     0,
+     3,
+     3
+    ],
+    "moves": [
+     [
+      8,
+      1
+     ],
+     [
+      8,
+      1
+     ],
+     [
+      9,
+      1
+     ],
+     [
+      9,
+      1
+     ],
+     [
+      13,
+      1
+     ],
+     [
+      24,
+      1
+     ]
+    ]
+   },
+   "solutionCount": 1,
+   "solutionCountCapped": false
+  },
+  {
+   "id": "c17",
+   "name": "Backlog",
+   "version": 1,
+   "difficulty": "easy",
+   "difficultyScore": 121,
+   "width": 5,
+   "height": 5,
+   "tiles": [
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "source",
+     "r": 0,
+     "c": 0
+    },
+    {
+     "t": "straight",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    }
+   ],
+   "generator": {
+    "version": "gen-1",
+    "seed": 1018,
+    "tier": "easy"
+   },
+   "par": 6,
+   "solution": {
+    "rotations": [
+     1,
+     0,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     2,
+     1,
+     0,
+     0,
+     0,
+     0,
+     3,
+     0,
+     0,
+     0,
+     3,
+     1,
+     0
+    ],
+    "moves": [
+     [
+      12,
+      -1
+     ],
+     [
+      13,
+      1
+     ],
+     [
+      13,
+      1
+     ],
+     [
+      16,
+      1
+     ],
+     [
+      17,
+      1
+     ],
+     [
+      17,
+      1
+     ]
+    ]
+   },
+   "solutionCount": 1,
+   "solutionCountCapped": false
+  },
+  {
+   "id": "c18",
+   "name": "Assembly",
+   "version": 1,
+   "difficulty": "easy",
+   "difficultyScore": 144,
+   "width": 5,
+   "height": 5,
+   "tiles": [
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 0
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "source",
+     "r": 0,
+     "c": 0,
+     "n": 2
+    },
+    {
+     "t": "straight",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 1
+    }
+   ],
+   "generator": {
+    "version": "gen-1",
+    "seed": 1000,
+    "tier": "easy"
+   },
+   "par": 7,
+   "solution": {
+    "rotations": [
+     0,
+     0,
+     2,
+     0,
+     0,
+     2,
+     0,
+     0,
+     3,
+     0,
+     1,
+     1,
+     2,
+     0,
+     0,
+     1,
+     0,
+     2,
+     1,
+     3,
+     2,
+     3,
+     0,
+     3,
+     1
+    ],
+    "moves": [
+     [
+      12,
+      -1
+     ],
+     [
+      18,
+      -1
+     ],
+     [
+      19,
+      1
+     ],
+     [
+      22,
+      1
+     ],
+     [
+      22,
+      1
+     ],
+     [
+      23,
+      1
+     ],
+     [
+      23,
+      1
+     ]
+    ]
+   },
+   "solutionCount": 1,
+   "solutionCountCapped": false
+  },
+  {
+   "id": "c19",
+   "name": "Serpentine",
+   "version": 1,
+   "difficulty": "easy",
+   "difficultyScore": 167,
+   "width": 5,
+   "height": 5,
+   "tiles": [
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 2
+    },
+    {
+     "t": "straight",
+     "r": 3
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 0
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "source",
+     "r": 2,
+     "c": 0,
+     "n": 2
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "straight",
+     "r": 3
+    },
+    {
+     "t": "straight",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 1
+    }
+   ],
+   "generator": {
+    "version": "gen-1",
+    "seed": 1019,
+    "tier": "easy"
+   },
+   "par": 9,
+   "solution": {
+    "rotations": [
+     0,
+     0,
+     0,
+     1,
+     2,
+     1,
+     0,
+     2,
+     0,
+     0,
+     3,
+     1,
+     2,
+     2,
+     3,
+     0,
+     2,
+     0,
+     0,
+     0,
+     0,
+     2,
+     0,
+     3,
+     1
+    ],
+    "moves": [
+     [
+      3,
+      1
+     ],
+     [
+      3,
+      1
+     ],
+     [
+      4,
+      -1
+     ],
+     [
+      8,
+      1
+     ],
+     [
+      13,
+      1
+     ],
+     [
+      17,
+      1
+     ],
+     [
+      22,
+      -1
+     ],
+     [
+      23,
+      1
+     ],
+     [
+      23,
+      1
+     ]
+    ]
+   },
+   "solutionCount": 1,
+   "solutionCountCapped": false
+  },
+  {
+   "id": "c20",
+   "name": "Pair Up",
+   "version": 1,
+   "difficulty": "medium",
+   "difficultyScore": 153,
+   "width": 5,
+   "height": 6,
+   "tiles": [
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "straight",
+     "r": 1,
+     "l": true
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 1
+    },
+    {
+     "t": "source",
+     "r": 1,
+     "c": 0,
+     "n": 2
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "straight",
+     "r": 3
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 0
+    },
+    {
+     "t": "straight",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "source",
+     "r": 2,
+     "c": 1
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "straight",
+     "r": 2
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "straight",
+     "r": 1,
+     "l": true
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 0
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    }
+   ],
+   "generator": {
+    "version": "gen-1",
+    "seed": 1022,
+    "tier": "medium"
+   },
+   "par": 6,
+   "solution": {
+    "rotations": [
+     0,
+     1,
+     1,
+     2,
+     0,
+     1,
+     3,
+     3,
+     0,
+     2,
+     3,
+     0,
+     3,
+     0,
+     2,
+     1,
+     0,
+     2,
+     1,
+     2,
+     0,
+     2,
+     0,
+     1,
+     3,
+     1,
+     3,
+     0,
+     0,
+     0
+    ],
+    "moves": [
+     [
+      1,
+      -1
+     ],
+     [
+      3,
+      -1
+     ],
+     [
+      6,
+      1
+     ],
+     [
+      6,
+      1
+     ],
+     [
+      14,
+      1
+     ],
+     [
+      22,
+      -1
+     ]
+    ]
+   },
+   "solutionCount": 1,
+   "solutionCountCapped": false,
+   "tip": "Two routes now. Plan both before you press Run."
+  },
+  {
+   "id": "c21",
+   "name": "Sorting Room",
+   "version": 1,
+   "difficulty": "medium",
+   "difficultyScore": 156,
+   "width": 5,
+   "height": 6,
+   "tiles": [
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 3
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "source",
+     "r": 2,
+     "c": 1,
+     "n": 2
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "tee",
+     "r": 3
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "tee",
+     "r": 3
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 0
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 3,
+     "l": true
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 1
+    },
+    {
+     "t": "straight",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "source",
+     "r": 1,
+     "c": 0
+    },
+    {
+     "t": "straight",
+     "r": 1,
+     "l": true
+    },
+    {
+     "t": "straight",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "tee",
+     "r": 0
+    }
+   ],
+   "generator": {
+    "version": "gen-1",
+    "seed": 1024,
+    "tier": "medium"
+   },
+   "par": 6,
+   "solution": {
+    "rotations": [
+     0,
+     0,
+     0,
+     3,
+     0,
+     0,
+     2,
+     0,
+     3,
+     0,
+     3,
+     2,
+     0,
+     0,
+     0,
+     3,
+     0,
+     2,
+     1,
+     3,
+     0,
+     2,
+     0,
+     0,
+     2,
+     1,
+     1,
+     1,
+     3,
+     0
+    ],
+    "moves": [
+     [
+      11,
+      1
+     ],
+     [
+      16,
+      -1
+     ],
+     [
+      17,
+      1
+     ],
+     [
+      18,
+      -1
+     ],
+     [
+      27,
+      1
+     ],
+     [
+      28,
+      1
+     ]
+    ]
+   },
+   "solutionCount": 1,
+   "solutionCountCapped": false
+  },
+  {
+   "id": "c22",
+   "name": "Twin Lines",
+   "version": 1,
+   "difficulty": "medium",
+   "difficultyScore": 158,
+   "width": 5,
+   "height": 6,
+   "tiles": [
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "source",
+     "r": 2,
+     "c": 1
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "tee",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 1
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 0
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 0,
+     "l": true
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "source",
+     "r": 0,
+     "c": 0,
+     "n": 2
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 2
+    }
+   ],
+   "generator": {
+    "version": "gen-1",
+    "seed": 1003,
+    "tier": "medium"
+   },
+   "par": 7,
+   "solution": {
+    "rotations": [
+     0,
+     2,
+     2,
+     0,
+     0,
+     0,
+     3,
+     0,
+     2,
+     3,
+     0,
+     2,
+     0,
+     0,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     2,
+     0,
+     0,
+     0,
+     3,
+     0,
+     0,
+     2
+    ],
+    "moves": [
+     [
+      8,
+      1
+     ],
+     [
+      8,
+      1
+     ],
+     [
+      14,
+      -1
+     ],
+     [
+      21,
+      1
+     ],
+     [
+      22,
+      -1
+     ],
+     [
+      26,
+      1
+     ],
+     [
+      26,
+      1
+     ]
+    ]
+   },
+   "solutionCount": 1,
+   "solutionCountCapped": false
+  },
+  {
+   "id": "c23",
+   "name": "Dispatch",
+   "version": 1,
+   "difficulty": "medium",
+   "difficultyScore": 185,
+   "width": 5,
+   "height": 6,
+   "tiles": [
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "tee",
+     "r": 3
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 3
+    },
+    {
+     "t": "tee",
+     "r": 3
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "source",
+     "r": 2,
+     "c": 1
+    },
+    {
+     "t": "source",
+     "r": 2,
+     "c": 0,
+     "n": 2
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "tee",
+     "r": 2
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 1
+    }
+   ],
+   "generator": {
+    "version": "gen-1",
+    "seed": 1010,
+    "tier": "medium"
+   },
+   "par": 8,
+   "solution": {
+    "rotations": [
+     0,
+     0,
+     0,
+     3,
+     0,
+     3,
+     3,
+     0,
+     0,
+     0,
+     3,
+     1,
+     0,
+     0,
+     2,
+     2,
+     1,
+     3,
+     1,
+     3,
+     0,
+     3,
+     1,
+     3,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0
+    ],
+    "moves": [
+     [
+      16,
+      1
+     ],
+     [
+      16,
+      1
+     ],
+     [
+      18,
+      1
+     ],
+     [
+      18,
+      1
+     ],
+     [
+      19,
+      -1
+     ],
+     [
+      21,
+      -1
+     ],
+     [
+      23,
+      1
+     ],
+     [
+      27,
+      -1
+     ]
+    ]
+   },
+   "solutionCount": 1,
+   "solutionCountCapped": false
+  },
+  {
+   "id": "c24",
+   "name": "Rush Hour",
+   "version": 1,
+   "difficulty": "medium",
+   "difficultyScore": 185,
+   "width": 5,
+   "height": 6,
+   "tiles": [
+    {
+     "t": "straight",
+     "r": 0
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "source",
+     "r": 3,
+     "c": 0,
+     "n": 2
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "source",
+     "r": 3,
+     "c": 1,
+     "n": 2
+    },
+    {
+     "t": "tee",
+     "r": 0,
+     "l": true
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 0,
+     "l": true
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 0,
+     "l": true
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 1
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "straight",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    }
+   ],
+   "generator": {
+    "version": "gen-1",
+    "seed": 1016,
+    "tier": "medium"
+   },
+   "par": 9,
+   "solution": {
+    "rotations": [
+     0,
+     0,
+     1,
+     1,
+     3,
+     1,
+     1,
+     3,
+     0,
+     0,
+     0,
+     1,
+     2,
+     0,
+     2,
+     0,
+     3,
+     0,
+     1,
+     3,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "moves": [
+     [
+      5,
+      -1
+     ],
+     [
+      11,
+      1
+     ],
+     [
+      12,
+      1
+     ],
+     [
+      12,
+      1
+     ],
+     [
+      14,
+      1
+     ],
+     [
+      15,
+      -1
+     ],
+     [
+      18,
+      1
+     ],
+     [
+      19,
+      1
+     ],
+     [
+      19,
+      1
+     ]
+    ]
+   },
+   "solutionCount": 1,
+   "solutionCountCapped": false
+  },
+  {
+   "id": "c25",
+   "name": "Overtime",
+   "version": 1,
+   "difficulty": "medium",
+   "difficultyScore": 214,
+   "width": 5,
+   "height": 6,
+   "tiles": [
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "straight",
+     "r": 0
+    },
+    {
+     "t": "source",
+     "r": 3,
+     "c": 0,
+     "n": 2
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 0
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "straight",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "tee",
+     "r": 2
+    },
+    {
+     "t": "tee",
+     "r": 2
+    },
+    {
+     "t": "tee",
+     "r": 3
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 1
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "source",
+     "r": 2,
+     "c": 1
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 0
+    }
+   ],
+   "generator": {
+    "version": "gen-1",
+    "seed": 1012,
+    "tier": "medium"
+   },
+   "par": 10,
+   "solution": {
+    "rotations": [
+     1,
+     1,
+     1,
+     1,
+     3,
+     0,
+     2,
+     0,
+     0,
+     2,
+     2,
+     0,
+     0,
+     0,
+     0,
+     2,
+     2,
+     3,
+     0,
+     2,
+     0,
+     2,
+     1,
+     1,
+     3,
+     2,
+     0,
+     3,
+     0,
+     0
+    ],
+    "moves": [
+     [
+      0,
+      -1
+     ],
+     [
+      3,
+      1
+     ],
+     [
+      19,
+      1
+     ],
+     [
+      22,
+      1
+     ],
+     [
+      23,
+      1
+     ],
+     [
+      24,
+      1
+     ],
+     [
+      24,
+      1
+     ],
+     [
+      26,
+      -1
+     ],
+     [
+      27,
+      1
+     ],
+     [
+      27,
+      1
+     ]
+    ]
+   },
+   "solutionCount": 1,
+   "solutionCountCapped": false
+  },
+  {
+   "id": "c26",
+   "name": "Interchange",
+   "version": 1,
+   "difficulty": "hard",
+   "difficultyScore": 199,
+   "width": 6,
+   "height": 6,
+   "tiles": [
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 3
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "tee",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "tee",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "tee",
+     "r": 3
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "tee",
+     "r": 2
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "straight",
+     "r": 2
+    },
+    {
+     "t": "source",
+     "r": 2,
+     "c": 0,
+     "n": 2
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 3
+    },
+    {
+     "t": "source",
+     "r": 0,
+     "c": 1,
+     "n": 2
+    },
+    {
+     "t": "straight",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 1
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 0,
+     "l": true
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 0,
+     "l": true
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 0
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    }
+   ],
+   "generator": {
+    "version": "gen-1",
+    "seed": 1006,
+    "tier": "hard"
+   },
+   "par": 8,
+   "solution": {
+    "rotations": [
+     3,
+     0,
+     0,
+     3,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1,
+     2,
+     0,
+     3,
+     0,
+     2,
+     2,
+     2,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     2,
+     1,
+     2,
+     0,
+     3,
+     1,
+     0,
+     3,
+     0,
+     0,
+     0,
+     0
+    ],
+    "moves": [
+     [
+      10,
+      1
+     ],
+     [
+      16,
+      1
+     ],
+     [
+      22,
+      1
+     ],
+     [
+      25,
+      1
+     ],
+     [
+      25,
+      1
+     ],
+     [
+      26,
+      -1
+     ],
+     [
+      28,
+      -1
+     ],
+     [
+      31,
+      1
+     ]
+    ]
+   },
+   "solutionCount": 1,
+   "solutionCountCapped": false,
+   "tip": "Packages wait their turn at busy tiles. The earliest one goes first."
+  },
+  {
+   "id": "c27",
+   "name": "Flyover",
+   "version": 1,
+   "difficulty": "hard",
+   "difficultyScore": 204,
+   "width": 6,
+   "height": 6,
+   "tiles": [
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 1,
+     "l": true
+    },
+    {
+     "t": "straight",
+     "r": 0
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 1
+    },
+    {
+     "t": "tee",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "cross",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 1,
+     "l": true
+    },
+    {
+     "t": "corner",
+     "r": 2,
+     "l": true
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 0
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "straight",
+     "r": 3
+    },
+    {
+     "t": "tee",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 0,
+     "l": true
+    },
+    {
+     "t": "corner",
+     "r": 3,
+     "l": true
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "source",
+     "r": 3,
+     "c": 0,
+     "n": 2
+    },
+    {
+     "t": "straight",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 3
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "source",
+     "r": 3,
+     "c": 1,
+     "n": 2
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "tee",
+     "r": 2
+    },
+    {
+     "t": "tee",
+     "r": 2
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "empty",
+     "r": 0
+    }
+   ],
+   "generator": {
+    "version": "gen-1",
+    "seed": 1001,
+    "tier": "hard"
+   },
+   "par": 8,
+   "solution": {
+    "rotations": [
+     0,
+     1,
+     1,
+     0,
+     2,
+     1,
+     1,
+     0,
+     1,
+     2,
+     0,
+     2,
+     0,
+     0,
+     2,
+     0,
+     3,
+     0,
+     0,
+     3,
+     0,
+     1,
+     0,
+     0,
+     3,
+     0,
+     0,
+     3,
+     2,
+     2,
+     2,
+     0,
+     1,
+     0,
+     2,
+     0
+    ],
+    "moves": [
+     [
+      2,
+      1
+     ],
+     [
+      12,
+      1
+     ],
+     [
+      13,
+      1
+     ],
+     [
+      14,
+      1
+     ],
+     [
+      14,
+      1
+     ],
+     [
+      18,
+      1
+     ],
+     [
+      26,
+      1
+     ],
+     [
+      26,
+      1
+     ]
+    ]
+   },
+   "solutionCount": 1,
+   "solutionCountCapped": false
+  },
+  {
+   "id": "c28",
+   "name": "Bottleneck",
+   "version": 1,
+   "difficulty": "hard",
+   "difficultyScore": 219,
+   "width": 6,
+   "height": 6,
+   "tiles": [
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "source",
+     "r": 3,
+     "c": 0,
+     "n": 2
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "tee",
+     "r": 1
+    },
+    {
+     "t": "straight",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 0,
+     "l": true
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "straight",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "straight",
+     "r": 0,
+     "l": true
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "source",
+     "r": 3,
+     "c": 1,
+     "n": 2
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "straight",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 0
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "straight",
+     "r": 3
+    },
+    {
+     "t": "straight",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 1
+    },
+    {
+     "t": "tee",
+     "r": 3
+    },
+    {
+     "t": "empty",
+     "r": 0
+    }
+   ],
+   "generator": {
+    "version": "gen-1",
+    "seed": 1020,
+    "tier": "hard"
+   },
+   "par": 9,
+   "solution": {
+    "rotations": [
+     1,
+     3,
+     0,
+     1,
+     3,
+     0,
+     0,
+     2,
+     0,
+     1,
+     2,
+     2,
+     0,
+     3,
+     2,
+     0,
+     0,
+     3,
+     1,
+     3,
+     3,
+     2,
+     0,
+     1,
+     0,
+     2,
+     3,
+     0,
+     2,
+     0,
+     3,
+     1,
+     0,
+     0,
+     3,
+     0
+    ],
+    "moves": [
+     [
+      0,
+      1
+     ],
+     [
+      0,
+      1
+     ],
+     [
+      9,
+      -1
+     ],
+     [
+      10,
+      -1
+     ],
+     [
+      12,
+      1
+     ],
+     [
+      19,
+      1
+     ],
+     [
+      20,
+      1
+     ],
+     [
+      21,
+      1
+     ],
+     [
+      27,
+      1
+     ]
+    ]
+   },
+   "solutionCount": 1,
+   "solutionCountCapped": false
+  },
+  {
+   "id": "c29",
+   "name": "Gridlock",
+   "version": 1,
+   "difficulty": "hard",
+   "difficultyScore": 228,
+   "width": 6,
+   "height": 6,
+   "tiles": [
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "straight",
+     "r": 3
+    },
+    {
+     "t": "straight",
+     "r": 1,
+     "l": true
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "straight",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 1,
+     "l": true
+    },
+    {
+     "t": "tee",
+     "r": 3,
+     "l": true
+    },
+    {
+     "t": "source",
+     "r": 3,
+     "c": 1,
+     "n": 2
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "straight",
+     "r": 3
+    },
+    {
+     "t": "source",
+     "r": 2,
+     "c": 0,
+     "n": 2
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 2,
+     "l": true
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 0
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 1
+    },
+    {
+     "t": "tee",
+     "r": 2
+    },
+    {
+     "t": "tee",
+     "r": 2
+    },
+    {
+     "t": "straight",
+     "r": 2
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    }
+   ],
+   "generator": {
+    "version": "gen-1",
+    "seed": 1003,
+    "tier": "hard"
+   },
+   "par": 11,
+   "solution": {
+    "rotations": [
+     3,
+     1,
+     3,
+     1,
+     2,
+     2,
+     0,
+     0,
+     0,
+     1,
+     0,
+     2,
+     1,
+     3,
+     3,
+     2,
+     0,
+     2,
+     0,
+     2,
+     0,
+     0,
+     0,
+     3,
+     0,
+     0,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     3,
+     2,
+     2,
+     0
+    ],
+    "moves": [
+     [
+      1,
+      -1
+     ],
+     [
+      10,
+      1
+     ],
+     [
+      16,
+      1
+     ],
+     [
+      18,
+      1
+     ],
+     [
+      19,
+      1
+     ],
+     [
+      19,
+      1
+     ],
+     [
+      22,
+      1
+     ],
+     [
+      22,
+      1
+     ],
+     [
+      23,
+      -1
+     ],
+     [
+      25,
+      -1
+     ],
+     [
+      32,
+      1
+     ]
+    ]
+   },
+   "solutionCount": 1,
+   "solutionCountCapped": false
+  },
+  {
+   "id": "c30",
+   "name": "Freight",
+   "version": 1,
+   "difficulty": "hard",
+   "difficultyScore": 254,
+   "width": 6,
+   "height": 6,
+   "tiles": [
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "tee",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 1
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "cross",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 2
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 0
+    },
+    {
+     "t": "source",
+     "r": 2,
+     "c": 1,
+     "n": 2
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "source",
+     "r": 0,
+     "c": 0,
+     "n": 2
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "straight",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 0
+    }
+   ],
+   "generator": {
+    "version": "gen-1",
+    "seed": 1018,
+    "tier": "hard"
+   },
+   "par": 13,
+   "solution": {
+    "rotations": [
+     0,
+     3,
+     2,
+     0,
+     2,
+     0,
+     1,
+     0,
+     0,
+     0,
+     2,
+     0,
+     3,
+     1,
+     0,
+     1,
+     0,
+     2,
+     0,
+     0,
+     1,
+     3,
+     2,
+     0,
+     2,
+     0,
+     0,
+     1,
+     3,
+     1,
+     0,
+     1,
+     1,
+     3,
+     0,
+     0
+    ],
+    "moves": [
+     [
+      10,
+      -1
+     ],
+     [
+      15,
+      1
+     ],
+     [
+      15,
+      1
+     ],
+     [
+      17,
+      1
+     ],
+     [
+      17,
+      1
+     ],
+     [
+      20,
+      1
+     ],
+     [
+      21,
+      -1
+     ],
+     [
+      27,
+      1
+     ],
+     [
+      27,
+      1
+     ],
+     [
+      28,
+      1
+     ],
+     [
+      30,
+      -1
+     ],
+     [
+      31,
+      1
+     ],
+     [
+      33,
+      1
+     ]
+    ]
+   },
+   "solutionCount": 1,
+   "solutionCountCapped": false
+  },
+  {
+   "id": "c31",
+   "name": "Tri-Color",
+   "version": 1,
+   "difficulty": "expert",
+   "difficultyScore": 268,
+   "width": 6,
+   "height": 7,
+   "tiles": [
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "source",
+     "r": 1,
+     "c": 2,
+     "n": 2
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 2
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "straight",
+     "r": 2
+    },
+    {
+     "t": "tee",
+     "r": 2
+    },
+    {
+     "t": "tee",
+     "r": 2
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 2
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 0
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 1
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "tee",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 0,
+     "l": true
+    },
+    {
+     "t": "straight",
+     "r": 1,
+     "l": true
+    },
+    {
+     "t": "corner",
+     "r": 2,
+     "l": true
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "source",
+     "r": 2,
+     "c": 1
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "tee",
+     "r": 1,
+     "l": true
+    },
+    {
+     "t": "cross",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 3,
+     "l": true
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "source",
+     "r": 0,
+     "c": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    }
+   ],
+   "generator": {
+    "version": "gen-1",
+    "seed": 1012,
+    "tier": "expert"
+   },
+   "par": 12,
+   "solution": {
+    "rotations": [
+     1,
+     1,
+     1,
+     2,
+     1,
+     0,
+     3,
+     0,
+     0,
+     0,
+     1,
+     3,
+     3,
+     2,
+     2,
+     2,
+     0,
+     2,
+     0,
+     0,
+     0,
+     2,
+     0,
+     2,
+     3,
+     2,
+     0,
+     1,
+     2,
+     2,
+     0,
+     2,
+     1,
+     1,
+     0,
+     3,
+     0,
+     0,
+     3,
+     1,
+     0,
+     0
+    ],
+    "moves": [
+     [
+      3,
+      -1
+     ],
+     [
+      9,
+      1
+     ],
+     [
+      9,
+      1
+     ],
+     [
+      11,
+      1
+     ],
+     [
+      11,
+      1
+     ],
+     [
+      23,
+      -1
+     ],
+     [
+      29,
+      1
+     ],
+     [
+      32,
+      1
+     ],
+     [
+      35,
+      1
+     ],
+     [
+      35,
+      1
+     ],
+     [
+      37,
+      1
+     ],
+     [
+      37,
+      1
+     ]
+    ]
+   },
+   "solutionCount": 1,
+   "solutionCountCapped": false
+  },
+  {
+   "id": "c32",
+   "name": "Clockwork",
+   "version": 1,
+   "difficulty": "expert",
+   "difficultyScore": 280,
+   "width": 6,
+   "height": 7,
+   "tiles": [
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 2,
+     "l": true
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 2
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "straight",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 0,
+     "l": true
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "straight",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 2
+    },
+    {
+     "t": "straight",
+     "r": 1,
+     "l": true
+    },
+    {
+     "t": "source",
+     "r": 3,
+     "c": 2,
+     "n": 3
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "source",
+     "r": 3,
+     "c": 1
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 0
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "tee",
+     "r": 2
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 1
+    },
+    {
+     "t": "tee",
+     "r": 0,
+     "l": true
+    },
+    {
+     "t": "straight",
+     "r": 1,
+     "l": true
+    },
+    {
+     "t": "straight",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 1,
+     "l": true
+    },
+    {
+     "t": "source",
+     "r": 3,
+     "c": 0,
+     "n": 3
+    },
+    {
+     "t": "tee",
+     "r": 3
+    }
+   ],
+   "generator": {
+    "version": "gen-1",
+    "seed": 1004,
+    "tier": "expert"
+   },
+   "par": 12,
+   "solution": {
+    "rotations": [
+     1,
+     2,
+     1,
+     0,
+     2,
+     3,
+     2,
+     0,
+     3,
+     1,
+     0,
+     0,
+     0,
+     3,
+     1,
+     3,
+     0,
+     2,
+     1,
+     2,
+     0,
+     1,
+     3,
+     0,
+     2,
+     0,
+     0,
+     0,
+     2,
+     0,
+     2,
+     0,
+     2,
+     2,
+     0,
+     0,
+     0,
+     1,
+     1,
+     1,
+     3,
+     3
+    ],
+    "moves": [
+     [
+      0,
+      -1
+     ],
+     [
+      2,
+      1
+     ],
+     [
+      8,
+      1
+     ],
+     [
+      13,
+      1
+     ],
+     [
+      19,
+      1
+     ],
+     [
+      19,
+      1
+     ],
+     [
+      21,
+      1
+     ],
+     [
+      25,
+      1
+     ],
+     [
+      27,
+      -1
+     ],
+     [
+      30,
+      1
+     ],
+     [
+      34,
+      -1
+     ],
+     [
+      38,
+      1
+     ]
+    ]
+   },
+   "solutionCount": 1,
+   "solutionCountCapped": false
+  },
+  {
+   "id": "c33",
+   "name": "Mainframe",
+   "version": 1,
+   "difficulty": "expert",
+   "difficultyScore": 333,
+   "width": 6,
+   "height": 7,
+   "tiles": [
+    {
+     "t": "tee",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "straight",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 3
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 1
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "source",
+     "r": 3,
+     "c": 2,
+     "n": 3
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "source",
+     "r": 3,
+     "c": 1,
+     "n": 3
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 2
+    },
+    {
+     "t": "tee",
+     "r": 0
+    },
+    {
+     "t": "tee",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 2
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "tee",
+     "r": 2
+    },
+    {
+     "t": "straight",
+     "r": 3
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "source",
+     "r": 2,
+     "c": 0,
+     "n": 3
+    },
+    {
+     "t": "tee",
+     "r": 0
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "tee",
+     "r": 2
+    },
+    {
+     "t": "straight",
+     "r": 0,
+     "l": true
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "straight",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "tee",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 1
+    }
+   ],
+   "generator": {
+    "version": "gen-1",
+    "seed": 1021,
+    "tier": "expert"
+   },
+   "par": 14,
+   "solution": {
+    "rotations": [
+     1,
+     1,
+     1,
+     3,
+     2,
+     0,
+     3,
+     0,
+     1,
+     3,
+     0,
+     3,
+     1,
+     3,
+     3,
+     1,
+     1,
+     0,
+     0,
+     2,
+     2,
+     2,
+     3,
+     0,
+     0,
+     3,
+     0,
+     2,
+     0,
+     0,
+     0,
+     0,
+     2,
+     0,
+     0,
+     2,
+     0,
+     0,
+     1,
+     0,
+     3,
+     3
+    ],
+    "moves": [
+     [
+      1,
+      1
+     ],
+     [
+      1,
+      1
+     ],
+     [
+      3,
+      1
+     ],
+     [
+      4,
+      1
+     ],
+     [
+      4,
+      1
+     ],
+     [
+      8,
+      -1
+     ],
+     [
+      10,
+      1
+     ],
+     [
+      12,
+      1
+     ],
+     [
+      13,
+      1
+     ],
+     [
+      14,
+      -1
+     ],
+     [
+      35,
+      1
+     ],
+     [
+      40,
+      1
+     ],
+     [
+      41,
+      1
+     ],
+     [
+      41,
+      1
+     ]
+    ]
+   },
+   "solutionCount": 1,
+   "solutionCountCapped": false
+  },
+  {
+   "id": "c34",
+   "name": "Loop Factory",
+   "version": 1,
+   "difficulty": "expert",
+   "difficultyScore": 319,
+   "width": 6,
+   "height": 7,
+   "tiles": [
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "straight",
+     "r": 3
+    },
+    {
+     "t": "source",
+     "r": 3,
+     "c": 1,
+     "n": 2
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 3,
+     "l": true
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "source",
+     "r": 3,
+     "c": 0
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 0
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "tee",
+     "r": 3
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "blocked",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 3
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 1
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "straight",
+     "r": 1,
+     "l": true
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 1,
+     "l": true
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "source",
+     "r": 0,
+     "c": 2
+    },
+    {
+     "t": "straight",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "dest",
+     "r": 0,
+     "c": 2
+    },
+    {
+     "t": "corner",
+     "r": 3
+    },
+    {
+     "t": "straight",
+     "r": 1
+    },
+    {
+     "t": "straight",
+     "r": 3
+    },
+    {
+     "t": "straight",
+     "r": 3
+    },
+    {
+     "t": "corner",
+     "r": 1
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "corner",
+     "r": 2
+    },
+    {
+     "t": "corner",
+     "r": 0
+    },
+    {
+     "t": "straight",
+     "r": 2
+    },
+    {
+     "t": "empty",
+     "r": 0
+    },
+    {
+     "t": "empty",
+     "r": 0
+    }
+   ],
+   "generator": {
+    "version": "gen-1",
+    "seed": 1016,
+    "tier": "expert"
+   },
+   "par": 17,
+   "solution": {
+    "rotations": [
+     1,
+     2,
+     1,
+     3,
+     3,
+     0,
+     0,
+     0,
+     3,
+     1,
+     3,
+     0,
+     2,
+     2,
+     3,
+     2,
+     0,
+     0,
+     0,
+     1,
+     2,
+     0,
+     1,
+     3,
+     1,
+     3,
+     0,
+     0,
+     0,
+     3,
+     0,
+     3,
+     1,
+     3,
+     3,
+     1,
+     0,
+     2,
+     0,
+     2,
+     0,
+     0
+    ],
+    "moves": [
+     [
+      0,
+      1
+     ],
+     [
+      0,
+      1
+     ],
+     [
+      1,
+      1
+     ],
+     [
+      1,
+      1
+     ],
+     [
+      2,
+      -1
+     ],
+     [
+      7,
+      1
+     ],
+     [
+      9,
+      1
+     ],
+     [
+      9,
+      1
+     ],
+     [
+      12,
+      1
+     ],
+     [
+      15,
+      1
+     ],
+     [
+      17,
+      1
+     ],
+     [
+      19,
+      -1
+     ],
+     [
+      20,
+      1
+     ],
+     [
+      21,
+      1
+     ],
+     [
+      23,
+      1
+     ],
+     [
+      23,
+      1
+     ],
+     [
+      25,
+      -1
+     ]
+    ]
+   },
+   "solutionCount": 1,
+   "solutionCountCapped": false
+  }
+ ]
+}

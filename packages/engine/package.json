@@ -1,0 +1,15 @@
+{
+  "name": "@loopfactory/engine",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Deterministic Loop Factory rules: tiles, simulation, solver, procedural generator. Canonical implementation mirrored by apps/game/scripts/engine.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./levels/curated.json": "./levels/curated.json"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  }
+}

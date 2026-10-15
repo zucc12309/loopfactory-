@@ -1,0 +1,18 @@
+node_modules/
+dist/
+coverage/
+*.log
+.env
+.env.*
+!.env.example
+# Godot
+apps/game/.godot/
+apps/game/build/
+apps/game/export_credentials.cfg
+*.keystore
+!debug.keystore.example
+*.jks
+# OS
+.DS_Store
+# load test output
+scripts/loadtest/results/*.json
