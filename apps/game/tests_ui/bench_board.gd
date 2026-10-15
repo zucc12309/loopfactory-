@@ -18,19 +18,29 @@ func _run() -> void:
 	var board = load("res://scripts/ui/board_view.gd").new()
 	board.size = Vector2(664, 900)
 	vp.add_child(board)
-	for id in ["c06", "c34"]:
-		var lvl: Dictionary = Game.state.campaign[Game.state.campaign_index[id]]
-		board.set_level(lvl, lvl["solution"]["rotations"])
-		var res = Sim.simulate(lvl, lvl["solution"]["rotations"])
-		board.start_playback(res, 0.3)
-		for i in 30:
-			await process_frame
-		board.perf_samples.clear()
-		var m0: int = board.sb_misses
-		var o0 := Performance.get_monitor(Performance.OBJECT_COUNT)
-		for i in 120:
-			await process_frame
-		var s: Array = board.perf_samples.duplicate()
-		s.sort()
-		print("%s %dx%d: board work p50 %.2f ms p95 %.2f ms max %.2f ms (%d frames), stylebox misses %d, objects %+d" % [id, lvl["width"], lvl["height"], s[s.size() / 2] / 1000.0, s[int(s.size() * 0.95)] / 1000.0, s[-1] / 1000.0, s.size(), board.sb_misses - m0, Performance.get_monitor(Performance.OBJECT_COUNT) - o0])
+	for crew in [false, true]:
+		board.crew_on = crew
+		for id in ["c06", "c34"]:
+			var lvl: Dictionary = Game.state.campaign[Game.state.campaign_index[id]]
+			board.set_level(lvl, lvl["solution"]["rotations"])
+			# Idle (editing) frames: only the characters waiting in sources can redraw.
+			for i in 30:
+				await process_frame
+			board.perf_samples.clear()
+			for i in 120:
+				await process_frame
+			var idle: Array = board.perf_samples.duplicate()
+			idle.sort()
+			var res = Sim.simulate(lvl, lvl["solution"]["rotations"])
+			board.start_playback(res, 0.3)
+			for i in 30:
+				await process_frame
+			board.perf_samples.clear()
+			var m0: int = board.sb_misses
+			var o0 := Performance.get_monitor(Performance.OBJECT_COUNT)
+			for i in 120:
+				await process_frame
+			var s: Array = board.perf_samples.duplicate()
+			s.sort()
+			print("%s %s %dx%d: running p50 %.2f ms p95 %.2f ms max %.2f ms (%d frames) | idle p50 %.2f ms p95 %.2f ms | stylebox misses %d, objects %+d" % ["crew   " if crew else "classic", id, lvl["width"], lvl["height"], s[s.size() / 2] / 1000.0, s[int(s.size() * 0.95)] / 1000.0, s[-1] / 1000.0, s.size(), idle[idle.size() / 2] / 1000.0 if not idle.is_empty() else 0.0, idle[int(idle.size() * 0.95)] / 1000.0 if not idle.is_empty() else 0.0, board.sb_misses - m0, Performance.get_monitor(Performance.OBJECT_COUNT) - o0])
 	quit()
