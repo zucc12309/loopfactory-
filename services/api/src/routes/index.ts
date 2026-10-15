@@ -47,8 +47,15 @@ export function buildRoutes(d: Deps): AnyRoute[] {
   const privacy = new PrivacyService(db, config.privacySalt);
   const friends = new FriendChallengeService(db, levels, daily, config.publicBaseUrl);
   const off = config.rateLimitDisabled;
-  const guestLimit = makeLimiter({ name: 'guest', windowMs: 3600_000, limit: 30, disabled: off });
-  const authLimit = makeLimiter({ name: 'auth', windowMs: 60_000, limit: 30, disabled: off });
+  // Guest creation stays per IP (the only signal before an account exists): a short burst cap stops
+  // scripted mass creation, the hourly cap is sized for many genuine installs behind one carrier
+  // NAT. A refused guest creation doesn't block play: the client stays offline and retries later.
+  const guestBurst = makeLimiter({ name: 'guest', windowMs: 60_000, limit: 20, disabled: off });
+  const guestHourly = makeLimiter({ name: 'guest', windowMs: 3600_000, limit: 200, disabled: off });
+  const guestLimit = ((req, res, next) => guestBurst(req, res, (e?: unknown) => (e ? next(e) : guestHourly(req, res, next)))) as typeof guestBurst;
+  // Refresh is limited per refresh token (one session), not per IP.
+  const refreshLimit = makeLimiter({ name: 'auth', windowMs: 60_000, limit: 10, key: 'refresh-token', disabled: off });
+  const authLimit = makeLimiter({ name: 'auth', windowMs: 60_000, limit: 30, byPlayer: true, disabled: off });
   const syncLimit = makeLimiter({ name: 'sync', windowMs: 60_000, limit: 60, byPlayer: true, disabled: off });
   const submitLimit = makeLimiter({ name: 'submit', windowMs: 60_000, limit: 20, byPlayer: true, disabled: off });
   const privacyLimit = makeLimiter({ name: 'privacy', windowMs: 3600_000, limit: 10, byPlayer: true, disabled: off });
@@ -69,7 +76,7 @@ export function buildRoutes(d: Deps): AnyRoute[] {
       },
     }),
     defineRoute({
-      method: 'post', path: '/auth/refresh', tag: 'auth', auth: 'none', rateLimit: authLimit,
+      method: 'post', path: '/auth/refresh', tag: 'auth', auth: 'none', rateLimit: refreshLimit,
       summary: 'Rotate a refresh token (single use; reuse revokes the session family)',
       body: C.RefreshRequest, response: C.TokenResponse,
       handler: async ({ body }) => {

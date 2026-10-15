@@ -4,6 +4,7 @@ import { createApp } from './app';
 import { loadConfig } from './config';
 import { createDb } from './db';
 import { createLogger } from './logger';
+import { RATE_LIMIT_STORE } from './middleware/rateLimit';
 import { createReporter } from './services/monitoring';
 
 const config = loadConfig();
@@ -12,6 +13,10 @@ const logger = createLogger(config.logLevel);
 // Note: rate limits are in-memory per worker; DB_POOL_SIZE applies per worker.
 const workers = Math.min(Number(process.env.WEB_CONCURRENCY ?? 1), availableParallelism());
 
+if (cluster.isPrimary) {
+  // Say plainly what the limits are: never imply global enforcement that doesn't exist.
+  logger.info({ rateLimitStore: RATE_LIMIT_STORE, workers }, workers > 1 ? `rate limits are per worker process: effective limits are ${workers}x the configured values` : 'rate limits are per process (memory) and reset on restart');
+}
 if (workers > 1 && cluster.isPrimary) {
   logger.info({ workers }, 'starting worker processes');
   for (let i = 0; i < workers; i++) cluster.fork();

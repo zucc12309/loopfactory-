@@ -10,7 +10,7 @@ import { errorHandler, notFound } from './errors';
 import { mount, registry } from './http';
 import type { Logger } from './logger';
 import { authMiddleware } from './middleware/auth';
-import { makeLimiter } from './middleware/rateLimit';
+import { identify, makeLimiter } from './middleware/rateLimit';
 import { buildOpenApi } from './openapi';
 import { buildRoutes } from './routes';
 import { DailyService } from './services/daily';
@@ -45,7 +45,10 @@ export function createApp(opts: { config: Config; db: Db; logger: Logger; report
     }),
   );
   app.use(express.json({ limit: '256kb' }));
-  app.use(makeLimiter({ name: 'global', windowMs: 60_000, limit: 600, disabled: config.rateLimitDisabled }));
+  const tokens = new TokenService(db, config.jwtSecret, config.accessTtl, config.refreshTtlDays, config.refreshReuseGraceSeconds);
+  // Global ceiling: per player for authenticated traffic (NAT-safe), per IP for anonymous traffic.
+  app.use(identify(tokens));
+  app.use(makeLimiter({ name: 'global', windowMs: 60_000, limit: 600, key: 'player-or-ip', disabled: config.rateLimitDisabled }));
 
   app.get('/health', (_req, res) => res.json({ status: 'ok', version: API_VERSION }));
   app.get('/ready', async (_req, res) => {
@@ -57,7 +60,6 @@ export function createApp(opts: { config: Config; db: Db; logger: Logger; report
     }
   });
 
-  const tokens = new TokenService(db, config.jwtSecret, config.accessTtl, config.refreshTtlDays, config.refreshReuseGraceSeconds);
   const routes = buildRoutes({
     db,
     config,
