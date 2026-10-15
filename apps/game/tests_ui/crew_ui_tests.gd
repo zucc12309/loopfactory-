@@ -53,6 +53,7 @@ func _run() -> void:
 	Game.store = load("res://scripts/core/save_store.gd").new("user://crew-ui-test-save.json")
 	_fresh_state()
 	await _pixel_tests()
+	await _readability_tests()
 	await _board_tests()
 	await _screen_tests()
 	print("\nCrew UI tests: %d checks, %d failed" % [checks, failures])
@@ -143,6 +144,52 @@ func _pixel_tests() -> void:
 		check(body.is_equal_approx(col) or (absf(body.r - col.r) < 0.02 and absf(body.g - col.g) < 0.02 and absf(body.b - col.b) < 0.02), "colour %d body keeps its package colour (%s vs %s)" % [j[0], body.to_html(), col.to_html()])
 		var sym := img.get_pixel(o.x + int(half), o.y + int(half + Painter.SYMBOL_FULL.y * SZ))
 		check(sym.r > 0.95 and sym.g > 0.95 and sym.b > 0.95, "colour %d symbol is white at its centre" % j[0])
+
+
+## Readability at real displayed body sizes (16/24/32/48 px): the symbol is visible and the four
+## symbols stay distinguishable from each other (binary masks of the white symbol pixels differ).
+func _readability_tests() -> void:
+	var sizes := [16.0, 24.0, 32.0, 48.0]
+	var jobs: Array = []
+	for px in sizes:
+		for cb in [false, true]:
+			for cidx in 4:
+				jobs.append([cidx, "", px, cb])
+	var img := await _render(jobs)
+	var half := CELL / 2.0
+	var masks := {}
+	var report: PackedStringArray = []
+	for k in jobs.size():
+		var j: Array = jobs[k]
+		var px: float = j[2]
+		var det: int = Painter.detail_for(px)
+		var c: Vector2 = Vector2(half, half) + Painter.symbol_center(det) * px
+		var r: float = Painter.symbol_radius(det, j[3]) * px * 1.5 + 1.0
+		var o := _cell_origin(k)
+		var mask := {}
+		for y in range(int(c.y - r), int(c.y + r) + 1):
+			for x in range(int(c.x - r), int(c.x + r) + 1):
+				var p := img.get_pixel(o.x + x, o.y + y)
+				if p.r > 0.8 and p.g > 0.8 and p.b > 0.8:
+					mask[Vector2i(x - int(c.x), y - int(c.y))] = true
+		masks[k] = mask
+		if j[0] == 0:
+			report.append("%dpx%s=%d" % [int(px), " cb" if j[3] else "", mask.size()])
+		check(mask.size() >= 4, "symbol visible at %d px (colour %d, larger symbols %s): %d white px" % [int(px), j[0], j[3], mask.size()])
+	print("     symbol pixels (colour 0): ", ", ".join(report))
+	for k in range(0, jobs.size(), 4):
+		for a in 4:
+			for b in range(a + 1, 4):
+				var ma: Dictionary = masks[k + a]
+				var mb: Dictionary = masks[k + b]
+				var diff := 0
+				for key in ma:
+					if not mb.has(key):
+						diff += 1
+				for key in mb:
+					if not ma.has(key):
+						diff += 1
+				check(diff >= 3, "%d px%s: %s vs %s symbols distinguishable (%d px differ)" % [int(jobs[k][2]), " (larger)" if jobs[k][3] else "", ["circle", "square", "triangle", "diamond"][a], ["circle", "square", "triangle", "diamond"][b], diff])
 
 
 # ---------------------------------------------------------------------------------- board
